@@ -143,7 +143,7 @@ const NewLanding: React.FC = () => {
     onSuccess: (data) => {
       localStorage.setItem('userId', data.user.id);
       localStorage.setItem('userOnboarded', 'true');
-      window.location.href = '/donor-dashboard';
+      window.location.href = '/dashboard';
     }
   });
 
@@ -420,7 +420,7 @@ const NewLanding: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
       {/* Animated background particles */}
       {showParticles && (
         <div className="absolute inset-0">

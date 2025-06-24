@@ -57,26 +57,20 @@ function App() {
         <AuthProvider>
           <AddictionProvider>
             <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
-              {window.location.pathname !== '/' && <Header />}
+              <Header />
               
               <div className="flex">
-                {window.location.pathname !== '/' && (
-                  <Sidebar 
-                    collapsed={sidebarCollapsed} 
-                    onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-                  />
-                )}
+                <Sidebar 
+                  collapsed={sidebarCollapsed} 
+                  onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                />
                 
-                <main className={`flex-1 transition-all duration-300 ${
-                  window.location.pathname !== '/' ? `pt-16 ${sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'}` : ''
+                <main className={`flex-1 transition-all duration-300 pt-16 ${
+                  sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'
                 }`}>
                   <Routes>
-                    {/* Check if user completed onboarding */}
-                    <Route path="/" element={
-                      localStorage.getItem('userOnboarded') === 'true' 
-                        ? <DonorDashboard /> 
-                        : <NewLanding />
-                    } />
+                    {/* Landing page for new users */}
+                    <Route path="/" element={<NewLanding />} />
                     <Route path="/dashboard" element={<DonorDashboard />} />
                     <Route path="/donor-dashboard" element={<DonorDashboard />} />
                     <Route path="/student" element={<StudentDashboard />} />
