@@ -1,119 +1,38 @@
-# Granada OS - Grant and Funding Platform
+# Granada OS - Funding Opportunities Platform
 
 ## Overview
+Granada OS is a comprehensive funding opportunities platform successfully migrated from Bolt to Replit. The platform features an AI-powered bot system that scrapes real funding opportunities from major international organizations and stores them in a PostgreSQL database.
 
-Granada is a comprehensive funding discovery and grant management platform designed to empower impact-driven organizations, students, and researchers. The application combines AI-powered donor matching, proposal generation, and real-time funding opportunity discovery to streamline the fundraising process.
+## Project Architecture
+- **Frontend**: React + TypeScript with Tailwind CSS
+- **Backend**: Node.js/Express with TypeScript
+- **Database**: PostgreSQL (Neon) with Drizzle ORM
+- **Bot System**: Python with Selenium and DeepSeek AI integration
+- **API Integration**: RESTful endpoints serving funding opportunities
 
-## System Architecture
+## Recent Changes (June 24, 2025)
+- Successfully migrated from Bolt/Supabase to Replit/PostgreSQL
+- Created complete database schema with funding opportunities, bots, and user management
+- Built working Python bot manager for web scraping
+- Integrated DeepSeek AI for intelligent content extraction
+- Added 9 real funding opportunities from USAID, World Bank, WHO, UNDP, EU, Gates Foundation
+- Fixed API routing and frontend data display
+- Bot system tracking rewards with 220 total points earned
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite for fast development and optimized production builds
-- **UI Library**: Shadcn/UI components with Radix UI primitives
-- **Styling**: Tailwind CSS with custom theme system supporting multiple color schemes
-- **State Management**: React Context API for authentication and theme management
-- **Routing**: React Router for client-side navigation
-- **Animations**: Framer Motion for smooth transitions and micro-interactions
-
-### Backend Architecture
-- **Runtime**: Node.js with Express.js server
-- **Database**: PostgreSQL with Neon serverless driver
-- **ORM**: Drizzle ORM for type-safe database operations
-- **API Structure**: RESTful API with `/api` prefix routing
-- **Authentication**: Session-based authentication with user role management
-- **File Handling**: Support for document upload and processing
-
-### Database Schema
-- **Users**: Authentication and profile management with role-based access
-- **Organizations**: NGO and institutional profiles
-- **Donor Opportunities**: Real-time funding opportunities with verification system
-- **Search Bots**: Automated opportunity discovery system
-- **Proposals**: Grant proposal management and tracking
-- **Projects**: Active project and initiative management
-
-## Key Components
-
-### 1. Donor Discovery Engine
-- Real-time search across multiple funding sources
-- AI-powered matching based on organization profile and project needs
-- Country-specific bot system for localized opportunity discovery
-- Verification system for opportunity quality assurance
-
-### 2. AI-Powered Proposal Generator
-- Voice input and file upload support
-- Multi-language proposal generation
-- Integration with multiple AI providers (OpenAI, Gemini, DeepSeek)
-- Template-based document generation
-
-### 3. User Type System
-- **Students**: Scholarship and research opportunity focus
-- **NGOs**: Grant and funding opportunity management
-- **Businesses**: Corporate funding and partnership opportunities
-- **General Users**: Flexible access to all features
-
-### 4. Real-Time Search Bot Network
-- Country-specific search bots for local funding opportunities
-- Reward system for successful opportunity discovery
-- Performance tracking and success rate monitoring
-- Automated verification and quality scoring
-
-### 5. Credit System
-- Usage-based pricing model
-- Multiple payment method support (cards, mobile money, crypto)
-- Regional payment provider integration
-- Credit transaction history tracking
-
-## Data Flow
-
-1. **User Registration**: Type-specific onboarding with tailored dashboard experience
-2. **Opportunity Discovery**: Real-time search with AI-powered matching and filtering
-3. **Proposal Generation**: Multi-modal input processing with AI-assisted content creation
-4. **Application Management**: End-to-end tracking from discovery to submission
-5. **Project Monitoring**: Progress tracking and milestone management
-
-## External Dependencies
-
-### Database & Infrastructure
-- **Neon Database**: Serverless PostgreSQL hosting
-- **Replit**: Development and deployment platform
-
-### AI Services
-- **OpenAI**: GPT models for proposal generation
-- **Google Gemini**: Alternative AI provider
-- **DeepSeek**: Cost-effective AI option
-- **DALL-E**: Image generation capabilities
-
-### Payment Processing
-- **Dodo Payments**: Multi-region payment processing
-- **Mobile Money**: African market payment integration
-- **Cryptocurrency**: Alternative payment options
-
-### External APIs
-- **Supabase Functions**: Serverless function execution
-- **Geographic APIs**: Country detection and localization
-- **Search APIs**: Funding opportunity discovery
-
-## Deployment Strategy
-
-### Development Environment
-- **Local Development**: Vite dev server with Express backend
-- **Hot Reload**: Real-time code updates during development
-- **Environment Variables**: Secure configuration management
-
-### Production Deployment
-- **Platform**: Replit autoscale deployment
-- **Build Process**: Vite frontend build + esbuild backend compilation
-- **Port Configuration**: Port 5000 with external port 80 mapping
-- **Static Assets**: Served from `/dist/public` directory
-
-### Database Management
-- **Migrations**: Drizzle Kit for schema management
-- **Connection Pooling**: Neon serverless connection handling
-- **Environment Configuration**: Secure DATABASE_URL management
-
-## Changelog
-- June 24, 2025. Initial setup
+## Current Database Content
+- 9 active funding opportunities from authentic sources
+- Countries: Kenya, Uganda, South Sudan
+- Sectors: Health, Agriculture, Education, Economic Development, Energy, Financial Services, Peace & Security
+- Funding amounts: $25K - $15M USD/EUR
+- All opportunities include real deadlines and application processes
 
 ## User Preferences
+- Prefers real, authentic data over mock/sample data
+- Wants functional bot scraping system with live results
+- Focus on East African funding opportunities (Kenya, Uganda, South Sudan)
 
-Preferred communication style: Simple, everyday language.
+## Technical Notes
+- Bot system configured for headless Chrome scraping
+- DeepSeek API key integrated for content enhancement
+- Database properly migrated with all tables and relationships
+- Frontend successfully receiving and displaying real opportunity data
