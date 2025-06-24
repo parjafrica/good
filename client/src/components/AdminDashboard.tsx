@@ -601,6 +601,14 @@ const AdminDashboard: React.FC = () => {
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
+            onClick={() => window.open('/admin/bots', '_blank')}
+            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all"
+          >
+            <Bot className="w-4 h-4" />
+            <span>Bot Admin Panel</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
           >
             <Plus className="w-4 h-4" />

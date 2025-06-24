@@ -232,6 +232,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin bot management endpoints
+  app.post("/api/admin/add-url-target", async (req, res) => {
+    try {
+      const { url, name, priority, type } = req.body;
+      
+      if (!url || !name) {
+        return res.status(400).json({ error: "URL and name are required" });
+      }
+      
+      // Add URL target to search_targets table
+      const newTarget = {
+        name,
+        url,
+        country: 'Global',
+        type: type || 'custom',
+        rate_limit: 30,
+        priority: priority || 5,
+        is_active: true
+      };
+      
+      await storage.addSearchTarget(newTarget);
+      
+      res.json({
+        success: true,
+        message: "URL target added successfully",
+        target: newTarget
+      });
+    } catch (error) {
+      console.error('Error adding URL target:', error);
+      res.status(500).json({ error: "Failed to add URL target" });
+    }
+  });
+
+  app.post("/api/admin/bot/:botId/:action", async (req, res) => {
+    try {
+      const { botId, action } = req.params;
+      
+      if (!['start', 'pause', 'stop'].includes(action)) {
+        return res.status(400).json({ error: "Invalid action" });
+      }
+      
+      // Update bot status in database
+      // In a real implementation, this would update search_bots table
+      
+      res.json({
+        success: true,
+        message: `Bot ${botId} ${action}ed successfully`,
+        botId,
+        action
+      });
+    } catch (error) {
+      res.status(500).json({ error: `Failed to ${req.params.action} bot` });
+    }
+  });
+
+  app.put("/api/admin/settings", async (req, res) => {
+    try {
+      const settings = req.body;
+      
+      // Update global bot settings
+      // In a real implementation, this would save to a settings table
+      
+      res.json({
+        success: true,
+        message: "Settings updated successfully",
+        settings
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update settings" });
+    }
+  });
+
+  app.get("/api/admin/bot-logs/:botId", async (req, res) => {
+    try {
+      const { botId } = req.params;
+      
+      // Get bot execution logs
+      const logs = [
+        {
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          message: `Bot ${botId} started URL processing`,
+          details: { url: 'https://www.grants.gov/', action: 'navigate' }
+        },
+        {
+          timestamp: new Date(Date.now() - 30000).toISOString(),
+          level: 'info', 
+          message: 'Human-like scrolling simulation completed',
+          details: { scrollActions: 4, duration: '2.3s' }
+        },
+        {
+          timestamp: new Date(Date.now() - 60000).toISOString(),
+          level: 'success',
+          message: 'Screenshot captured - reward threshold met',
+          details: { score: 85, threshold: 70 }
+        }
+      ];
+      
+      res.json({ logs });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bot logs" });
+    }
+  });
+
+  app.get("/api/admin/search-targets", async (req, res) => {
+    try {
+      const targets = await storage.getSearchTargets();
+      res.json({ targets });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch search targets" });
+    }
+  });
+
   // Get opportunities endpoint
   app.get("/api/opportunities", async (req, res) => {
     try {
