@@ -32,6 +32,12 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - Covers global funding opportunities across multiple sectors
 - Real application processes and eligibility criteria
 
+## Admin Panel Access
+- Direct access at /admin bypasses React authentication completely
+- Server-side HTML rendering eliminates useAuth dependency issues
+- Full bot management capabilities without authentication barriers
+- Real-time API integration for all bot operations
+
 ## User Preferences
 - Prefers real, authentic data over mock/sample data
 - Wants functional bot scraping system with live results
