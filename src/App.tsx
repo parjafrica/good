@@ -1,0 +1,109 @@
+import React, { useEffect, useState } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import Header from './components/shared/Header';
+import Sidebar from './components/shared/Sidebar';
+import Dashboard from './components/Dashboard';
+import DonorDashboard from './components/DonorDashboard';
+import DonorDiscovery from './components/DonorDiscovery';
+import ProposalGenerator from './components/ProposalGenerator';
+import ProposalManager from './components/ProposalManager';
+import ProjectManager from './components/ProjectManager';
+import AIAssistant from './components/AIAssistant';
+import Settings from './components/Settings';
+import Funding from './components/Funding';
+import Documents from './components/Documents';
+import Analytics from './components/Analytics';
+import CreditsPurchase from './components/CreditsPurchase';
+import NGOPipeline from './components/NGOPipeline';
+import AdminDashboard from './components/AdminDashboard';
+import MobileNavigation from './components/shared/MobileNavigation';
+import LandingPage from './LandingPage';
+import StudentDashboard from './components/StudentDashboard';
+import HumanHelpPage from './pages/HumanHelpPage';
+import CreditsPage from './pages/CreditsPage';
+import PurchasePage from './pages/PurchasePage';
+import HumanHelpButton from './components/shared/HumanHelpButton';
+
+function AppContent() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+
+  // For development, we'll skip authentication check
+  // In production, you would uncomment these lines
+  /*
+  useEffect(() => {
+    // Redirect to landing page if not authenticated
+    if (!isAuthenticated) {
+      navigate('/landing');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // If not authenticated, don't render the app
+  if (!isAuthenticated) {
+    return <Navigate to="/landing" />;
+  }
+  */
+
+  // Check if user is a student
+  const isStudent = user?.userType === 'student';
+
+  return (
+    <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
+      <Header />
+      
+      <div className="flex">
+        <Sidebar 
+          collapsed={sidebarCollapsed} 
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        />
+        
+        <main className={`flex-1 transition-all duration-300 pt-16 ${
+          sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'
+        }`}>
+          <Routes>
+            {/* Render student dashboard for student users */}
+            <Route path="/" element={isStudent ? <StudentDashboard /> : <DonorDashboard />} />
+            <Route path="/donor-dashboard" element={<DonorDashboard />} />
+            <Route path="/student" element={<StudentDashboard />} />
+            <Route path="/donor-discovery" element={<DonorDiscovery />} />
+            <Route path="/proposal-generator" element={<ProposalGenerator />} />
+            <Route path="/proposals" element={<ProposalManager />} />
+            <Route path="/projects" element={<ProjectManager />} />
+            <Route path="/ai-assistant" element={<AIAssistant />} />
+            <Route path="/human-help" element={<HumanHelpPage />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/funding" element={<Funding />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/credits" element={<CreditsPage />} />
+            <Route path="/purchase/:packageId" element={<PurchasePage />} />
+            <Route path="/ngo-pipeline" element={<NGOPipeline />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Routes>
+        </main>
+      </div>
+      
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+      
+      {/* Human Help Button */}
+      <HumanHelpButton />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;

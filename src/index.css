@@ -1,0 +1,388 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default theme variables */
+  --theme-primary: #3b82f6;
+  --theme-secondary: #1e40af;
+  --theme-accent: #8b5cf6;
+  --theme-background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+  --theme-surface: rgba(255, 255, 255, 0.8);
+  --theme-text: #1e293b;
+  --theme-text-secondary: #64748b;
+  --theme-border: rgba(203, 213, 225, 0.5);
+  --theme-success: #22c55e;
+  --theme-warning: #f59e0b;
+  --theme-error: #ef4444;
+}
+
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--theme-background);
+  color: var(--theme-text);
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Theme-aware utility classes */
+.theme-bg-surface {
+  background: var(--theme-surface);
+}
+
+.theme-text {
+  color: var(--theme-text);
+}
+
+.theme-text-secondary {
+  color: var(--theme-text-secondary);
+}
+
+.theme-border {
+  border-color: var(--theme-border);
+}
+
+.theme-primary {
+  color: var(--theme-primary);
+}
+
+.theme-bg-primary {
+  background-color: var(--theme-primary);
+}
+
+/* Tour highlight */
+.tour-highlight {
+  position: relative;
+  z-index: 60;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+  animation: pulse-blue 2s infinite;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar for dark themes */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Fix for header overlap */
+main {
+  padding-top: 4rem;
+  padding-bottom: 5rem; /* Add padding for mobile navigation */
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 768px) {
+  main {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    padding-bottom: 5rem !important; /* Space for bottom navigation */
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  .mobile-stack > * {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-show {
+    display: block !important;
+  }
+  
+  .mobile-text-center {
+    text-align: center !important;
+  }
+  
+  .mobile-p-4 {
+    padding: 1rem !important;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* Interactive elements */
+.interactive-element {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.interactive-element:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.interactive-element:active {
+  transform: translateY(0);
+}
+
+/* Pulse animation for notifications and alerts */
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.pulse-blue {
+  animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-green-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.pulse-green {
+  animation: pulse-green-animation 2s infinite;
+}
+
+@layer components {
+  .granada-card {
+    @apply rounded-xl shadow-lg border transition-all duration-300 hover:-translate-y-1;
+    background: var(--theme-surface);
+    border-color: var(--theme-border);
+    backdrop-filter: blur(12px);
+  }
+  
+  .granada-card-interactive {
+    @apply cursor-pointer hover:shadow-xl;
+  }
+  
+  .granada-gradient-primary {
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+  }
+  
+  .granada-gradient-accent {
+    background: linear-gradient(135deg, var(--theme-accent), var(--theme-primary));
+  }
+  
+  .granada-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  .text-gradient-primary {
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* New utility classes for improved UX */
+  .hover-scale {
+    @apply transition-transform duration-200;
+  }
+  
+  .hover-scale:hover {
+    @apply transform scale-105;
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-200;
+  }
+  
+  .hover-lift:hover {
+    @apply transform -translate-y-1 shadow-lg;
+  }
+  
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+  }
+  
+  .glass-effect {
+    @apply bg-opacity-20 backdrop-blur-lg;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Theme-specific overrides */
+[data-theme="dark"] {
+  --theme-primary: #3b82f6;
+  --theme-secondary: #1e40af;
+  --theme-accent: #8b5cf6;
+  --theme-background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  --theme-surface: rgba(51, 65, 85, 0.5);
+  --theme-text: #ffffff;
+  --theme-text-secondary: #cbd5e1;
+  --theme-border: rgba(71, 85, 105, 0.5);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Modal styles */
+.modal-container {
+  @apply fixed inset-4 md:inset-8 lg:inset-16 bg-white rounded-2xl border border-gray-200 z-50 overflow-hidden flex flex-col shadow-xl;
+}
+
+.modal-header {
+  @apply flex items-center justify-between p-6 border-b border-gray-200;
+}
+
+.modal-body {
+  @apply flex-1 overflow-y-auto p-6;
+}
+
+.modal-footer {
+  @apply p-6 border-t border-gray-200 flex justify-between items-center;
+}
+
+/* Tooltip styles */
+.tooltip {
+  @apply absolute z-50 px-3 py-2 text-sm bg-gray-800 text-white rounded-lg shadow-lg;
+  max-width: 200px;
+}
+
+.tooltip::before {
+  content: '';
+  @apply absolute w-2 h-2 bg-gray-800 transform rotate-45;
+}
+
+.tooltip-top::before {
+  @apply -bottom-1 left-1/2 -translate-x-1/2;
+}
+
+.tooltip-bottom::before {
+  @apply -top-1 left-1/2 -translate-x-1/2;
+}
+
+.tooltip-left::before {
+  @apply -right-1 top-1/2 -translate-y-1/2;
+}
+
+.tooltip-right::before {
+  @apply -left-1 top-1/2 -translate-y-1/2;
+}
+
+/* Fix for payment modal positioning */
+.payment-modal {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 90%;
+  max-width: 500px;
+  margin: 0 auto;
+  z-index: 50;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 640px) {
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .md\:grid-cols-2, .md\:grid-cols-3, .md\:grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .md\:grid-cols-3, .md\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Bottom padding for mobile screens to account for navigation */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 4rem;
+  }
+}
+
+/* Fix for Safari browser */
+@supports (-webkit-touch-callout: none) {
+  /* Safari specific styles */
+  .safari-fix {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  
+  /* Fix for backdrop-filter not working properly in Safari */
+  .bg-slate-800\/95 {
+    background-color: rgba(30, 41, 59, 0.95);
+  }
+  
+  /* Fix for gradient text in Safari */
+  .text-gradient-primary {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* Fix for flex gap in Safari */
+  .safari-flex-gap {
+    margin-right: 1rem;
+  }
+  
+  .safari-flex-gap:last-child {
+    margin-right: 0;
+  }
+}
