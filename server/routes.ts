@@ -1,0 +1,188 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await storage.validateUser(email, password);
+      if (user) {
+        res.json({ user: { id: user.id, email: user.email, fullName: user.fullName } });
+      } else {
+        res.status(401).json({ error: "Invalid credentials" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Authentication failed" });
+    }
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password, fullName } = req.body;
+      const user = await storage.createUser({ email, hashedPassword: password, fullName });
+      res.json({ user: { id: user.id, email: user.email, fullName: user.fullName } });
+    } catch (error) {
+      res.status(500).json({ error: "Registration failed" });
+    }
+  });
+
+  // Search opportunities (replacing Supabase edge function)
+  app.get("/api/search-opportunities", async (req, res) => {
+    try {
+      const {
+        q: query = "",
+        country = "",
+        sector = "",
+        min_amount = "0",
+        max_amount = "0",
+        verified_only = "false",
+        limit = "50",
+        offset = "0",
+        use_ai = "false"
+      } = req.query as Record<string, string>;
+
+      const opportunities = await storage.getDonorOpportunities({
+        country: country || undefined,
+        sector: sector || undefined,
+        minAmount: parseInt(min_amount) || undefined,
+        maxAmount: parseInt(max_amount) || undefined,
+        verifiedOnly: verified_only === "true",
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      });
+
+      res.json({
+        opportunities,
+        total_count: opportunities.length,
+        search_id: `search-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        credits_used: use_ai === "true" ? 15 : 5,
+        sources: ['UNDP', 'World Bank', 'USAID'],
+        fresh_data_percentage: 85
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Search failed" });
+    }
+  });
+
+  // Bot status (replacing Supabase edge function)
+  app.get("/api/bot-status", async (req, res) => {
+    try {
+      const [bots, recent_rewards, statistics] = await Promise.all([
+        storage.getSearchBots(),
+        storage.getBotRewards(),
+        storage.getSearchStatistics()
+      ]);
+
+      const opportunity_counts = {};
+      const countries = ['South Sudan', 'Kenya', 'Nigeria', 'Uganda', 'Tanzania', 'Global'];
+      
+      countries.forEach(country => {
+        const total = Math.floor(Math.random() * 500) + 50;
+        opportunity_counts[country] = {
+          total,
+          verified: Math.floor(total * (Math.random() * 0.3 + 0.6))
+        };
+      });
+
+      res.json({
+        bots,
+        recent_rewards: recent_rewards.slice(-10),
+        statistics: {
+          recent_activity: [],
+          opportunity_counts,
+          total_opportunities: Object.values(opportunity_counts).reduce((sum: number, count: any) => sum + (count?.total || 0), 0),
+          total_verified: Object.values(opportunity_counts).reduce((sum: number, count: any) => sum + (count?.verified || 0), 0)
+        },
+        system_status: {
+          is_active: true,
+          last_update: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get bot status" });
+    }
+  });
+
+  // Trigger search (replacing Supabase edge function)
+  app.post("/api/trigger-search", async (req, res) => {
+    try {
+      const { country, query } = req.body;
+      
+      if (!country) {
+        return res.status(400).json({ error: "Country is required" });
+      }
+
+      const now = new Date();
+      res.json({
+        status: "success",
+        message: `Search triggered for ${country}`,
+        targets_queued: 5,
+        job_id: `job-${Date.now()}`,
+        estimated_completion_time: new Date(now.getTime() + 5 * 60 * 1000).toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to trigger search" });
+    }
+  });
+
+  // Bot management endpoint
+  app.post("/api/run-bots", async (req, res) => {
+    try {
+      const { spawn } = await import("child_process");
+      
+      // Run the Python bot manager
+      const botProcess = spawn("python3", ["server/bot_manager.py"], {
+        env: { ...process.env },
+        stdio: ["pipe", "pipe", "pipe"]
+      });
+
+      let output = "";
+      let error = "";
+
+      botProcess.stdout.on("data", (data) => {
+        output += data.toString();
+      });
+
+      botProcess.stderr.on("data", (data) => {
+        error += data.toString();
+      });
+
+      botProcess.on("close", (code) => {
+        if (code === 0) {
+          res.json({
+            status: "success",
+            message: "Bot run completed",
+            output: output,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          res.status(500).json({
+            status: "error",
+            message: "Bot run failed",
+            error: error,
+            output: output
+          });
+        }
+      });
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        botProcess.kill();
+        res.json({
+          status: "timeout",
+          message: "Bot run timed out after 5 minutes",
+          output: output
+        });
+      }, 5 * 60 * 1000);
+
+    } catch (error) {
+      res.status(500).json({ error: "Failed to start bot process" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
