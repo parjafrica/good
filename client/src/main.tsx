@@ -6,6 +6,7 @@ import LandingPage from './LandingPage.tsx';
 import LoginPage from './pages/LoginPage.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.tsx';
+import AdminBotPanelStandalone from './components/AdminBotPanelStandalone.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './index.css';
@@ -16,6 +17,8 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <AuthProvider>
           <Routes>
+            <Route path="/admin" element={<AdminBotPanelStandalone />} />
+            <Route path="/admin/*" element={<AdminBotPanelStandalone />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />

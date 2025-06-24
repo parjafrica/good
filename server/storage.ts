@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { users, organizations, donors, donorCalls, proposals, projects, aiInteractions, donorOpportunities, searchBots, botRewards, searchTargets, opportunityVerifications, searchStatistics, type User, type InsertUser } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
 
@@ -103,6 +103,42 @@ export class PostgresStorage implements IStorage {
 
   async getSearchStatistics() {
     return db.select().from(searchStatistics);
+  }
+
+  async addSearchTarget(target: {
+    name: string;
+    url: string;
+    country: string;
+    type: string;
+    rate_limit: number;
+    priority: number;
+    is_active: boolean;
+  }) {
+    try {
+      const result = await db.insert(searchTargets).values({
+        name: target.name,
+        url: target.url,
+        country: target.country,
+        type: target.type,
+        rateLimit: target.rate_limit,
+        priority: target.priority,
+        isActive: target.is_active
+      }).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error adding search target:', error);
+      throw error;
+    }
+  }
+
+  async getSearchTargets() {
+    try {
+      const result = await db.select().from(searchTargets).orderBy(desc(searchTargets.priority));
+      return result;
+    } catch (error) {
+      console.error('Error getting search targets:', error);
+      return [];
+    }
   }
 }
 

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
 import Header from './components/shared/Header';
 import Sidebar from './components/shared/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -19,6 +17,7 @@ import Analytics from './components/Analytics';
 import CreditsPurchase from './components/CreditsPurchase';
 import NGOPipeline from './components/NGOPipeline';
 import AdminDashboard from './components/AdminDashboard';
+import AdminBotPanel from './components/AdminBotPanel';
 import MobileNavigation from './components/shared/MobileNavigation';
 import LandingPage from './LandingPage';
 import StudentDashboard from './components/StudentDashboard';
@@ -27,29 +26,17 @@ import CreditsPage from './pages/CreditsPage';
 import PurchasePage from './pages/PurchasePage';
 import HumanHelpButton from './components/shared/HumanHelpButton';
 
-function AppContent() {
+function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
+  
+  // For development, bypass auth for admin panel
+  const mockUser = { userType: 'admin' };
+  const isAuthenticated = true;
 
-  // For development, we'll skip authentication check
-  // In production, you would uncomment these lines
-  /*
-  useEffect(() => {
-    // Redirect to landing page if not authenticated
-    if (!isAuthenticated) {
-      navigate('/landing');
-    }
-  }, [isAuthenticated, navigate]);
-
-  // If not authenticated, don't render the app
-  if (!isAuthenticated) {
-    return <Navigate to="/landing" />;
-  }
-  */
+  // Skip authentication for admin access
 
   // Check if user is a student
-  const isStudent = user?.userType === 'student';
+  const isStudent = mockUser?.userType === 'student';
 
   return (
     <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
@@ -83,6 +70,7 @@ function AppContent() {
             <Route path="/purchase/:packageId" element={<PurchasePage />} />
             <Route path="/ngo-pipeline" element={<NGOPipeline />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/bots" element={<AdminBotPanel />} />
           </Routes>
         </main>
       </div>
@@ -93,16 +81,6 @@ function AppContent() {
       {/* Human Help Button */}
       <HumanHelpButton />
     </div>
-  );
-}
-
-function App() {
-  return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
   );
 }
 
