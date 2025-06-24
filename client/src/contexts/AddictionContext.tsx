@@ -189,28 +189,31 @@ const AddictionProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         });
       }
       
-      // Random encouragement
-      if (newClicks % 10 === 0) {
+      // Occasional encouragement (less frequent)
+      if (newClicks % 25 === 0) {
         const message = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
         addNotification({
           type: 'encouragement',
           title: 'Keep Going!',
           message,
           icon: <Fire className="w-6 h-6" />,
-          duration: 4000
+          duration: 3000
         });
       }
       
-      // Special action rewards
+      // Special action rewards (background tracking)
       if (element.includes('opportunity') || element.includes('grant')) {
         newXP += 10;
-        addNotification({
-          type: 'reward',
-          title: 'Opportunity Hunter!',
-          message: 'Great choice! +10 XP for exploring opportunities!',
-          icon: <Target className="w-6 h-6" />,
-          reward: { type: 'xp', amount: 10 }
-        });
+        // Only show notification for major milestones
+        if (newClicks % 20 === 0) {
+          addNotification({
+            type: 'reward',
+            title: 'Opportunity Hunter!',
+            message: 'Great progress exploring opportunities!',
+            icon: <Target className="w-6 h-6" />,
+            reward: { type: 'xp', amount: 10 }
+          });
+        }
       }
       
       return {
@@ -411,45 +414,35 @@ const AddictionProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }}>
       {children}
       
-      {/* Notification System */}
-      <div className="fixed top-20 right-4 z-[9999] space-y-2 max-w-sm">
-        <AnimatePresence>
-          {notifications.map((notification) => (
-            <motion.div
-              key={notification.id}
-              initial={{ opacity: 0, x: 300, scale: 0.8 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 300, scale: 0.8 }}
-              className={`p-4 rounded-xl shadow-2xl backdrop-blur-xl border-2 cursor-pointer ${
-                notification.type === 'achievement' ? 'bg-gradient-to-r from-yellow-500/90 to-orange-500/90 border-yellow-400' :
-                notification.type === 'milestone' ? 'bg-gradient-to-r from-purple-500/90 to-pink-500/90 border-purple-400' :
-                notification.type === 'reward' ? 'bg-gradient-to-r from-green-500/90 to-blue-500/90 border-green-400' :
-                notification.type === 'credit' ? 'bg-gradient-to-r from-blue-500/90 to-cyan-500/90 border-blue-400' :
-                notification.type === 'streak' ? 'bg-gradient-to-r from-red-500/90 to-orange-500/90 border-red-400' :
-                'bg-gradient-to-r from-gray-500/90 to-gray-600/90 border-gray-400'
-              }`}
-              onClick={() => clearNotification(notification.id)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="flex items-start space-x-3">
-                <div className="text-white flex-shrink-0">
-                  {notification.icon}
+      {/* Minimal notification system - only shows occasionally */}
+      {notifications.length > 0 && notifications.some(n => n.type === 'achievement' || n.type === 'milestone') && (
+        <div className="fixed bottom-4 right-4 z-[9999] max-w-xs">
+          <AnimatePresence>
+            {notifications
+              .filter(n => n.type === 'achievement' || n.type === 'milestone')
+              .slice(0, 1)
+              .map((notification) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.8 }}
+                className="p-3 rounded-lg shadow-lg bg-green-500/90 border border-green-400 cursor-pointer"
+                onClick={() => clearNotification(notification.id)}
+              >
+                <div className="flex items-center space-x-2 text-white">
+                  <div className="text-white">
+                    {notification.icon}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{notification.title}</p>
+                  </div>
                 </div>
-                <div className="flex-1 text-white">
-                  <h3 className="font-bold text-sm mb-1">{notification.title}</h3>
-                  <p className="text-xs opacity-90">{notification.message}</p>
-                  {notification.reward && (
-                    <div className="mt-2 text-xs font-semibold bg-white/20 rounded-full px-2 py-1 inline-block">
-                      +{notification.reward.amount} {notification.reward.type.toUpperCase()}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
     </AddictionContext.Provider>
   );
 };
