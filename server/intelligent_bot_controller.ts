@@ -89,7 +89,10 @@ export class IntelligentBotController {
         
         // Save opportunities if found
         if (result.opportunities.length > 0) {
+          console.log(`Bot ${botId} found ${result.opportunities.length} opportunities, saving to database...`);
           await this.saveOpportunities(result.opportunities, task.url, botId);
+        } else {
+          console.log(`Bot ${botId} found no opportunities from ${task.url}`);
         }
         
         // Update statistics
@@ -270,7 +273,7 @@ export class IntelligentBotController {
     try {
       for (const opp of opportunities) {
         try {
-          await storage.createDonorOpportunity({
+          const opportunity = await storage.createDonorOpportunity({
             title: opp.title,
             description: opp.description,
             amountMin: opp.amount_min,
@@ -286,7 +289,7 @@ export class IntelligentBotController {
             focusAreas: [opp.sector],
             contentHash: this.generateContentHash(`${opp.title}${sourceUrl}`)
           });
-          console.log(`Saved opportunity: ${opp.title}`);
+          console.log(`Successfully saved opportunity: ${opp.title} with ID: ${opportunity.id}`);
         } catch (saveError) {
           console.error(`Error saving individual opportunity: ${saveError}`);
         }
