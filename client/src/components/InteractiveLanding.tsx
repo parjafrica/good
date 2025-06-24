@@ -19,7 +19,6 @@ import {
   Globe
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAddiction } from '../contexts/AddictionContext';
 import { useMutation } from '@tanstack/react-query';
 
 interface Message {
@@ -44,7 +43,6 @@ interface UserProfile {
 
 const InteractiveLanding: React.FC = () => {
   const navigate = useNavigate();
-  const { trackClick, trackPageVisit, addXP } = useAddiction();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
@@ -53,9 +51,8 @@ const InteractiveLanding: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    trackPageVisit('/');
     startConversation();
-  }, [trackPageVisit]);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -123,7 +120,6 @@ const InteractiveLanding: React.FC = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      addXP(100, 'profile completion');
       // Store user ID for personalization
       localStorage.setItem('userId', data.user.id);
       navigate('/dashboard');
@@ -170,7 +166,6 @@ const InteractiveLanding: React.FC = () => {
   };
 
   const handleUserResponse = (response: string) => {
-    trackClick('chat_response', `step_${currentStep}`);
     
     const userMessage: Message = {
       id: `user-${currentStep}`,

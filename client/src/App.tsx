@@ -31,7 +31,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Create a client
+// Create a client outside of component to avoid recreation
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -47,8 +47,6 @@ function App() {
   // For development, bypass auth for admin panel
   const mockUser = { userType: 'admin' };
   const isAuthenticated = true;
-
-  // Skip authentication for admin access
 
   // Check if user is a student
   const isStudent = mockUser?.userType === 'student';

@@ -129,14 +129,22 @@ export const useTheme = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem('granada_theme');
-    return (saved as Theme) || 'light'; // Default to light theme
+    try {
+      const saved = localStorage.getItem('granada_theme');
+      return (saved as Theme) || 'light';
+    } catch {
+      return 'light';
+    }
   });
 
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('granada_theme', theme);
+    try {
+      localStorage.setItem('granada_theme', theme);
+    } catch {
+      // Ignore localStorage errors
+    }
     
     // Determine if theme should be dark
     if (theme === 'auto') {
