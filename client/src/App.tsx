@@ -25,6 +25,21 @@ import HumanHelpPage from './pages/HumanHelpPage';
 import CreditsPage from './pages/CreditsPage';
 import PurchasePage from './pages/PurchasePage';
 import HumanHelpButton from './components/shared/HumanHelpButton';
+import AddictiveDashboard from './components/AddictiveDashboard';
+import AddictionProvider from './contexts/AddictionContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -39,48 +54,56 @@ function App() {
   const isStudent = mockUser?.userType === 'student';
 
   return (
-    <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
-      <Header />
-      
-      <div className="flex">
-        <Sidebar 
-          collapsed={sidebarCollapsed} 
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-        />
-        
-        <main className={`flex-1 transition-all duration-300 pt-16 ${
-          sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'
-        }`}>
-          <Routes>
-            {/* Render student dashboard for student users */}
-            <Route path="/" element={isStudent ? <StudentDashboard /> : <DonorDashboard />} />
-            <Route path="/donor-dashboard" element={<DonorDashboard />} />
-            <Route path="/student" element={<StudentDashboard />} />
-            <Route path="/donor-discovery" element={<DonorDiscovery />} />
-            <Route path="/proposal-generator" element={<ProposalGenerator />} />
-            <Route path="/proposals" element={<ProposalManager />} />
-            <Route path="/projects" element={<ProjectManager />} />
-            <Route path="/ai-assistant" element={<AIAssistant />} />
-            <Route path="/human-help" element={<HumanHelpPage />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/funding" element={<Funding />} />
-            <Route path="/documents" element={<Documents />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/credits" element={<CreditsPage />} />
-            <Route path="/purchase/:packageId" element={<PurchasePage />} />
-            <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/bots" element={<AdminBotPanel />} />
-          </Routes>
-        </main>
-      </div>
-      
-      {/* Mobile Navigation */}
-      <MobileNavigation />
-      
-      {/* Human Help Button */}
-      <HumanHelpButton />
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <AddictionProvider>
+            <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
+              <Header />
+              
+              <div className="flex">
+                <Sidebar 
+                  collapsed={sidebarCollapsed} 
+                  onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                />
+                
+                <main className={`flex-1 transition-all duration-300 pt-16 ${
+                  sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'
+                }`}>
+                  <Routes>
+                    {/* Addictive main dashboard */}
+                    <Route path="/" element={<AddictiveDashboard />} />
+                    <Route path="/donor-dashboard" element={<DonorDashboard />} />
+                    <Route path="/student" element={<StudentDashboard />} />
+                    <Route path="/donor-discovery" element={<DonorDiscovery />} />
+                    <Route path="/proposal-generator" element={<ProposalGenerator />} />
+                    <Route path="/proposals" element={<ProposalManager />} />
+                    <Route path="/projects" element={<ProjectManager />} />
+                    <Route path="/ai-assistant" element={<AIAssistant />} />
+                    <Route path="/human-help" element={<HumanHelpPage />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/funding" element={<Funding />} />
+                    <Route path="/documents" element={<Documents />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/credits" element={<CreditsPage />} />
+                    <Route path="/purchase/:packageId" element={<PurchasePage />} />
+                    <Route path="/ngo-pipeline" element={<NGOPipeline />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/bots" element={<AdminBotPanel />} />
+                  </Routes>
+                </main>
+              </div>
+              
+              {/* Mobile Navigation */}
+              <MobileNavigation />
+              
+              {/* Human Help Button */}
+              <HumanHelpButton />
+            </div>
+          </AddictionProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
