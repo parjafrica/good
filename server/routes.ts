@@ -503,6 +503,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI matching score calculation function
+  function calculateAIMatchScore(opportunity: any, userProfile: any): number {
+    let score = 0;
+    
+    // Country matching (40% weight)
+    if (opportunity.country === userProfile.country || opportunity.country === 'Global') {
+      score += 40;
+    }
+    
+    // Sector matching (35% weight)
+    if (opportunity.sector === userProfile.sector) {
+      score += 35;
+    }
+    
+    // Funding amount matching (15% weight)
+    if (userProfile.fundingNeeds && opportunity.amountMin) {
+      const needsMatch = {
+        'under_10k': opportunity.amountMin <= 10000,
+        '10k_50k': opportunity.amountMin <= 50000 && opportunity.amountMax >= 10000,
+        '50k_100k': opportunity.amountMin <= 100000 && opportunity.amountMax >= 50000,
+        '100k_500k': opportunity.amountMin <= 500000 && opportunity.amountMax >= 100000,
+        '500k_plus': opportunity.amountMax >= 500000
+      };
+      
+      if (needsMatch[userProfile.fundingNeeds]) {
+        score += 15;
+      }
+    }
+    
+    // Interest/keywords matching (10% weight)
+    if (userProfile.interests && opportunity.keywords) {
+      const interestMatch = userProfile.interests.some((interest: string) =>
+        opportunity.keywords.some((keyword: string) =>
+          keyword.toLowerCase().includes(interest.toLowerCase()) ||
+          interest.toLowerCase().includes(keyword.toLowerCase())
+        )
+      );
+      if (interestMatch) score += 10;
+    }
+    
+    return Math.min(100, score);
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }
