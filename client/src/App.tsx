@@ -25,7 +25,7 @@ import HumanHelpPage from './pages/HumanHelpPage';
 import CreditsPage from './pages/CreditsPage';
 import PurchasePage from './pages/PurchasePage';
 import HumanHelpButton from './components/shared/HumanHelpButton';
-import NewLanding from './components/NewLanding';
+
 import AddictionProvider from './contexts/AddictionContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -69,8 +69,7 @@ function App() {
                   sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'
                 }`}>
                   <Routes>
-                    {/* Landing page for new users */}
-                    <Route path="/" element={<NewLanding />} />
+                    <Route path="/" element={isStudent ? <StudentDashboard /> : <DonorDashboard />} />
                     <Route path="/dashboard" element={<DonorDashboard />} />
                     <Route path="/donor-dashboard" element={<DonorDashboard />} />
                     <Route path="/student" element={<StudentDashboard />} />
