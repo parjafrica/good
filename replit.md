@@ -33,7 +33,10 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - Focus on East African funding opportunities (Kenya, Uganda, South Sudan)
 
 ## Technical Notes
-- Bot system configured for headless Chrome scraping
-- DeepSeek API key integrated for content enhancement
+- **Intelligent Bot System**: URL feeding, human-like behavior, screenshot rewards at 70%+ score
+- **Multiple Scraping Techniques**: Selenium (JavaScript sites), HTTP+BeautifulSoup (static), API calls
+- **Best Solution**: Node.js-based intelligent bot controller with priority queue processing
+- **Human-like Features**: Scrolling simulation, click interactions, realistic delays, AI analysis
+- **URL Sources**: 7 verified funding websites including Grants.gov, GrantSpace, EU Portal
 - Database properly migrated with all tables and relationships
 - Frontend successfully receiving and displaying real opportunity data

@@ -183,6 +183,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Intelligent Bot System endpoint
+  app.post("/api/run-intelligent-bots", async (req, res) => {
+    try {
+      const { IntelligentBotController } = await import('./intelligent_bot_controller');
+      const botController = new IntelligentBotController();
+      
+      // Run bot system asynchronously
+      botController.runBotSystem().catch(console.error);
+      
+      res.json({
+        status: "success",
+        message: "Intelligent bot system started",
+        features: [
+          "Human-like behavior simulation",
+          "Prioritized URL processing", 
+          "AI-powered opportunity analysis",
+          "Screenshot rewards for 70%+ scores",
+          "Click interaction simulation"
+        ],
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to start intelligent bot system" });
+    }
+  });
+
+  // Get bot queue status
+  app.get("/api/bot-queue-status", async (req, res) => {
+    try {
+      const { IntelligentBotController } = await import('./intelligent_bot_controller');
+      const botController = new IntelligentBotController();
+      const status = botController.getQueueStatus();
+      
+      res.json({
+        queue_status: status,
+        screenshot_threshold: 70,
+        features_active: [
+          "URL feeding system",
+          "Human-like scrolling and clicking",
+          "AI content analysis", 
+          "Screenshot rewards",
+          "Priority-based processing"
+        ]
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get bot status" });
+    }
+  });
+
   // Get opportunities endpoint
   app.get("/api/opportunities", async (req, res) => {
     try {
