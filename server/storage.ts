@@ -16,6 +16,15 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   validateUser(email: string, password: string): Promise<User | null>;
+  
+  // Admin functions
+  getAllUsers(): Promise<User[]>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
+  deleteUser(id: string): Promise<boolean>;
+  getUserInteractions(userId?: string): Promise<any[]>;
+  getCreditTransactions(userId?: string): Promise<any[]>;
+  getSystemSettings(): Promise<any>;
+  updateSystemSettings(settings: any): Promise<any>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -139,6 +148,97 @@ export class PostgresStorage implements IStorage {
       console.error('Error getting search targets:', error);
       return [];
     }
+  }
+
+  // Admin functions
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const result = await db.select().from(users).orderBy(users.createdAt);
+      return result;
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      return [];
+    }
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      await db.delete(users).where(eq(users.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
+  }
+
+  async getUserInteractions(userId?: string): Promise<any[]> {
+    try {
+      let query = db.select().from(aiInteractions);
+      if (userId) {
+        query = query.where(eq(aiInteractions.userId, userId));
+      }
+      const result = await query.orderBy(aiInteractions.createdAt).limit(1000);
+      return result;
+    } catch (error) {
+      console.error('Error fetching user interactions:', error);
+      return [];
+    }
+  }
+
+  async getCreditTransactions(userId?: string): Promise<any[]> {
+    // Mock credit transactions for now - would be real table in production
+    return [
+      {
+        id: '1',
+        userId: userId || 'all',
+        type: 'earned',
+        amount: 50,
+        reason: 'Application submission',
+        timestamp: new Date(),
+      },
+      {
+        id: '2', 
+        userId: userId || 'all',
+        type: 'spent',
+        amount: 25,
+        reason: 'AI proposal generation',
+        timestamp: new Date(),
+      }
+    ];
+  }
+
+  async getSystemSettings(): Promise<any> {
+    return {
+      siteName: 'Granada OS',
+      theme: 'dark',
+      aiModels: {
+        primary: 'gpt-4',
+        secondary: 'claude-3',
+        backup: 'deepseek'
+      },
+      features: {
+        botScraping: true,
+        aiAssistant: true,
+        creditSystem: true,
+        analytics: true
+      },
+      limits: {
+        maxUsers: 10000,
+        maxOpportunities: 50000,
+        creditsPerUser: 1000
+      }
+    };
+  }
+
+  async updateSystemSettings(settings: any): Promise<any> {
+    // In production, this would update a settings table
+    console.log('System settings updated:', settings);
+    return settings;
   }
 }
 
