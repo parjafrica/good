@@ -34,7 +34,7 @@ class BotManager:
         
         # Parse DATABASE_URL for psycopg2
         self.db_config = self._parse_db_url(self.db_url)
-        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
+        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY') or "sk-7153751787d945d98a69a27db92d65ba"
         
         # Chrome options for headless browsing
         self.chrome_options = Options()
@@ -44,42 +44,26 @@ class BotManager:
         self.chrome_options.add_argument('--disable-gpu')
         self.chrome_options.add_argument('--window-size=1920,1080')
         self.chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+        # Set ChromeDriver path
+        self.chrome_options.add_argument('--remote-debugging-port=9222')
         
     def _parse_db_url(self, url: str) -> Dict[str, str]:
         """Parse DATABASE_URL into connection parameters"""
-        # Remove 'postgresql://' prefix
-        url = url.replace('postgresql://', '').replace('postgres://', '')
+        from urllib.parse import urlparse, parse_qs
         
-        # Split user:password@host:port/database
-        if '@' in url:
-            auth, host_db = url.split('@', 1)
-            if ':' in auth:
-                user, password = auth.split(':', 1)
-            else:
-                user = auth
-                password = ''
-        else:
-            user = password = ''
-            host_db = url
-            
-        if '/' in host_db:
-            host_port, database = host_db.split('/', 1)
-        else:
-            host_port = host_db
-            database = ''
-            
-        if ':' in host_port:
-            host, port = host_port.split(':', 1)
-        else:
-            host = host_port
-            port = '5432'
-            
+        parsed = urlparse(url)
+        
+        # Extract SSL mode from query parameters
+        query_params = parse_qs(parsed.query)
+        sslmode = query_params.get('sslmode', ['require'])[0]
+        
         return {
-            'host': host,
-            'port': port,
-            'database': database,
-            'user': user,
-            'password': password
+            'host': parsed.hostname,
+            'port': str(parsed.port or 5432),
+            'database': parsed.path.lstrip('/'),
+            'user': parsed.username,
+            'password': parsed.password,
+            'sslmode': sslmode
         }
     
     def get_db_connection(self):
@@ -90,6 +74,7 @@ class BotManager:
             database=self.db_config['database'],
             user=self.db_config['user'],
             password=self.db_config['password'],
+            sslmode=self.db_config.get('sslmode', 'require'),
             cursor_factory=RealDictCursor
         )
     
@@ -117,7 +102,9 @@ class BotManager:
     
     def create_webdriver(self) -> webdriver.Chrome:
         """Create and return a Chrome webdriver instance"""
-        return webdriver.Chrome(options=self.chrome_options)
+        from selenium.webdriver.chrome.service import Service
+        service = Service('/nix/store/3qnxr5x6gw3k9a9i7d0akz0m6bksbwff-chromedriver-125.0.6422.141/bin/chromedriver')
+        return webdriver.Chrome(service=service, options=self.chrome_options)
     
     def take_screenshot(self, driver: webdriver.Chrome, url: str) -> Optional[str]:
         """Take screenshot and return base64 encoded image"""
