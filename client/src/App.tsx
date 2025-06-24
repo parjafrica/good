@@ -71,8 +71,12 @@ function App() {
                   window.location.pathname !== '/' ? `pt-16 ${sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'}` : ''
                 }`}>
                   <Routes>
-                    {/* New interactive landing page for new users */}
-                    <Route path="/" element={localStorage.getItem('userOnboarded') ? (isStudent ? <StudentDashboard /> : <DonorDashboard />) : <NewLanding />} />
+                    {/* Check if user completed onboarding */}
+                    <Route path="/" element={
+                      localStorage.getItem('userOnboarded') === 'true' 
+                        ? <DonorDashboard /> 
+                        : <NewLanding />
+                    } />
                     <Route path="/dashboard" element={<DonorDashboard />} />
                     <Route path="/donor-dashboard" element={<DonorDashboard />} />
                     <Route path="/student" element={<StudentDashboard />} />
