@@ -183,6 +183,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get opportunities endpoint
+  app.get("/api/opportunities", async (req, res) => {
+    try {
+      const { country, sector, verified_only, limit = 20, offset = 0 } = req.query;
+      
+      const opportunities = await storage.getDonorOpportunities({
+        country: country as string,
+        sector: sector as string,
+        verifiedOnly: verified_only === 'true',
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string)
+      });
+
+      console.log(`API: Found ${opportunities.length} opportunities`);
+      res.json(opportunities);
+    } catch (error) {
+      console.error('API Error fetching opportunities:', error);
+      res.status(500).json({ error: "Failed to fetch opportunities" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

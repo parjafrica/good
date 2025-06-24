@@ -137,30 +137,30 @@ const DonorDiscovery: React.FC = () => {
   const sectors = ['Education', 'Health', 'Environment', 'Human Rights', 'Economic Development', 'Technology', 'Agriculture', 'Water & Sanitation', 'Gender Equality', 'Climate Change'];
   const countries = ['Global', 'United States', 'United Kingdom', 'Germany', 'France', 'Kenya', 'Nigeria', 'South Africa', 'Ghana', 'Uganda', 'Tanzania', 'Rwanda', 'Senegal', 'Mali', 'Ivory Coast', 'Cameroon', 'South Sudan'];
 
-  const transformApiData = (apiData: ApiOpportunity): Opportunity => {
-    // This function converts the flat API response to the nested structure the component expects.
+  const transformApiData = (apiData: any): Opportunity => {
+    // Transform the database row to component format
     return {
       id: apiData.id,
       title: apiData.title,
-      description: apiData.description,
+      description: apiData.description || '',
       deadline: apiData.deadline,
       fundingAmount: {
-        min: apiData.amount_min,
-        max: apiData.amount_max,
+        min: apiData.amountMin || apiData.amount_min,
+        max: apiData.amountMax || apiData.amount_max,
         currency: apiData.currency || 'USD',
       },
-      source_url: apiData.source_url,
-      source_name: apiData.source_name,
+      source_url: apiData.sourceUrl || apiData.source_url,
+      source_name: apiData.sourceName || apiData.source_name,
       country: apiData.country,
-      is_verified: apiData.is_verified,
-      scraped_at: apiData.scraped_at,
+      is_verified: apiData.isVerified || apiData.is_verified || true,
+      scraped_at: apiData.createdAt || apiData.scraped_at || new Date().toISOString(),
       donor: {
-        id: apiData.source_name, // Using source_name as a proxy for donor ID
-        name: apiData.source_name,
-        type: 'foundation', // Defaulting type, could be enhanced
+        id: apiData.sourceName || apiData.source_name || 'unknown',
+        name: apiData.sourceName || apiData.source_name || 'Unknown Donor',
+        type: 'foundation' as const,
         country: apiData.country,
-        website: new URL(apiData.source_url).origin,
-        description: `Funding opportunities from ${apiData.source_name}.`,
+        website: apiData.sourceUrl || apiData.source_url || '#',
+        description: `Funding opportunities from ${apiData.sourceName || apiData.source_name || 'this organization'}.`,
       },
       status: apiData.deadline && new Date(apiData.deadline) < new Date() ? 'closed' : 'open',
       eligibility: {
@@ -192,15 +192,21 @@ const DonorDiscovery: React.FC = () => {
     }, 300);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/search/opportunities?${queryParams.toString()}`);
+      const response = await fetch(`/api/opportunities?${queryParams.toString()}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
+      console.log('Received opportunities data:', data);
       
-      const transformedOpportunities = data.opportunities.map(transformApiData);
-      setOpportunities(transformedOpportunities);
-      setSearchStats({ totalResults: data.total });
+      if (Array.isArray(data)) {
+        const transformedOpportunities = data.map(transformApiData);
+        setOpportunities(transformedOpportunities);
+        setSearchStats({ totalResults: data.length });
+      } else {
+        setOpportunities([]);
+        setSearchStats({ totalResults: 0 });
+      }
 
     } catch (error) {
       console.error('Search error:', error);
