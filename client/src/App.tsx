@@ -6,7 +6,7 @@ import Sidebar from './components/shared/Sidebar';
 import Dashboard from './components/Dashboard';
 import DonorDashboard from './components/DonorDashboard';
 import DonorDiscovery from './components/DonorDiscovery';
-import ProposalGenerator from './components/ProposalGenerator';
+import EnhancedProposalGenerator from './components/EnhancedProposalGenerator';
 import ProposalManager from './components/ProposalManager';
 import ProjectManager from './components/ProjectManager';
 import AIAssistant from './components/AIAssistant';
@@ -74,7 +74,7 @@ function App() {
                     <Route path="/donor-dashboard" element={<DonorDashboard />} />
                     <Route path="/student" element={<StudentDashboard />} />
                     <Route path="/donor-discovery" element={<DonorDiscovery />} />
-                    <Route path="/proposal-generator" element={<ProposalGenerator />} />
+                    <Route path="/proposal-generator" element={<EnhancedProposalGenerator />} />
                     <Route path="/proposals" element={<ProposalManager />} />
                     <Route path="/projects" element={<ProjectManager />} />
                     <Route path="/ai-assistant" element={<AIAssistant />} />

@@ -546,6 +546,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return Math.min(100, score);
   }
 
+  // Proposal AI routes - proxy to Python service
+  app.post('/api/proposal/analyze-opportunity', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/proposal/analyze-opportunity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Proposal AI proxy error:', error);
+      res.status(500).json({ error: 'AI service unavailable' });
+    }
+  });
+
+  app.post('/api/proposal/generate-section', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/proposal/generate-section', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Proposal AI proxy error:', error);
+      res.status(500).json({ error: 'AI service unavailable' });
+    }
+  });
+
+  app.post('/api/proposal/enhance-content', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/proposal/enhance-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Proposal AI proxy error:', error);
+      res.status(500).json({ error: 'AI service unavailable' });
+    }
+  });
+
+  app.post('/api/proposal/suggestions', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/proposal/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Proposal AI proxy error:', error);
+      res.status(500).json({ error: 'AI service unavailable' });
+    }
+  });
+
+  app.post('/api/proposal/transcribe-audio', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/proposal/transcribe-audio', {
+        method: 'POST',
+        headers: req.headers,
+        body: req.body
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Proposal AI proxy error:', error);
+      res.status(500).json({ error: 'AI service unavailable' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
