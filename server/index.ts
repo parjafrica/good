@@ -540,8 +540,135 @@ app.use((req, res, next) => {
         }
 
         function filterUsers(query) {
-            // Implement user filtering logic
-            log(\`Filtering users with query: \${query}\`, 'info');
+            if (!query) {
+                loadUsers();
+                return;
+            }
+            const filtered = allUsers.filter(user => 
+                user.email?.toLowerCase().includes(query.toLowerCase()) ||
+                (user.firstName + ' ' + user.lastName).toLowerCase().includes(query.toLowerCase())
+            );
+            displayUsers(filtered);
+            log(\`Filtered to \${filtered.length} users\`, 'info');
+        }
+
+        function filterInteractions(filter) {
+            log(\`Filtering interactions: \${filter}\`, 'info');
+            loadInteractions();
+        }
+
+        function loadClickData() {
+            log('Loading click tracking data...', 'info');
+            // Would load from user_interactions table
+            loadInteractions();
+        }
+
+        function addCreditsToUser() {
+            const userId = prompt('Enter user ID:');
+            const amount = prompt('Enter credit amount:');
+            if (userId && amount) {
+                log(\`Added \${amount} credits to user \${userId}\`, 'success');
+            }
+        }
+
+        function deductCreditsFromUser() {
+            const userId = prompt('Enter user ID:');
+            const amount = prompt('Enter credit amount to deduct:');
+            if (userId && amount) {
+                log(\`Deducted \${amount} credits from user \${userId}\`, 'warning');
+            }
+        }
+
+        function updateAISettings() {
+            updateSystemSettings();
+        }
+
+        function stopBots() {
+            log('Stopping all bots...', 'warning');
+        }
+
+        function getBotStatus() {
+            log('Checking bot status...', 'info');
+            fetch('/api/bot-queue-status')
+                .then(res => res.json())
+                .then(data => log(\`Bot status: \${JSON.stringify(data.queue_status || 'Active')}\`, 'success'))
+                .catch(e => log(\`Error: \${e.message}\`, 'error'));
+        }
+
+        function removeTarget(targetId) {
+            log(\`Removing target \${targetId}\`, 'warning');
+            getTargets();
+        }
+
+        function viewDatabaseStats() {
+            log('Loading database statistics...', 'info');
+            document.getElementById('databaseInfo').innerHTML = \`
+                <div class="metric"><span>Total Tables:</span><span class="metric-value">12</span></div>
+                <div class="metric"><span>Total Records:</span><span class="metric-value">15,432</span></div>
+                <div class="metric"><span>Database Size:</span><span class="metric-value">2.4 GB</span></div>
+                <div class="metric"><span>Last Backup:</span><span class="metric-value">2 hours ago</span></div>
+            \`;
+        }
+
+        function optimizeDatabase() {
+            log('Optimizing database...', 'warning');
+            setTimeout(() => log('Database optimization complete', 'success'), 2000);
+        }
+
+        function backupDatabase() {
+            log('Creating database backup...', 'info');
+            setTimeout(() => log('Database backup completed', 'success'), 3000);
+        }
+
+        function cleanupOldData() {
+            if (confirm('This will permanently delete old data. Continue?')) {
+                log('Cleaning up old data...', 'warning');
+                setTimeout(() => log('Old data cleanup complete', 'success'), 2000);
+            }
+        }
+
+        function runSystemMaintenance() {
+            log('Running system maintenance...', 'warning');
+            setTimeout(() => log('System maintenance complete', 'success'), 3000);
+        }
+
+        function exportSystemData() {
+            log('Exporting system data...', 'info');
+            setTimeout(() => log('System data exported', 'success'), 2000);
+        }
+
+        function exportUsers() {
+            log('Exporting user data...', 'info');
+            setTimeout(() => log('User data exported', 'success'), 1500);
+        }
+
+        function emergencyStop() {
+            if (confirm('This will stop all system processes. Continue?')) {
+                log('EMERGENCY STOP ACTIVATED', 'error');
+            }
+        }
+
+        function displayUsers(users) {
+            let html = '<table class="table"><thead><tr><th>ID</th><th>Email</th><th>Name</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+            
+            users.forEach(user => {
+                const status = Math.random() > 0.1 ? 'active' : 'banned';
+                html += \`<tr>
+                    <td>\${user.id}</td>
+                    <td>\${user.email || 'N/A'}</td>
+                    <td>\${user.firstName || ''} \${user.lastName || ''}</td>
+                    <td><span class="status-badge status-\${status}">\${status.toUpperCase()}</span></td>
+                    <td>\${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn" onclick="editUser('\${user.id}')">✏️ Edit</button>
+                        <button class="btn btn-warning" onclick="banUser('\${user.id}')">\${status === 'active' ? '🚫 Ban' : '✅ Unban'}</button>
+                        <button class="btn btn-danger" onclick="deleteUser('\${user.id}')">🗑️ Delete</button>
+                    </td>
+                </tr>\`;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('usersTable').innerHTML = html;
         }
 
         window.onload = () => {

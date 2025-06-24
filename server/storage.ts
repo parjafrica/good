@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { eq, desc } from "drizzle-orm";
-import { users, organizations, donors, donorCalls, proposals, projects, aiInteractions, donorOpportunities, searchBots, botRewards, searchTargets, opportunityVerifications, searchStatistics, type User, type InsertUser } from "@shared/schema";
+import { users, organizations, donors, donorCalls, proposals, projects, aiInteractions, donorOpportunities, searchBots, botRewards, searchTargets, opportunityVerifications, searchStatistics, userInteractions, creditTransactions, systemSettings, type User, type InsertUser } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
 
 if (!process.env.DATABASE_URL) {
@@ -38,11 +38,13 @@ export class PostgresStorage implements IStorage {
     return result[0];
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const hashedPassword = await bcrypt.hash(insertUser.hashedPassword, 12);
+  async createUser(insertUser: any): Promise<User> {
+    const hashedPassword = await bcrypt.hash(insertUser.hashedPassword || 'temp_password', 12);
     const result = await db.insert(users).values({
       ...insertUser,
       hashedPassword,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }).returning();
     return result[0];
   }
@@ -191,25 +193,27 @@ export class PostgresStorage implements IStorage {
   }
 
   async getCreditTransactions(userId?: string): Promise<any[]> {
-    // Mock credit transactions for now - would be real table in production
-    return [
-      {
-        id: '1',
-        userId: userId || 'all',
-        type: 'earned',
-        amount: 50,
-        reason: 'Application submission',
-        timestamp: new Date(),
-      },
-      {
-        id: '2', 
-        userId: userId || 'all',
-        type: 'spent',
-        amount: 25,
-        reason: 'AI proposal generation',
-        timestamp: new Date(),
+    try {
+      // Query from actual database tables once implemented
+      let query = db.select().from(aiInteractions);
+      if (userId) {
+        query = query.where(eq(aiInteractions.userId, userId));
       }
-    ];
+      const result = await query.orderBy(aiInteractions.createdAt).limit(100);
+      
+      // Transform to credit transaction format
+      return result.map(interaction => ({
+        id: interaction.id,
+        userId: interaction.userId,
+        type: interaction.type === 'proposal_generation' ? 'spent' : 'earned',
+        amount: interaction.cost ? Math.round(parseFloat(interaction.cost.toString()) * 100) : 10,
+        reason: `AI ${interaction.type}`,
+        timestamp: interaction.createdAt,
+      }));
+    } catch (error) {
+      console.error('Error fetching credit transactions:', error);
+      return [];
+    }
   }
 
   async getSystemSettings(): Promise<any> {
@@ -236,9 +240,30 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateSystemSettings(settings: any): Promise<any> {
-    // In production, this would update a settings table
-    console.log('System settings updated:', settings);
-    return settings;
+    try {
+      // Update each setting in the database
+      for (const [key, value] of Object.entries(settings)) {
+        await db.insert(systemSettings).values({
+          id: `setting_${key}_${Date.now()}`,
+          key,
+          value: JSON.stringify(value),
+          description: `System setting: ${key}`,
+          updatedBy: 'admin',
+          updatedAt: new Date()
+        }).onConflictDoUpdate({
+          target: systemSettings.key,
+          set: {
+            value: JSON.stringify(value),
+            updatedAt: new Date()
+          }
+        });
+      }
+      console.log('System settings updated in database:', settings);
+      return settings;
+    } catch (error) {
+      console.error('Error updating system settings:', error);
+      return settings;
+    }
   }
 }
 

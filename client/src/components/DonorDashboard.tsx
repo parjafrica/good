@@ -37,6 +37,9 @@ import { realDonorSearchEngine } from '../services/realDonorSearchEngine';
 const DonorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, deductCredits } = useAuth();
+  
+  // Get user ID from localStorage (set during onboarding)
+  const userId = localStorage.getItem('userId') || user?.id || 'demo_user';
   const [stats, setStats] = useState<DashboardStats>({
     totalFundingSecured: 2300000,
     fundingGrowth: 12.5,

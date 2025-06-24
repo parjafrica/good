@@ -1,16 +1,36 @@
-import { pgTable, text, serial, integer, boolean, uuid, timestamp, bigint, date, jsonb, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, uuid, timestamp, bigint, date, jsonb, real, varchar, decimal, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table for authentication
+// Session storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table with enhanced fields for AI personalization
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
-  hashedPassword: text("hashed_password").notNull(),
-  fullName: text("full_name").notNull(),
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  country: varchar("country"),
+  sector: varchar("sector"), // Education, Health, Environment, etc.
+  organizationType: varchar("organization_type"), // small_ngo, large_ngo, university, etc.
+  interests: text("interests"), // Comma-separated interests for AI matching
+  fundingHistory: jsonb("funding_history"), // Previous grants for AI analysis
+  hashedPassword: varchar("hashed_password").notNull(),
+  userType: varchar("user_type").default("donor"), // donor, student, admin
+  credits: integer("credits").default(1000),
   isActive: boolean("is_active").default(true),
-  isSuperuser: boolean("is_superuser").default(false),
-  organizationId: uuid("organization_id"),
+  isBanned: boolean("is_banned").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -223,10 +243,52 @@ export const searchStatistics = pgTable("search_statistics", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// User interaction tracking
+export const userInteractions = pgTable("user_interactions", {
+  id: varchar("id").primaryKey().notNull(),
+  userId: varchar("user_id"),
+  sessionId: varchar("session_id"),
+  action: varchar("action").notNull(), // 'click', 'page_visit', 'form_submit', etc.
+  element: varchar("element"), // What was clicked/interacted with
+  page: varchar("page"), // Which page/route
+  timestamp: timestamp("timestamp").defaultNow(),
+  metadata: jsonb("metadata"), // Additional context
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+});
+
+// Credit transactions
+export const creditTransactions = pgTable("credit_transactions", {
+  id: varchar("id").primaryKey().notNull(),
+  userId: varchar("user_id").notNull(),
+  type: varchar("type").notNull(), // 'earned', 'spent', 'admin_adjustment'
+  amount: integer("amount").notNull(),
+  reason: text("reason"),
+  balanceBefore: integer("balance_before"),
+  balanceAfter: integer("balance_after"),
+  adminUserId: varchar("admin_user_id"), // If admin made the change
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// System settings
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().notNull(),
+  key: varchar("key").notNull().unique(),
+  value: jsonb("value"),
+  description: text("description"),
+  updatedBy: varchar("updated_by"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   hashedPassword: true,
-  fullName: true,
+  firstName: true,
+  lastName: true,
+  country: true,
+  sector: true,
+  organizationType: true,
+  interests: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
