@@ -143,7 +143,7 @@ const NewLanding: React.FC = () => {
     onSuccess: (data) => {
       localStorage.setItem('userId', data.user.id);
       localStorage.setItem('userOnboarded', 'true');
-      navigate('/donor-dashboard');
+      window.location.href = '/donor-dashboard';
     }
   });
 

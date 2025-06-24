@@ -485,17 +485,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         id: `user_${Date.now()}`,
         email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        country: userData.country,
-        sector: userData.sector,
-        organizationType: userData.organizationType,
-        interests: userData.interests,
+        fullName: `${userData.firstName} ${userData.lastName}`,
         hashedPassword: userData.hashedPassword,
-        userType: userData.userType || 'donor',
-        credits: 1000,
         isActive: true,
-        isBanned: false
+        isSuperuser: false,
+        organizationId: null
       });
 
       res.json({ 
