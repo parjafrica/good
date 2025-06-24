@@ -137,6 +137,8 @@ const DonorDiscovery: React.FC = () => {
   const sectors = ['Education', 'Health', 'Environment', 'Human Rights', 'Economic Development', 'Technology', 'Agriculture', 'Water & Sanitation', 'Gender Equality', 'Climate Change'];
   const countries = ['Global', 'United States', 'United Kingdom', 'Germany', 'France', 'Kenya', 'Nigeria', 'South Africa', 'Ghana', 'Uganda', 'Tanzania', 'Rwanda', 'Senegal', 'Mali', 'Ivory Coast', 'Cameroon', 'South Sudan'];
 
+
+
   const transformApiData = (apiData: any): Opportunity => {
     // Transform the database row to component format
     return {

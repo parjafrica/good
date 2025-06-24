@@ -7,7 +7,7 @@ import {
   Zap, ArrowRight, Brain, Send, Volume2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface OpportunityDetails {
   id: string;
@@ -42,9 +42,16 @@ interface VoiceRecording {
 const EnhancedProposalGenerator: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const [opportunity, setOpportunity] = useState<OpportunityDetails | null>(
-    location.state?.opportunity || null
-  );
+  const navigate = useNavigate();
+  const [opportunity, setOpportunity] = useState<OpportunityDetails | null>(null);
+
+  // Initialize opportunity from navigation state
+  useEffect(() => {
+    console.log('Location state:', location.state);
+    if (location.state?.opportunity) {
+      setOpportunity(location.state.opportunity);
+    }
+  }, [location.state]);
   
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -340,7 +347,7 @@ const EnhancedProposalGenerator: React.FC = () => {
             Please select a funding opportunity from the discovery page to generate a proposal.
           </p>
           <button
-            onClick={() => window.history.back()}
+            onClick={() => navigate('/donor-discovery')}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
           >
             Go Back to Discovery
