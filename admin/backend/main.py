@@ -16,6 +16,7 @@ import os
 from datetime import datetime, timedelta
 import json
 import hashlib
+from database_manager import db_manager
 
 app = FastAPI(
     title="Granada OS Admin System",
@@ -93,6 +94,11 @@ async def admin_bots_page(request: Request):
     """Serve bots management page"""
     return templates.TemplateResponse("bots.html", {"request": request})
 
+@app.get("/admin/analytics", response_class=HTMLResponse)
+async def admin_analytics_page(request: Request):
+    """Serve analytics page"""
+    return templates.TemplateResponse("analytics.html", {"request": request})
+
 @app.get("/admin/system", response_class=HTMLResponse)
 async def admin_system_page(request: Request):
     """Serve system logs page"""
@@ -110,7 +116,8 @@ async def get_dashboard_stats():
                 COUNT(CASE WHEN user_type = 'admin' THEN 1 END) as admin_users,
                 COUNT(CASE WHEN user_type = 'student' THEN 1 END) as student_users,
                 COUNT(CASE WHEN user_type = 'donor' THEN 1 END) as ngo_users,
-                COUNT(CASE WHEN is_active = true THEN 1 END) as active_users
+                COUNT(CASE WHEN is_active = true THEN 1 END) as active_users,
+                COUNT(CASE WHEN is_banned = true THEN 1 END) as banned_users
             FROM users
         """
         user_stats = admin_db.execute_query(users_query)[0]
@@ -139,12 +146,14 @@ async def get_dashboard_stats():
         # Get recent activity (last 7 days)
         activity_query = """
             SELECT 
+                action_type,
                 DATE(created_at) as date,
-                COUNT(*) as activity_count
-            FROM donor_opportunities 
+                COUNT(*) as count
+            FROM user_interactions 
             WHERE created_at >= NOW() - INTERVAL '7 days'
-            GROUP BY DATE(created_at)
-            ORDER BY date DESC
+            GROUP BY action_type, DATE(created_at)
+            ORDER BY date DESC, count DESC
+            LIMIT 20
         """
         activity_data = admin_db.execute_query(activity_query)
         
@@ -154,7 +163,8 @@ async def get_dashboard_stats():
                 "admins": user_stats['admin_users'] or 0,
                 "students": user_stats['student_users'] or 0,
                 "ngos": user_stats['ngo_users'] or 0,
-                "active": user_stats['active_users'] or 0
+                "active": user_stats['active_users'] or 0,
+                "banned": user_stats['banned_users'] or 0
             },
             "opportunities": {
                 "total": opp_stats['total_opportunities'] or 0,
@@ -194,7 +204,8 @@ async def get_users(
         
         # Build base query
         base_query = """
-            SELECT id, email, user_type, is_active, created_at,
+            SELECT id, email, first_name, last_name, user_type, is_active, 
+                   is_banned, country, sector, organization_type, created_at,
                    COALESCE(credits, 0) as credits
             FROM users
         """
@@ -203,8 +214,9 @@ async def get_users(
         params = []
         
         if search:
-            where_clause = " WHERE email ILIKE %s"
-            params.append(f"%{search}%")
+            where_clause = " WHERE (email ILIKE %s OR first_name ILIKE %s OR last_name ILIKE %s)"
+            search_term = f"%{search}%"
+            params.extend([search_term, search_term, search_term])
         
         # Get users
         users_query = f"{base_query}{where_clause} ORDER BY created_at DESC LIMIT %s OFFSET %s"
@@ -215,6 +227,8 @@ async def get_users(
         # Get total count
         count_query = f"SELECT COUNT(*) as total FROM users{where_clause}"
         count_params = params[:-2] if search else []
+        if search and len(params) >= 5:  # Adjusted for 3 search terms
+            count_params = params[:-2]
         total = admin_db.execute_query(count_query, count_params)[0]['total']
         
         return {
@@ -351,6 +365,202 @@ async def run_bot(bot_id: str):
             raise HTTPException(status_code=404, detail="Bot not found")
         
         return {"message": f"Bot {bot_id} started successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/analytics/users")
+async def get_user_analytics(days: int = Query(30, ge=1, le=365)):
+    """Get comprehensive user analytics"""
+    try:
+        analytics = db_manager.get_user_analytics(days)
+        return analytics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/analytics/opportunities") 
+async def get_opportunity_analytics(days: int = Query(30, ge=1, le=365)):
+    """Get comprehensive opportunity analytics"""
+    try:
+        analytics = db_manager.get_opportunity_analytics(days)
+        return analytics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/analytics/bots")
+async def get_bot_analytics():
+    """Get comprehensive bot analytics"""
+    try:
+        analytics = db_manager.get_bot_analytics()
+        return analytics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/analytics/financial")
+async def get_financial_analytics():
+    """Get financial and credit analytics"""
+    try:
+        analytics = db_manager.get_financial_analytics()
+        return analytics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/system/health")
+async def get_system_health():
+    """Get comprehensive system health metrics"""
+    try:
+        health = db_manager.get_system_health()
+        return health
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/admin/system/cleanup")
+async def cleanup_system(days: int = Query(90, ge=30, le=365)):
+    """Clean up old data and optimize database"""
+    try:
+        results = db_manager.cleanup_old_data(days)
+        return {"message": "Cleanup completed", "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/export/{table_name}")
+async def export_table_data(table_name: str):
+    """Export data from specified table"""
+    allowed_tables = ['users', 'donor_opportunities', 'user_interactions', 'credit_transactions', 'search_bots']
+    
+    if table_name not in allowed_tables:
+        raise HTTPException(status_code=400, detail="Table not allowed for export")
+    
+    try:
+        data = db_manager.export_data(table_name)
+        return {"data": data, "count": len(data), "table": table_name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/admin/users/{user_id}/credits")
+async def adjust_user_credits(user_id: str, adjustment: Dict[str, Any]):
+    """Adjust user credits with transaction logging"""
+    try:
+        amount = adjustment.get('amount', 0)
+        reason = adjustment.get('reason', 'Admin adjustment')
+        
+        # Update user credits
+        update_query = """
+            UPDATE users SET credits = credits + %s
+            WHERE id = %s
+            RETURNING credits
+        """
+        
+        result = admin_db.execute_query(update_query, [amount, user_id])
+        if not result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        new_balance = result[0]['credits']
+        
+        # Record transaction
+        transaction_query = """
+            INSERT INTO credit_transactions (
+                user_id, amount, transaction_type, description, created_at
+            ) VALUES (%s, %s, %s, %s, NOW())
+        """
+        
+        admin_db.execute_query(transaction_query, [user_id, amount, 'admin_adjustment', reason], fetch=False)
+        
+        # Log interaction
+        interaction_query = """
+            INSERT INTO user_interactions (
+                user_id, action_type, action_details, created_at
+            ) VALUES (%s, %s, %s, NOW())
+        """
+        
+        action_details = json.dumps({
+            'amount': amount,
+            'reason': reason,
+            'new_balance': new_balance,
+            'admin_action': True
+        })
+        
+        admin_db.execute_query(interaction_query, [user_id, 'credit_adjustment', action_details], fetch=False)
+        
+        return {
+            "message": "Credits adjusted successfully",
+            "new_balance": new_balance,
+            "adjustment": amount
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/admin/users/{user_id}/ban")
+async def ban_user(user_id: str):
+    """Ban a user with logging"""
+    try:
+        query = """
+            UPDATE users 
+            SET is_banned = true, is_active = false 
+            WHERE id = %s 
+            RETURNING email
+        """
+        
+        result = admin_db.execute_query(query, [user_id])
+        if not result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_email = result[0]['email']
+        
+        # Log admin action
+        interaction_query = """
+            INSERT INTO user_interactions (
+                user_id, action_type, action_details, created_at
+            ) VALUES (%s, %s, %s, NOW())
+        """
+        
+        action_details = json.dumps({
+            'action': 'user_banned',
+            'email': user_email,
+            'admin_action': True
+        })
+        
+        admin_db.execute_query(interaction_query, [user_id, 'admin_ban_user', action_details], fetch=False)
+        
+        return {"message": f"User {user_email} banned successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/admin/users/{user_id}/unban")
+async def unban_user(user_id: str):
+    """Unban a user with logging"""
+    try:
+        query = """
+            UPDATE users 
+            SET is_banned = false, is_active = true 
+            WHERE id = %s 
+            RETURNING email
+        """
+        
+        result = admin_db.execute_query(query, [user_id])
+        if not result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_email = result[0]['email']
+        
+        # Log admin action
+        interaction_query = """
+            INSERT INTO user_interactions (
+                user_id, action_type, action_details, created_at
+            ) VALUES (%s, %s, %s, NOW())
+        """
+        
+        action_details = json.dumps({
+            'action': 'user_unbanned',
+            'email': user_email,
+            'admin_action': True
+        })
+        
+        admin_db.execute_query(interaction_query, [user_id, 'admin_unban_user', action_details], fetch=False)
+        
+        return {"message": f"User {user_email} unbanned successfully"}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
