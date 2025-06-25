@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import DocumentUpload from './DocumentUpload';
 
 interface OpportunityDetails {
   id: string;
@@ -78,6 +79,7 @@ const EnhancedProposalGenerator: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState('executive_summary');
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -337,21 +339,80 @@ const EnhancedProposalGenerator: React.FC = () => {
   
   if (!opportunity) {
     return (
-      <div className="p-6 text-center">
-        <div className="max-w-md mx-auto">
-          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            No Opportunity Selected
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Please select a funding opportunity from the discovery page to generate a proposal.
-          </p>
-          <button
-            onClick={() => navigate('/donor-discovery')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-          >
-            Go Back to Discovery
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
+        <div className="p-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg text-center"
+            >
+              <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                No Opportunity Selected
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Select a funding opportunity from discovery or upload your own funding call document.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => navigate('/donor-discovery')}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  Browse Opportunities
+                </button>
+                <button
+                  onClick={() => setShowDocumentUpload(true)}
+                  className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  <Upload className="w-5 h-5" />
+                  Upload Custom Call
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Document Upload Component */}
+            <AnimatePresence>
+              {showDocumentUpload && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Upload Custom Funding Call
+                    </h3>
+                    <button
+                      onClick={() => setShowDocumentUpload(false)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <DocumentUpload
+                    onUploadComplete={(opportunityId, analysis) => {
+                      setOpportunity({
+                        id: opportunityId,
+                        title: analysis.title,
+                        description: analysis.description,
+                        amountMin: analysis.amount_min,
+                        amountMax: analysis.amount_max,
+                        currency: analysis.currency,
+                        sector: analysis.focus_areas[0] || 'General',
+                        country: analysis.countries[0] || 'Global',
+                        eligibilityCriteria: analysis.eligibility_criteria,
+                        applicationProcess: analysis.application_process,
+                        sourceName: analysis.organization
+                      });
+                      setShowDocumentUpload(false);
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     );

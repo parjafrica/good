@@ -622,6 +622,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document processing routes - proxy to Python service
+  app.post('/api/documents/upload', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5002/api/documents/upload', {
+        method: 'POST',
+        headers: req.headers,
+        body: req.body
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Document processing error:', error);
+      res.status(500).json({ error: 'Document service unavailable' });
+    }
+  });
+
+  app.post('/api/documents/analyze-text', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5002/api/documents/analyze-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Document processing error:', error);
+      res.status(500).json({ error: 'Document service unavailable' });
+    }
+  });
+
+  app.get('/api/documents/opportunities/:userId', async (req, res) => {
+    try {
+      const response = await fetch(`http://localhost:5002/api/documents/opportunities/${req.params.userId}`);
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Document processing error:', error);
+      res.status(500).json({ error: 'Document service unavailable' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

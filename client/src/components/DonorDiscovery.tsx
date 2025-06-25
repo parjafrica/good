@@ -250,11 +250,20 @@ const DonorDiscovery: React.FC = () => {
     if (!applyingOpportunity) return;
     navigate('/proposal-generator', { 
       state: { 
-        opportunityTitle: applyingOpportunity.title,
-        donorName: applyingOpportunity.donor.name,
-        description: applyingOpportunity.description,
-        fundingAmount: applyingOpportunity.fundingAmount.max || applyingOpportunity.fundingAmount.min
-      } 
+        opportunity: {
+          id: applyingOpportunity.id,
+          title: applyingOpportunity.title,
+          description: applyingOpportunity.description,
+          amountMin: applyingOpportunity.fundingAmount.min,
+          amountMax: applyingOpportunity.fundingAmount.max,
+          currency: applyingOpportunity.fundingAmount.currency,
+          sector: applyingOpportunity.focusAreas[0] || 'Development',
+          country: applyingOpportunity.country,
+          eligibilityCriteria: applyingOpportunity.eligibility?.countries?.join(', ') || 'Various criteria apply',
+          applicationProcess: applyingOpportunity.applicationProcess,
+          sourceName: applyingOpportunity.source_name
+        }
+      }
     });
     setApplyingOpportunity(null);
   };
@@ -714,6 +723,13 @@ const DonorDiscovery: React.FC = () => {
                 </div>
                 <div className="flex space-x-3">
                   <ViewDetailsButton onClick={() => handleViewDetails(opportunity)} className="flex-1" />
+                  <button
+                    onClick={() => handleGenerateProposal(opportunity)}
+                    className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center gap-1"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    AI Proposal
+                  </button>
                   <ApplyButton onClick={() => handleOpenApplyModal(opportunity)} className="flex-1" />
                 </div>
               </motion.div>
