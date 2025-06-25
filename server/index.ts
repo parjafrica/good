@@ -2967,6 +2967,792 @@ app.use((req, res, next) => {
       return;
     }
     
+    if (path.includes('/submissions')) {
+      // Serve Submissions & Document Management module
+      res.send(`
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submissions & Document Management - Granada OS Wabden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); }
+        .card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); backdrop-filter: blur(10px); }
+        .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .submission-card { border-left: 4px solid #f59e0b; }
+        .submission-card.draft { border-left-color: #6b7280; }
+        .submission-card.submitted { border-left-color: #10b981; }
+        .submission-card.under-review { border-left-color: #3b82f6; }
+        .submission-card.approved { border-left-color: #10b981; }
+        .submission-card.rejected { border-left-color: #ef4444; }
+        
+        /* Word Processor Styles */
+        .editor-toolbar { background: #374151; }
+        .editor-content { min-height: 400px; background: white; color: black; }
+        .editor-content:focus { outline: none; }
+        .toolbar-btn { padding: 8px 12px; margin: 2px; background: #4b5563; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .toolbar-btn:hover { background: #6b7280; }
+        .toolbar-btn.active { background: #3b82f6; }
+        .donor-tag { background: #1e40af; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar-gradient shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Wabden Admin
+                    </h1>
+                </div>
+                
+                <nav class="space-y-2">
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden'">
+                        <i class="fas fa-tachometer-alt text-blue-400"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/users'">
+                        <i class="fas fa-users text-green-400"></i>
+                        <span>User Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                        <i class="fas fa-bullseye text-yellow-400"></i>
+                        <span>Opportunities</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/hr'">
+                        <i class="fas fa-user-tie text-purple-400"></i>
+                        <span>HR Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/accounting'">
+                        <i class="fas fa-chart-line text-emerald-400"></i>
+                        <span>Accounting</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-orange-600/30 cursor-pointer">
+                        <i class="fas fa-file-alt text-orange-400"></i>
+                        <span class="text-orange-300">Submissions</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/bots'">
+                        <i class="fas fa-robot text-cyan-400"></i>
+                        <span>Bot Control</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="bg-gray-800/50 backdrop-blur-lg shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Submissions & Document Management</h2>
+                        <p class="text-gray-400 mt-1">Proposal editing, donor integration, and submission tracking</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="openNewSubmissionModal()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i> New Submission
+                        </button>
+                        <button onclick="openWordProcessor()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            <i class="fas fa-edit mr-2"></i> Word Processor
+                        </button>
+                        <button onclick="exportSubmissions()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                            <i class="fas fa-download mr-2"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Submissions Overview -->
+            <div class="p-6">
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Total Submissions</p>
+                                <p class="text-3xl font-bold text-orange-400 mt-1" id="totalSubmissions">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-alt text-orange-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Drafts</p>
+                                <p class="text-3xl font-bold text-gray-400 mt-1" id="draftCount">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-edit text-gray-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Submitted</p>
+                                <p class="text-3xl font-bold text-green-400 mt-1" id="submittedCount">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-paper-plane text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Under Review</p>
+                                <p class="text-3xl font-bold text-blue-400 mt-1" id="reviewCount">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-search text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Approved</p>
+                                <p class="text-3xl font-bold text-emerald-400 mt-1" id="approvedCount">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-emerald-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="card-gradient rounded-xl p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="text" id="submissionSearch" placeholder="Search submissions..." 
+                               class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <select id="statusFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="submitted">Submitted</option>
+                            <option value="under-review">Under Review</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <select id="donorFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                            <option value="">All Donors</option>
+                            <option value="world-bank">World Bank</option>
+                            <option value="usaid">USAID</option>
+                            <option value="dfid">DFID</option>
+                            <option value="gates-foundation">Gates Foundation</option>
+                            <option value="eu-commission">EU Commission</option>
+                        </select>
+                        <input type="month" id="dateFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                    </div>
+                </div>
+
+                <!-- Submissions Grid -->
+                <div id="submissionsGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Submissions will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Processor Modal -->
+    <div id="wordProcessorModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-xl w-full max-w-6xl mx-4 max-h-[95vh] overflow-hidden">
+            <!-- Word Processor Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                <div class="flex items-center space-x-4">
+                    <h3 class="text-xl font-bold text-white">Document Editor</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-400 text-sm">Document:</span>
+                        <span id="currentDocumentName" class="text-white font-medium">Untitled Proposal</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="saveDocument()" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm transition-colors">
+                        <i class="fas fa-save mr-1"></i> Save
+                    </button>
+                    <button onclick="closeWordProcessor()" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-sm transition-colors">
+                        <i class="fas fa-times mr-1"></i> Close
+                    </button>
+                </div>
+            </div>
+
+            <!-- Donor Integration Panel -->
+            <div class="p-4 bg-gray-750 border-b border-gray-700">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-lg font-bold text-white">Donor Integration</h4>
+                    <button onclick="toggleDonorPanel()" id="donorPanelToggle" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors">
+                        <i class="fas fa-eye mr-1"></i> Show Details
+                    </button>
+                </div>
+                <div id="donorPanel" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-800 rounded-lg p-4">
+                            <h5 class="font-bold text-blue-400 mb-2">Donor Information</h5>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-400">Organization:</span> <span id="donorOrg" class="text-white">World Bank</span></div>
+                                <div><span class="text-gray-400">Program:</span> <span id="donorProgram" class="text-white">Education Innovation Fund</span></div>
+                                <div><span class="text-gray-400">Contact:</span> <span id="donorContact" class="text-white">Sarah Johnson</span></div>
+                                <div><span class="text-gray-400">Email:</span> <span id="donorEmail" class="text-white">sarah.johnson@worldbank.org</span></div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4">
+                            <h5 class="font-bold text-green-400 mb-2">Grant Details</h5>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-400">Amount:</span> <span id="grantAmount" class="text-white">$250,000</span></div>
+                                <div><span class="text-gray-400">Duration:</span> <span id="grantDuration" class="text-white">24 months</span></div>
+                                <div><span class="text-gray-400">Deadline:</span> <span id="grantDeadline" class="text-white">March 30, 2024</span></div>
+                                <div><span class="text-gray-400">Focus Area:</span> <span id="grantFocus" class="text-white">Technology in Education</span></div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4">
+                            <h5 class="font-bold text-purple-400 mb-2">Requirements</h5>
+                            <div class="space-y-1 text-sm">
+                                <div class="flex items-center text-gray-300">
+                                    <i class="fas fa-check text-green-400 mr-2"></i>
+                                    <span>Executive Summary</span>
+                                </div>
+                                <div class="flex items-center text-gray-300">
+                                    <i class="fas fa-check text-green-400 mr-2"></i>
+                                    <span>Project Description</span>
+                                </div>
+                                <div class="flex items-center text-gray-300">
+                                    <i class="fas fa-check text-green-400 mr-2"></i>
+                                    <span>Budget Breakdown</span>
+                                </div>
+                                <div class="flex items-center text-gray-300">
+                                    <i class="fas fa-times text-red-400 mr-2"></i>
+                                    <span>Evaluation Plan</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Toolbar -->
+            <div class="editor-toolbar p-2 border-b border-gray-700">
+                <div class="flex flex-wrap items-center gap-1">
+                    <!-- File Operations -->
+                    <div class="flex items-center border-r border-gray-600 pr-2 mr-2">
+                        <button onclick="newDocument()" class="toolbar-btn" title="New Document">
+                            <i class="fas fa-file"></i>
+                        </button>
+                        <button onclick="openTemplate()" class="toolbar-btn" title="Open Template">
+                            <i class="fas fa-folder-open"></i>
+                        </button>
+                        <button onclick="saveDocument()" class="toolbar-btn" title="Save">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+
+                    <!-- Text Formatting -->
+                    <div class="flex items-center border-r border-gray-600 pr-2 mr-2">
+                        <button onclick="formatText('bold')" class="toolbar-btn" title="Bold">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button onclick="formatText('italic')" class="toolbar-btn" title="Italic">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button onclick="formatText('underline')" class="toolbar-btn" title="Underline">
+                            <i class="fas fa-underline"></i>
+                        </button>
+                    </div>
+
+                    <!-- Lists -->
+                    <div class="flex items-center border-r border-gray-600 pr-2 mr-2">
+                        <button onclick="formatText('insertUnorderedList')" class="toolbar-btn" title="Bullet List">
+                            <i class="fas fa-list-ul"></i>
+                        </button>
+                        <button onclick="formatText('insertOrderedList')" class="toolbar-btn" title="Numbered List">
+                            <i class="fas fa-list-ol"></i>
+                        </button>
+                    </div>
+
+                    <!-- Alignment -->
+                    <div class="flex items-center border-r border-gray-600 pr-2 mr-2">
+                        <button onclick="formatText('justifyLeft')" class="toolbar-btn" title="Align Left">
+                            <i class="fas fa-align-left"></i>
+                        </button>
+                        <button onclick="formatText('justifyCenter')" class="toolbar-btn" title="Align Center">
+                            <i class="fas fa-align-center"></i>
+                        </button>
+                        <button onclick="formatText('justifyRight')" class="toolbar-btn" title="Align Right">
+                            <i class="fas fa-align-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Font Size -->
+                    <div class="flex items-center border-r border-gray-600 pr-2 mr-2">
+                        <select id="fontSize" onchange="changeFontSize()" class="toolbar-btn text-sm">
+                            <option value="12px">12px</option>
+                            <option value="14px" selected>14px</option>
+                            <option value="16px">16px</option>
+                            <option value="18px">18px</option>
+                            <option value="20px">20px</option>
+                            <option value="24px">24px</option>
+                        </select>
+                    </div>
+
+                    <!-- Insert Elements -->
+                    <div class="flex items-center">
+                        <button onclick="insertDonorInfo()" class="toolbar-btn" title="Insert Donor Info">
+                            <i class="fas fa-building mr-1"></i> Donor
+                        </button>
+                        <button onclick="insertTable()" class="toolbar-btn" title="Insert Table">
+                            <i class="fas fa-table"></i>
+                        </button>
+                        <button onclick="insertSignature()" class="toolbar-btn" title="Insert Signature">
+                            <i class="fas fa-signature"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Content -->
+            <div class="h-96 overflow-auto">
+                <div id="editor" class="editor-content p-6" contenteditable="true">
+                    <h1>Proposal Title</h1>
+                    <p>Begin writing your proposal here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allSubmissions = [];
+        let currentDocument = null;
+
+        // Sample submissions data
+        const sampleSubmissions = [
+            {
+                id: '1',
+                title: 'Education Technology Initiative',
+                donor: 'World Bank',
+                donorProgram: 'Education Innovation Fund',
+                amount: 250000,
+                status: 'under-review',
+                submittedDate: '2024-01-15',
+                deadline: '2024-03-30',
+                progress: 85,
+                tags: ['education', 'technology', 'innovation'],
+                requirements: ['Executive Summary', 'Project Description', 'Budget', 'Evaluation Plan'],
+                contact: 'Sarah Johnson',
+                email: 'sarah.johnson@worldbank.org'
+            },
+            {
+                id: '2',
+                title: 'Healthcare Access Program',
+                donor: 'USAID',
+                donorProgram: 'Global Health Initiative',
+                amount: 180000,
+                status: 'draft',
+                submittedDate: null,
+                deadline: '2024-04-15',
+                progress: 60,
+                tags: ['healthcare', 'access', 'rural'],
+                requirements: ['Needs Assessment', 'Implementation Plan', 'Budget', 'Sustainability Plan'],
+                contact: 'Dr. Michael Chen',
+                email: 'michael.chen@usaid.gov'
+            },
+            {
+                id: '3',
+                title: 'Climate Change Adaptation',
+                donor: 'EU Commission',
+                donorProgram: 'Climate Action Fund',
+                amount: 320000,
+                status: 'submitted',
+                submittedDate: '2024-02-01',
+                deadline: '2024-05-01',
+                progress: 100,
+                tags: ['climate', 'adaptation', 'environment'],
+                requirements: ['Environmental Impact', 'Community Engagement', 'Budget', 'Monitoring Plan'],
+                contact: 'Dr. Emma Larsson',
+                email: 'emma.larsson@ec.europa.eu'
+            },
+            {
+                id: '4',
+                title: 'Digital Skills Training',
+                donor: 'Gates Foundation',
+                donorProgram: 'Digital Opportunity Initiative',
+                amount: 150000,
+                status: 'approved',
+                submittedDate: '2023-12-10',
+                deadline: '2024-02-28',
+                progress: 100,
+                tags: ['digital', 'skills', 'training'],
+                requirements: ['Training Curriculum', 'Impact Metrics', 'Budget', 'Partnership Plan'],
+                contact: 'Lisa Wang',
+                email: 'lisa.wang@gatesfoundation.org'
+            },
+            {
+                id: '5',
+                title: 'Youth Employment Program',
+                donor: 'DFID',
+                donorProgram: 'Economic Development Fund',
+                amount: 200000,
+                status: 'rejected',
+                submittedDate: '2023-11-20',
+                deadline: '2024-01-31',
+                progress: 100,
+                tags: ['youth', 'employment', 'skills'],
+                requirements: ['Market Analysis', 'Training Plan', 'Budget', 'Job Placement Strategy'],
+                contact: 'James Thompson',
+                email: 'james.thompson@dfid.gov.uk'
+            }
+        ];
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            allSubmissions = sampleSubmissions;
+            loadSubmissionsData();
+        });
+
+        function loadSubmissionsData() {
+            calculateSubmissionStats();
+            renderSubmissions(allSubmissions);
+        }
+
+        function calculateSubmissionStats() {
+            const stats = {
+                total: allSubmissions.length,
+                draft: allSubmissions.filter(s => s.status === 'draft').length,
+                submitted: allSubmissions.filter(s => s.status === 'submitted').length,
+                review: allSubmissions.filter(s => s.status === 'under-review').length,
+                approved: allSubmissions.filter(s => s.status === 'approved').length
+            };
+
+            document.getElementById('totalSubmissions').textContent = stats.total;
+            document.getElementById('draftCount').textContent = stats.draft;
+            document.getElementById('submittedCount').textContent = stats.submitted;
+            document.getElementById('reviewCount').textContent = stats.review;
+            document.getElementById('approvedCount').textContent = stats.approved;
+        }
+
+        function renderSubmissions(submissions) {
+            const grid = document.getElementById('submissionsGrid');
+            
+            if (submissions.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">No submissions found</div>';
+                return;
+            }
+
+            grid.innerHTML = submissions.map(submission => {
+                const statusClass = 'submission-card ' + submission.status.replace('-', '-');
+                const statusColor = {
+                    'draft': 'text-gray-400',
+                    'submitted': 'text-green-400',
+                    'under-review': 'text-blue-400',
+                    'approved': 'text-emerald-400',
+                    'rejected': 'text-red-400'
+                }[submission.status] || 'text-yellow-400';
+                
+                const statusText = submission.status.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+                
+                const submittedText = submission.submittedDate ? 
+                    'Submitted: ' + new Date(submission.submittedDate).toLocaleDateString() :
+                    'Not submitted yet';
+                
+                const progressColor = submission.progress >= 80 ? 'bg-green-500' : 
+                                    submission.progress >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+                
+                return '<div class="' + statusClass + ' card-gradient rounded-xl p-6 hover-scale">' +
+                    '<div class="flex items-start justify-between mb-4">' +
+                        '<div>' +
+                            '<h3 class="text-lg font-bold text-white mb-2">' + submission.title + '</h3>' +
+                            '<div class="flex items-center space-x-2 mb-2">' +
+                                '<span class="donor-tag">' + submission.donor + '</span>' +
+                                '<span class="text-gray-400 text-sm">' + submission.donorProgram + '</span>' +
+                            '</div>' +
+                            '<div class="flex items-center space-x-4 text-sm text-gray-400">' +
+                                '<span><i class="fas fa-dollar-sign mr-1"></i>$' + submission.amount.toLocaleString() + '</span>' +
+                                '<span><i class="fas fa-calendar mr-1"></i>' + new Date(submission.deadline).toLocaleDateString() + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="px-3 py-1 bg-gray-700 rounded-full text-xs ' + statusColor + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="mb-4">' +
+                        '<div class="flex items-center justify-between mb-2">' +
+                            '<span class="text-gray-400 text-sm">Progress</span>' +
+                            '<span class="text-white text-sm">' + submission.progress + '%</span>' +
+                        '</div>' +
+                        '<div class="w-full bg-gray-700 rounded-full h-2">' +
+                            '<div class="' + progressColor + ' h-2 rounded-full" style="width: ' + submission.progress + '%"></div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="mb-4">' +
+                        '<div class="flex flex-wrap gap-1">' +
+                            submission.tags.map(tag => 
+                                '<span class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">' + tag + '</span>'
+                            ).join('') +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex items-center justify-between pt-4 border-t border-gray-700">' +
+                        '<span class="text-xs text-gray-400">' + submittedText + '</span>' +
+                        '<div class="flex space-x-2">' +
+                            '<button onclick="editSubmission(' + "'" + submission.id + "'" + ')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">' +
+                                '<i class="fas fa-edit mr-1"></i> Edit' +
+                            '</button>' +
+                            '<button onclick="viewSubmission(' + "'" + submission.id + "'" + ')" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors">' +
+                                '<i class="fas fa-eye mr-1"></i> View' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // Search and filter functionality
+        document.getElementById('submissionSearch').addEventListener('input', filterSubmissions);
+        document.getElementById('statusFilter').addEventListener('change', filterSubmissions);
+        document.getElementById('donorFilter').addEventListener('change', filterSubmissions);
+        document.getElementById('dateFilter').addEventListener('change', filterSubmissions);
+
+        function filterSubmissions() {
+            const searchTerm = document.getElementById('submissionSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const donorFilter = document.getElementById('donorFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            const filteredSubmissions = allSubmissions.filter(submission => {
+                const matchesSearch = submission.title.toLowerCase().includes(searchTerm) ||
+                                    submission.donor.toLowerCase().includes(searchTerm) ||
+                                    submission.donorProgram.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || submission.status === statusFilter;
+                const matchesDonor = !donorFilter || submission.donor.toLowerCase().replace(' ', '-') === donorFilter;
+                const matchesDate = !dateFilter || (submission.submittedDate && submission.submittedDate.startsWith(dateFilter));
+                
+                return matchesSearch && matchesStatus && matchesDonor && matchesDate;
+            });
+            
+            renderSubmissions(filteredSubmissions);
+        }
+
+        // Word Processor Functions
+        window.openWordProcessor = function(submissionId = null) {
+            if (submissionId) {
+                currentDocument = allSubmissions.find(s => s.id === submissionId);
+                loadDocumentData();
+            }
+            document.getElementById('wordProcessorModal').classList.remove('hidden');
+            document.getElementById('wordProcessorModal').classList.add('flex');
+        }
+
+        window.closeWordProcessor = function() {
+            document.getElementById('wordProcessorModal').classList.add('hidden');
+            document.getElementById('wordProcessorModal').classList.remove('flex');
+        }
+
+        function loadDocumentData() {
+            if (currentDocument) {
+                document.getElementById('currentDocumentName').textContent = currentDocument.title;
+                document.getElementById('donorOrg').textContent = currentDocument.donor;
+                document.getElementById('donorProgram').textContent = currentDocument.donorProgram;
+                document.getElementById('donorContact').textContent = currentDocument.contact;
+                document.getElementById('donorEmail').textContent = currentDocument.email;
+                document.getElementById('grantAmount').textContent = '$' + currentDocument.amount.toLocaleString();
+                document.getElementById('grantDeadline').textContent = new Date(currentDocument.deadline).toLocaleDateString();
+            }
+        }
+
+        window.toggleDonorPanel = function() {
+            const panel = document.getElementById('donorPanel');
+            const toggle = document.getElementById('donorPanelToggle');
+            
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                toggle.innerHTML = '<i class="fas fa-eye-slash mr-1"></i> Hide Details';
+            } else {
+                panel.classList.add('hidden');
+                toggle.innerHTML = '<i class="fas fa-eye mr-1"></i> Show Details';
+            }
+        }
+
+        window.formatText = function(command) {
+            document.execCommand(command, false, null);
+            document.getElementById('editor').focus();
+        }
+
+        window.changeFontSize = function() {
+            const size = document.getElementById('fontSize').value;
+            document.execCommand('fontSize', false, '7');
+            const fontElements = document.getElementsByTagName('font');
+            for (let i = 0; i < fontElements.length; i++) {
+                if (fontElements[i].size === '7') {
+                    fontElements[i].removeAttribute('size');
+                    fontElements[i].style.fontSize = size;
+                }
+            }
+        }
+
+        window.insertDonorInfo = function() {
+            const editor = document.getElementById('editor');
+            const donorInfo = '<div style="background: #f3f4f6; padding: 10px; margin: 10px 0; border-radius: 5px; color: black;">' +
+                '<strong>Donor Information:</strong><br>' +
+                'Organization: ' + document.getElementById('donorOrg').textContent + '<br>' +
+                'Program: ' + document.getElementById('donorProgram').textContent + '<br>' +
+                'Contact: ' + document.getElementById('donorContact').textContent + '<br>' +
+                'Email: ' + document.getElementById('donorEmail').textContent + '<br>' +
+                'Grant Amount: ' + document.getElementById('grantAmount').textContent +
+                '</div>';
+            
+            document.execCommand('insertHTML', false, donorInfo);
+        }
+
+        window.insertTable = function() {
+            const table = '<table border="1" style="border-collapse: collapse; width: 100%; margin: 10px 0;">' +
+                '<tr><th style="padding: 8px; background: #f3f4f6; color: black;">Item</th><th style="padding: 8px; background: #f3f4f6; color: black;">Cost</th><th style="padding: 8px; background: #f3f4f6; color: black;">Quantity</th><th style="padding: 8px; background: #f3f4f6; color: black;">Total</th></tr>' +
+                '<tr><td style="padding: 8px; color: black;">Equipment</td><td style="padding: 8px; color: black;">$1,000</td><td style="padding: 8px; color: black;">5</td><td style="padding: 8px; color: black;">$5,000</td></tr>' +
+                '<tr><td style="padding: 8px; color: black;">Training</td><td style="padding: 8px; color: black;">$500</td><td style="padding: 8px; color: black;">10</td><td style="padding: 8px; color: black;">$5,000</td></tr>' +
+                '</table>';
+            
+            document.execCommand('insertHTML', false, table);
+        }
+
+        window.insertSignature = function() {
+            const signature = '<div style="margin-top: 50px; color: black;">' +
+                '<p>Best regards,</p>' +
+                '<br>' +
+                '<p><strong>Granada OS Team</strong><br>' +
+                'Email: info@granada.os<br>' +
+                'Phone: +256-701-234567</p>' +
+                '</div>';
+            
+            document.execCommand('insertHTML', false, signature);
+        }
+
+        window.saveDocument = function() {
+            const content = document.getElementById('editor').innerHTML;
+            showNotification('Document saved successfully', 'success');
+        }
+
+        window.newDocument = function() {
+            document.getElementById('editor').innerHTML = '<h1>New Proposal</h1><p>Begin writing your proposal here...</p>';
+            document.getElementById('currentDocumentName').textContent = 'Untitled Proposal';
+        }
+
+        window.openTemplate = function() {
+            const template = '<h1>Grant Proposal Template</h1>' +
+                '<h2>1. Executive Summary</h2>' +
+                '<p>Provide a brief overview of your project...</p>' +
+                '<h2>2. Project Description</h2>' +
+                '<p>Describe your project in detail...</p>' +
+                '<h2>3. Objectives</h2>' +
+                '<ul><li>Objective 1</li><li>Objective 2</li><li>Objective 3</li></ul>' +
+                '<h2>4. Methodology</h2>' +
+                '<p>Explain how you will achieve your objectives...</p>' +
+                '<h2>5. Budget</h2>' +
+                '<p>Provide detailed budget information...</p>' +
+                '<h2>6. Timeline</h2>' +
+                '<p>Project timeline and milestones...</p>' +
+                '<h2>7. Evaluation</h2>' +
+                '<p>How will you measure success...</p>';
+            
+            document.getElementById('editor').innerHTML = template;
+            showNotification('Template loaded', 'success');
+        }
+
+        // Main functions
+        window.openNewSubmissionModal = function() {
+            showNotification('New submission creation will be implemented', 'info');
+        }
+
+        window.exportSubmissions = function() {
+            try {
+                let csvContent = '# GRANADA OS - SUBMISSIONS EXPORT\\n';
+                csvContent += '# Export Generated: ' + new Date().toISOString() + '\\n';
+                csvContent += '# Total Submissions: ' + allSubmissions.length + '\\n';
+                csvContent += '#\\n';
+                csvContent += 'ID,Title,Donor,Program,Amount,Status,Submitted Date,Deadline,Progress,Contact,Email\\n';
+                
+                allSubmissions.forEach(submission => {
+                    csvContent += [
+                        submission.id,
+                        submission.title.replace(/,/g, ';'),
+                        submission.donor,
+                        submission.donorProgram.replace(/,/g, ';'),
+                        submission.amount,
+                        submission.status,
+                        submission.submittedDate || '',
+                        submission.deadline,
+                        submission.progress,
+                        submission.contact,
+                        submission.email
+                    ].join(',') + '\\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.download = 'granada_os_submissions_' + timestamp + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(url);
+                showNotification('Submissions exported successfully', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        window.editSubmission = function(submissionId) {
+            openWordProcessor(submissionId);
+        }
+
+        window.viewSubmission = function(submissionId) {
+            const submission = allSubmissions.find(s => s.id === submissionId);
+            if (submission) {
+                showNotification('Viewing: ' + submission.title, 'info');
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ' + 
+                (type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600') + ' text-white';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('wordProcessorModal').addEventListener('click', function(e) {
+            if (e.target === this) closeWordProcessor();
+        });
+    </script>
+</body>
+</html>
+      `);
+      return;
+    }
+    
     // Serve default dashboard
     res.send(`
 <!DOCTYPE html>
