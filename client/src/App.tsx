@@ -27,6 +27,7 @@ import HumanHelpPage from './pages/HumanHelpPage';
 import CreditsPage from './pages/CreditsPage';
 import PurchasePage from './pages/PurchasePage';
 import HumanHelpButton from './components/shared/HumanHelpButton';
+import AdminLink from './components/shared/AdminLink';
 
 import AddictionProvider from './contexts/AddictionContext';
 import { ThemeProvider } from './contexts/ThemeContext';
