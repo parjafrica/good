@@ -44,25 +44,36 @@ app.use((req, res, next) => {
     res.status(404).json({ error: 'Not found' });
   });
 
-  // Wabden admin API routes for user management
+  // Proxy wabden admin API routes to Python backend
   app.get('/api/wabden/users', async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const userStats = users.reduce((acc, user) => {
-        acc[user.userType] = (acc[user.userType] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      res.json({ users, userStats });
+      const response = await fetch('http://localhost:8002/api/users');
+      const data = await response.json();
+      res.json(data);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch users' });
+      console.error('Python API error:', error);
+      // Fallback to storage if Python API unavailable
+      try {
+        const users = await storage.getAllUsers();
+        const userStats = users.reduce((acc, user) => {
+          acc[user.userType] = (acc[user.userType] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        res.json({ users, userStats });
+      } catch (fallbackError) {
+        res.status(500).json({ error: 'Failed to fetch users' });
+      }
     }
   });
 
   app.post('/api/wabden/users/:id/ban', async (req, res) => {
     try {
-      await storage.updateUser(req.params.id, { isBanned: true });
-      res.json({ success: true, message: 'User banned successfully' });
+      const response = await fetch(`http://localhost:8002/api/users/${req.params.id}/ban`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      res.json(data);
     } catch (error) {
       res.status(500).json({ error: 'Failed to ban user' });
     }
@@ -70,8 +81,12 @@ app.use((req, res, next) => {
 
   app.post('/api/wabden/users/:id/unban', async (req, res) => {
     try {
-      await storage.updateUser(req.params.id, { isBanned: false });
-      res.json({ success: true, message: 'User unbanned successfully' });
+      const response = await fetch(`http://localhost:8002/api/users/${req.params.id}/unban`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      res.json(data);
     } catch (error) {
       res.status(500).json({ error: 'Failed to unban user' });
     }
@@ -79,25 +94,56 @@ app.use((req, res, next) => {
 
   app.patch('/api/wabden/users/:id', async (req, res) => {
     try {
-      const { credits, userType, firstName, lastName } = req.body;
-      await storage.updateUser(req.params.id, { 
-        credits: parseInt(credits), 
-        userType, 
-        firstName, 
-        lastName 
+      const response = await fetch(`http://localhost:8002/api/users/${req.params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
       });
-      res.json({ success: true, message: 'User updated successfully' });
+      const data = await response.json();
+      res.json(data);
     } catch (error) {
       res.status(500).json({ error: 'Failed to update user' });
     }
   });
 
+  app.post('/api/wabden/users', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:8002/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  });
+
   app.delete('/api/wabden/users/:id', async (req, res) => {
     try {
-      await storage.deleteUser(req.params.id);
-      res.json({ success: true, message: 'User deleted successfully' });
+      const response = await fetch(`http://localhost:8002/api/users/${req.params.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      res.json(data);
     } catch (error) {
       res.status(500).json({ error: 'Failed to delete user' });
+    }
+  });
+
+  app.get('/api/wabden/export/users', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:8002/api/export/users');
+      const csvData = await response.text();
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=granada_os_users_${timestamp}.csv`);
+      res.send(csvData);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to export users' });
     }
   });
 
@@ -562,7 +608,38 @@ app.use((req, res, next) => {
             document.getElementById('editUserModal').classList.remove('flex');
         }
 
-        // Form submissions
+        // Add User Form submission
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                email: document.getElementById('newUserEmail').value,
+                firstName: document.getElementById('newUserFirstName').value,
+                lastName: document.getElementById('newUserLastName').value,
+                userType: document.getElementById('newUserType').value,
+                credits: parseInt(document.getElementById('newUserCredits').value)
+            };
+
+            try {
+                const response = await fetch('/api/wabden/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    closeAddUserModal();
+                    await loadUsers();
+                    showNotification('User created successfully', 'success');
+                } else {
+                    showNotification('Error creating user', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Edit User Form submission
         document.getElementById('editUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -593,28 +670,33 @@ app.use((req, res, next) => {
             }
         });
 
-        // Export functionality
-        function exportUsers() {
-            const csvContent = "data:text/csv;charset=utf-8," + 
-                "Email,First Name,Last Name,Type,Credits,Status,Joined,Last Login\\n" +
-                allUsers.map(user => [
-                    user.email,
-                    user.firstName || '',
-                    user.lastName || '',
-                    user.userType,
-                    user.credits || 0,
-                    user.isBanned ? 'Banned' : 'Active',
-                    new Date(user.createdAt).toLocaleDateString(),
-                    user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'
-                ].join(",")).join("\\n");
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", 'users_export_' + new Date().toISOString().split('T')[0] + '.csv');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        // Export functionality - Professional CSV with Granada branding
+        async function exportUsers() {
+            try {
+                showNotification('Generating professional CSV export...', 'success');
+                
+                const response = await fetch('/api/wabden/export/users');
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.download = 'granada_os_users_professional_' + timestamp + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(url);
+                showNotification('Professional CSV export completed successfully', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
         }
 
         // Notification system
