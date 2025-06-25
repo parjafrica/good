@@ -331,7 +331,7 @@ const DonorDiscovery: React.FC = () => {
           <div className="flex items-center gap-2 mb-2">
             {opportunity.trending && (
               <div className="flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs">
-                <Fire className="w-3 h-3" />
+                <Flame className="w-3 h-3" />
                 Trending
               </div>
             )}
@@ -539,7 +539,7 @@ const DonorDiscovery: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center space-x-2 px-3 py-1 bg-slate-700/50 rounded-lg cursor-pointer"
                 >
-                  <Fire className="w-4 h-4 text-orange-400" />
+                  <Flame className="w-4 h-4 text-orange-400" />
                   <span className="text-slate-300 text-sm">{searchMetrics.streak} day streak</span>
                 </motion.div>
               </div>
