@@ -73,6 +73,9 @@ const EnhancedProposalGenerator: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState('executive_summary');
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [proposalStatus, setProposalStatus] = useState('generating');
+  const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
   
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
