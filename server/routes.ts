@@ -6,6 +6,16 @@ import { proposals, donorOpportunities } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Admin routes redirect to new system
+  app.get('/admin', (req, res) => {
+    res.redirect('http://localhost:9000/admin');
+  });
+
+  app.get('/admin/*', (req, res) => {
+    const path = req.path.replace('/admin', '');
+    res.redirect(`http://localhost:9000/admin${path}`);
+  });
   // Register admin routes first
   registerAdminRoutes(app);
 
