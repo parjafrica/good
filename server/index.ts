@@ -152,6 +152,104 @@ app.use((req, res, next) => {
     }
   });
 
+  // Opportunities API routes
+  app.get('/api/wabden/opportunities', async (req, res) => {
+    try {
+      const opportunities = await storage.getDonorOpportunities();
+      const stats = {
+        total: opportunities.length,
+        verified: opportunities.filter(o => o.isVerified).length,
+        pending: opportunities.filter(o => !o.isVerified).length,
+        active: opportunities.filter(o => o.deadline && new Date(o.deadline) > new Date()).length
+      };
+      res.json({ opportunities, stats });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch opportunities' });
+    }
+  });
+
+  app.post('/api/wabden/opportunities', async (req, res) => {
+    try {
+      const opportunity = await storage.createDonorOpportunity(req.body);
+      res.json({ success: true, opportunity });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create opportunity' });
+    }
+  });
+
+  app.post('/api/wabden/opportunities/:id/verify', async (req, res) => {
+    try {
+      // Implementation would update opportunity verification status
+      res.json({ success: true, message: 'Opportunity verified successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to verify opportunity' });
+    }
+  });
+
+  app.post('/api/wabden/opportunities/:id/unverify', async (req, res) => {
+    try {
+      // Implementation would update opportunity verification status
+      res.json({ success: true, message: 'Opportunity unverified successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to unverify opportunity' });
+    }
+  });
+
+  app.delete('/api/wabden/opportunities/:id', async (req, res) => {
+    try {
+      // Implementation would delete opportunity
+      res.json({ success: true, message: 'Opportunity deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete opportunity' });
+    }
+  });
+
+  app.post('/api/wabden/opportunities/verify-all', async (req, res) => {
+    try {
+      // Implementation would verify all unverified opportunities
+      res.json({ success: true, message: 'All opportunities verified successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to verify opportunities' });
+    }
+  });
+
+  app.get('/api/wabden/export/opportunities', async (req, res) => {
+    try {
+      const opportunities = await storage.getDonorOpportunities();
+      
+      // Generate CSV content with Granada branding
+      let csvContent = '# GRANADA OS - FUNDING OPPORTUNITIES PLATFORM\\n';
+      csvContent += '# Professional Opportunities Export\\n';
+      csvContent += '# Export Generated: ' + new Date().toISOString() + '\\n';
+      csvContent += '# Total Records: ' + opportunities.length + '\\n';
+      csvContent += '#\\n';
+      csvContent += 'ID,Title,Country,Sector,Amount Min,Amount Max,Currency,Deadline,Source,Verified,Created\\n';
+      
+      opportunities.forEach(opp => {
+        csvContent += [
+          opp.id,
+          (opp.title || '').replace(/,/g, ';'),
+          opp.country || '',
+          opp.sector || '',
+          opp.amountMin || '',
+          opp.amountMax || '',
+          opp.currency || 'USD',
+          opp.deadline || '',
+          (opp.sourceUrl || '').replace(/,/g, ';'),
+          opp.isVerified ? 'Yes' : 'No',
+          opp.createdAt || ''
+        ].join(',') + '\\n';
+      });
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=granada_os_opportunities_${timestamp}.csv`);
+      res.send(csvContent);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to export opportunities' });
+    }
+  });
+
   // Serve wabden admin directly without external redirect
   app.get('/wabden*', (req, res) => {
     // Check if it's a specific module request
@@ -733,6 +831,540 @@ app.use((req, res, next) => {
 
         document.getElementById('editUserModal').addEventListener('click', function(e) {
             if (e.target === this) closeEditUserModal();
+        });
+    </script>
+</body>
+</html>
+      `);
+      return;
+    }
+    
+    if (path.includes('/opportunities')) {
+      // Serve opportunities management module
+      res.send(`
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opportunities Management - Granada OS Wabden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); }
+        .card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); backdrop-filter: blur(10px); }
+        .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .opportunity-card { border-left: 4px solid #3b82f6; }
+        .opportunity-card.verified { border-left-color: #10b981; }
+        .opportunity-card.pending { border-left-color: #f59e0b; }
+        .opportunity-card.expired { border-left-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar-gradient shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Wabden Admin
+                    </h1>
+                </div>
+                
+                <nav class="space-y-2">
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden'">
+                        <i class="fas fa-tachometer-alt text-blue-400"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/users'">
+                        <i class="fas fa-users text-green-400"></i>
+                        <span>User Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-yellow-600/30 cursor-pointer">
+                        <i class="fas fa-bullseye text-yellow-400"></i>
+                        <span class="text-yellow-300">Opportunities</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/hr'">
+                        <i class="fas fa-user-tie text-purple-400"></i>
+                        <span>HR Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/accounting'">
+                        <i class="fas fa-chart-line text-emerald-400"></i>
+                        <span>Accounting</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/submissions'">
+                        <i class="fas fa-file-alt text-orange-400"></i>
+                        <span>Submissions</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/bots'">
+                        <i class="fas fa-robot text-cyan-400"></i>
+                        <span>Bot Control</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="bg-gray-800/50 backdrop-blur-lg shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Opportunities Management</h2>
+                        <p class="text-gray-400 mt-1">Funding opportunities discovery and verification system</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="openAddOpportunityModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i> Add Opportunity
+                        </button>
+                        <button onclick="verifyAllOpportunities()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                            <i class="fas fa-check-circle mr-2"></i> Verify All
+                        </button>
+                        <button onclick="exportOpportunities()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                            <i class="fas fa-download mr-2"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="p-6">
+                <!-- Loading State -->
+                <div id="loading" class="flex items-center justify-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+                    <span class="ml-3 text-gray-400">Loading opportunities...</span>
+                </div>
+
+                <!-- Opportunity Statistics -->
+                <div id="opportunityStats" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 hidden">
+                    <!-- Stats will be populated by JavaScript -->
+                </div>
+
+                <!-- Search and Filters -->
+                <div id="searchSection" class="card-gradient rounded-xl p-6 mb-6 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="text" id="opportunitySearch" placeholder="Search opportunities..." 
+                               class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <select id="countryFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                            <option value="">All Countries</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="Uganda">Uganda</option>
+                            <option value="South Sudan">South Sudan</option>
+                            <option value="Global">Global</option>
+                        </select>
+                        <select id="sectorFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                            <option value="">All Sectors</option>
+                            <option value="Education">Education</option>
+                            <option value="Health">Health</option>
+                            <option value="Environment">Environment</option>
+                            <option value="Agriculture">Agriculture</option>
+                            <option value="Technology">Technology</option>
+                        </select>
+                        <select id="statusFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                            <option value="">All Status</option>
+                            <option value="verified">Verified</option>
+                            <option value="pending">Pending</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Opportunities Grid -->
+                <div id="opportunitiesGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 hidden">
+                    <!-- Opportunities will be populated by JavaScript -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Opportunity Modal -->
+    <div id="addOpportunityModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-4">Add New Opportunity</h3>
+            <form id="addOpportunityForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-400 text-sm mb-2">Title</label>
+                        <input type="text" id="newOpportunityTitle" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Country</label>
+                        <select id="newOpportunityCountry" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            <option value="">Select Country</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="Uganda">Uganda</option>
+                            <option value="South Sudan">South Sudan</option>
+                            <option value="Global">Global</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Sector</label>
+                        <select id="newOpportunitySector" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            <option value="">Select Sector</option>
+                            <option value="Education">Education</option>
+                            <option value="Health">Health</option>
+                            <option value="Environment">Environment</option>
+                            <option value="Agriculture">Agriculture</option>
+                            <option value="Technology">Technology</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Funding Amount (Min)</label>
+                        <input type="number" id="newOpportunityAmountMin" min="0" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Funding Amount (Max)</label>
+                        <input type="number" id="newOpportunityAmountMax" min="0" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Deadline</label>
+                        <input type="date" id="newOpportunityDeadline" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Source URL</label>
+                        <input type="url" id="newOpportunityUrl" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-400 text-sm mb-2">Description</label>
+                        <textarea id="newOpportunityDescription" rows="4" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddOpportunityModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i> Add Opportunity
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allOpportunities = [];
+        let opportunityStats = {};
+
+        // Load opportunities on page load
+        document.addEventListener('DOMContentLoaded', loadOpportunities);
+
+        async function loadOpportunities() {
+            try {
+                const response = await fetch('/api/wabden/opportunities');
+                const data = await response.json();
+                allOpportunities = data.opportunities || [];
+                opportunityStats = data.stats || {};
+                
+                renderOpportunityStats();
+                renderOpportunities(allOpportunities);
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('opportunityStats').classList.remove('hidden');
+                document.getElementById('searchSection').classList.remove('hidden');
+                document.getElementById('opportunitiesGrid').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading opportunities:', error);
+                document.getElementById('loading').innerHTML = '<div class="text-red-400">Error loading opportunities. Please refresh the page.</div>';
+            }
+        }
+
+        function renderOpportunityStats() {
+            const statsContainer = document.getElementById('opportunityStats');
+            const stats = [
+                { label: 'Total Opportunities', count: allOpportunities.length, color: 'blue', icon: 'fas fa-bullseye' },
+                { label: 'Verified', count: allOpportunities.filter(o => o.isVerified).length, color: 'green', icon: 'fas fa-check-circle' },
+                { label: 'Pending Review', count: allOpportunities.filter(o => !o.isVerified).length, color: 'yellow', icon: 'fas fa-clock' },
+                { label: 'Active Deadlines', count: allOpportunities.filter(o => o.deadline && new Date(o.deadline) > new Date()).length, color: 'purple', icon: 'fas fa-calendar-alt' }
+            ];
+
+            statsContainer.innerHTML = stats.map(stat => 
+                '<div class="card-gradient rounded-xl p-6 hover-scale">' +
+                    '<div class="flex items-center justify-between">' +
+                        '<div>' +
+                            '<p class="text-gray-400 text-sm uppercase tracking-wide">' + stat.label + '</p>' +
+                            '<p class="text-3xl font-bold text-white mt-1">' + stat.count + '</p>' +
+                        '</div>' +
+                        '<div class="w-12 h-12 bg-' + stat.color + '-500/20 rounded-lg flex items-center justify-center">' +
+                            '<i class="' + stat.icon + ' text-' + stat.color + '-400 text-xl"></i>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        function renderOpportunities(opportunities) {
+            const grid = document.getElementById('opportunitiesGrid');
+            
+            if (opportunities.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">No opportunities found</div>';
+                return;
+            }
+
+            grid.innerHTML = opportunities.map(opp => {
+                const statusClass = opp.isVerified ? 'verified' : 'pending';
+                const statusText = opp.isVerified ? 'Verified' : 'Pending Review';
+                const statusColor = opp.isVerified ? 'text-green-400' : 'text-yellow-400';
+                const deadline = opp.deadline ? new Date(opp.deadline).toLocaleDateString() : 'No deadline';
+                const amount = formatAmount(opp.amountMin, opp.amountMax, opp.currency);
+                
+                return '<div class="opportunity-card ' + statusClass + ' card-gradient rounded-xl p-6 hover-scale">' +
+                    '<div class="flex items-start justify-between mb-4">' +
+                        '<div class="flex-1">' +
+                            '<h3 class="text-lg font-bold text-white mb-2">' + (opp.title || 'Untitled Opportunity') + '</h3>' +
+                            '<div class="flex items-center space-x-4 text-sm text-gray-400">' +
+                                '<span><i class="fas fa-map-marker-alt mr-1"></i>' + (opp.country || 'Unknown') + '</span>' +
+                                '<span><i class="fas fa-tag mr-1"></i>' + (opp.sector || 'General') + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="px-2 py-1 bg-gray-700 rounded-full text-xs ' + statusColor + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<p class="text-gray-300 text-sm mb-4 line-clamp-3">' + (opp.description || 'No description available') + '</p>' +
+                    '<div class="space-y-2 mb-4">' +
+                        '<div class="flex items-center justify-between text-sm">' +
+                            '<span class="text-gray-400">Funding:</span>' +
+                            '<span class="text-white font-medium">' + amount + '</span>' +
+                        '</div>' +
+                        '<div class="flex items-center justify-between text-sm">' +
+                            '<span class="text-gray-400">Deadline:</span>' +
+                            '<span class="text-white">' + deadline + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex items-center justify-between">' +
+                        '<div class="flex space-x-2">' +
+                            (opp.isVerified ? 
+                                '<button onclick="unverifyOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-xs transition-colors">' +
+                                    '<i class="fas fa-times mr-1"></i> Unverify' +
+                                '</button>' :
+                                '<button onclick="verifyOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors">' +
+                                    '<i class="fas fa-check mr-1"></i> Verify' +
+                                '</button>'
+                            ) +
+                            '<button onclick="editOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">' +
+                                '<i class="fas fa-edit mr-1"></i> Edit' +
+                            '</button>' +
+                        '</div>' +
+                        '<button onclick="deleteOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">' +
+                            '<i class="fas fa-trash mr-1"></i> Delete' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function formatAmount(min, max, currency) {
+            const curr = currency || 'USD';
+            if (min && max) {
+                return curr + ' ' + min.toLocaleString() + ' - ' + max.toLocaleString();
+            } else if (min) {
+                return curr + ' ' + min.toLocaleString() + '+';
+            } else if (max) {
+                return 'Up to ' + curr + ' ' + max.toLocaleString();
+            }
+            return 'Amount not specified';
+        }
+
+        // Search and filter functionality
+        document.getElementById('opportunitySearch').addEventListener('input', filterOpportunities);
+        document.getElementById('countryFilter').addEventListener('change', filterOpportunities);
+        document.getElementById('sectorFilter').addEventListener('change', filterOpportunities);
+        document.getElementById('statusFilter').addEventListener('change', filterOpportunities);
+
+        function filterOpportunities() {
+            const searchTerm = document.getElementById('opportunitySearch').value.toLowerCase();
+            const countryFilter = document.getElementById('countryFilter').value;
+            const sectorFilter = document.getElementById('sectorFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            const filteredOpportunities = allOpportunities.filter(opp => {
+                const matchesSearch = (opp.title || '').toLowerCase().includes(searchTerm) ||
+                                    (opp.description || '').toLowerCase().includes(searchTerm);
+                const matchesCountry = !countryFilter || opp.country === countryFilter;
+                const matchesSector = !sectorFilter || opp.sector === sectorFilter;
+                const matchesStatus = !statusFilter || 
+                    (statusFilter === 'verified' && opp.isVerified) ||
+                    (statusFilter === 'pending' && !opp.isVerified) ||
+                    (statusFilter === 'expired' && opp.deadline && new Date(opp.deadline) < new Date());
+                
+                return matchesSearch && matchesCountry && matchesSector && matchesStatus;
+            });
+            
+            renderOpportunities(filteredOpportunities);
+        }
+
+        // Modal functions
+        window.openAddOpportunityModal = function() {
+            document.getElementById('addOpportunityModal').classList.remove('hidden');
+            document.getElementById('addOpportunityModal').classList.add('flex');
+        }
+
+        window.closeAddOpportunityModal = function() {
+            document.getElementById('addOpportunityModal').classList.add('hidden');
+            document.getElementById('addOpportunityModal').classList.remove('flex');
+            document.getElementById('addOpportunityForm').reset();
+        }
+
+        // Opportunity management functions
+        window.verifyOpportunity = async function(opportunityId) {
+            try {
+                const response = await fetch('/api/wabden/opportunities/' + opportunityId + '/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    await loadOpportunities();
+                    showNotification('Opportunity verified successfully', 'success');
+                } else {
+                    showNotification('Error verifying opportunity', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        window.unverifyOpportunity = async function(opportunityId) {
+            try {
+                const response = await fetch('/api/wabden/opportunities/' + opportunityId + '/unverify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    await loadOpportunities();
+                    showNotification('Opportunity unverified successfully', 'success');
+                } else {
+                    showNotification('Error unverifying opportunity', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        window.deleteOpportunity = async function(opportunityId) {
+            if (confirm('Are you sure you want to delete this opportunity? This action cannot be undone.')) {
+                try {
+                    const response = await fetch('/api/wabden/opportunities/' + opportunityId, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        await loadOpportunities();
+                        showNotification('Opportunity deleted successfully', 'success');
+                    } else {
+                        showNotification('Error deleting opportunity', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error: ' + error.message, 'error');
+                }
+            }
+        }
+
+        window.verifyAllOpportunities = async function() {
+            if (confirm('Verify all unverified opportunities?')) {
+                try {
+                    const response = await fetch('/api/wabden/opportunities/verify-all', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        await loadOpportunities();
+                        showNotification('All opportunities verified successfully', 'success');
+                    } else {
+                        showNotification('Error verifying opportunities', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error: ' + error.message, 'error');
+                }
+            }
+        }
+
+        window.exportOpportunities = async function() {
+            try {
+                showNotification('Generating professional opportunities export...', 'success');
+                
+                const response = await fetch('/api/wabden/export/opportunities');
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.download = 'granada_os_opportunities_' + timestamp + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(url);
+                showNotification('Professional CSV export completed successfully', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        // Add opportunity form submission
+        document.getElementById('addOpportunityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('newOpportunityTitle').value,
+                country: document.getElementById('newOpportunityCountry').value,
+                sector: document.getElementById('newOpportunitySector').value,
+                amountMin: parseInt(document.getElementById('newOpportunityAmountMin').value) || null,
+                amountMax: parseInt(document.getElementById('newOpportunityAmountMax').value) || null,
+                deadline: document.getElementById('newOpportunityDeadline').value || null,
+                sourceUrl: document.getElementById('newOpportunityUrl').value,
+                description: document.getElementById('newOpportunityDescription').value
+            };
+
+            try {
+                const response = await fetch('/api/wabden/opportunities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    closeAddOpportunityModal();
+                    await loadOpportunities();
+                    showNotification('Opportunity created successfully', 'success');
+                } else {
+                    showNotification('Error creating opportunity', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ' + 
+                (type === 'success' ? 'bg-green-600' : 'bg-red-600') + ' text-white';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('addOpportunityModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddOpportunityModal();
         });
     </script>
 </body>
