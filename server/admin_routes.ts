@@ -7,7 +7,20 @@ export function registerAdminRoutes(app: Express) {
   // Get all real users from database
   app.get('/api/admin/users', async (req, res) => {
     try {
-      const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+      const allUsers = await db.select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        country: users.country,
+        sector: users.sector,
+        organizationType: users.organizationType,
+        credits: users.credits,
+        userType: users.userType,
+        isActive: users.isActive,
+        isBanned: users.isBanned,
+        createdAt: users.createdAt
+      }).from(users).orderBy(desc(users.createdAt));
       res.json(allUsers);
     } catch (error) {
       console.error('Database error fetching users:', error);
