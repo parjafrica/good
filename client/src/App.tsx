@@ -21,6 +21,7 @@ import EnhancedAdminDashboard from './components/EnhancedAdminDashboard';
 import AuthenticAdminDashboard from './components/AuthenticAdminDashboard';
 import DatabaseAdminPanel from './components/DatabaseAdminPanel';
 import AdminDashboardWithSidebar from './components/AdminDashboardWithSidebar';
+import SimpleAdminDashboard from './components/SimpleAdminDashboard';
 import AdminBotPanel from './components/AdminBotPanel';
 import AdminProposalReviewPanel from './components/AdminProposalReviewPanel';
 import MobileNavigation from './components/shared/MobileNavigation';
@@ -92,7 +93,7 @@ function App() {
                     <Route path="/credits" element={<CreditsPage />} />
                     <Route path="/purchase/:packageId" element={<PurchasePage />} />
                     <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                    <Route path="/admin" element={<AdminDashboardWithSidebar />} />
+                    <Route path="/admin" element={<SimpleAdminDashboard />} />
                     <Route path="/admin/bots" element={<AdminBotPanel />} />
                     <Route path="/admin/proposals" element={<AdminProposalReviewPanel />} />
                   </Routes>
