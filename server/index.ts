@@ -2016,6 +2016,957 @@ app.use((req, res, next) => {
       return;
     }
     
+    if (path.includes('/accounting')) {
+      // Serve Accounting & Finance module
+      res.send(`
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting & Finance - Granada OS Wabden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); }
+        .card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); backdrop-filter: blur(10px); }
+        .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .transaction-card { border-left: 4px solid #10b981; }
+        .transaction-card.expense { border-left-color: #ef4444; }
+        .transaction-card.pending { border-left-color: #f59e0b; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar-gradient shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Wabden Admin
+                    </h1>
+                </div>
+                
+                <nav class="space-y-2">
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden'">
+                        <i class="fas fa-tachometer-alt text-blue-400"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/users'">
+                        <i class="fas fa-users text-green-400"></i>
+                        <span>User Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                        <i class="fas fa-bullseye text-yellow-400"></i>
+                        <span>Opportunities</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/hr'">
+                        <i class="fas fa-user-tie text-purple-400"></i>
+                        <span>HR Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-emerald-600/30 cursor-pointer">
+                        <i class="fas fa-chart-line text-emerald-400"></i>
+                        <span class="text-emerald-300">Accounting</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/submissions'">
+                        <i class="fas fa-file-alt text-orange-400"></i>
+                        <span>Submissions</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/bots'">
+                        <i class="fas fa-robot text-cyan-400"></i>
+                        <span>Bot Control</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="bg-gray-800/50 backdrop-blur-lg shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Accounting & Finance</h2>
+                        <p class="text-gray-400 mt-1">Financial management and business accounting systems</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="openAddTransactionModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i> Add Transaction
+                        </button>
+                        <button onclick="openInvoiceModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            <i class="fas fa-file-invoice mr-2"></i> Create Invoice
+                        </button>
+                        <button onclick="exportFinancialData()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                            <i class="fas fa-download mr-2"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Financial Overview Cards -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Total Revenue</p>
+                                <p class="text-3xl font-bold text-green-400 mt-1" id="totalRevenue">$0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-arrow-up text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-green-400 text-sm">+12.5% from last month</span>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Total Expenses</p>
+                                <p class="text-3xl font-bold text-red-400 mt-1" id="totalExpenses">$0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-arrow-down text-red-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-red-400 text-sm">+8.2% from last month</span>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Net Profit</p>
+                                <p class="text-3xl font-bold text-blue-400 mt-1" id="netProfit">$0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-line text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-blue-400 text-sm">+15.3% from last month</span>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Pending Invoices</p>
+                                <p class="text-3xl font-bold text-yellow-400 mt-1" id="pendingInvoices">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-yellow-400 text-sm">3 invoices due</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Tabs -->
+                <div class="flex space-x-1 mb-6">
+                    <button onclick="switchFinanceTab('transactions')" id="transactionsTab" class="px-4 py-2 bg-emerald-600 text-white rounded-lg">Transactions</button>
+                    <button onclick="switchFinanceTab('spreadsheet')" id="spreadsheetTab" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Financial Spreadsheet</button>
+                    <button onclick="switchFinanceTab('invoices')" id="invoicesTab" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Invoices</button>
+                    <button onclick="switchFinanceTab('grants')" id="grantsTab" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Grant Tracking</button>
+                    <button onclick="switchFinanceTab('reports')" id="reportsTab" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Reports</button>
+                </div>
+
+                <!-- Transactions Tab -->
+                <div id="transactionsContent" class="tab-content">
+                    <!-- Search and Filters -->
+                    <div class="card-gradient rounded-xl p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <input type="text" id="transactionSearch" placeholder="Search transactions..." 
+                                   class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <select id="typeFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                                <option value="">All Types</option>
+                                <option value="revenue">Revenue</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                            <select id="categoryFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                                <option value="">All Categories</option>
+                                <option value="operations">Operations</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="salaries">Salaries</option>
+                                <option value="grants">Grants</option>
+                                <option value="equipment">Equipment</option>
+                            </select>
+                            <input type="month" id="dateFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                        </div>
+                    </div>
+
+                    <!-- Transactions List -->
+                    <div id="transactionsList" class="space-y-4">
+                        <!-- Transactions will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Financial Spreadsheet Tab -->
+                <div id="spreadsheetContent" class="tab-content hidden">
+                    <div class="card-gradient rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-white">Financial Spreadsheet</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="addSpreadsheetRow()" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm transition-colors">
+                                    <i class="fas fa-plus mr-1"></i> Add Row
+                                </button>
+                                <button onclick="addSpreadsheetColumn()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors">
+                                    <i class="fas fa-columns mr-1"></i> Add Column
+                                </button>
+                                <button onclick="calculateSpreadsheet()" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm transition-colors">
+                                    <i class="fas fa-calculator mr-1"></i> Calculate
+                                </button>
+                                <button onclick="exportSpreadsheet()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 rounded text-sm transition-colors">
+                                    <i class="fas fa-download mr-1"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Formula Bar -->
+                        <div class="mb-4 p-3 bg-gray-800 rounded-lg">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-gray-400 text-sm font-medium">Cell:</span>
+                                <span id="currentCell" class="text-white font-mono">A1</span>
+                                <span class="text-gray-400 text-sm font-medium">Formula:</span>
+                                <input type="text" id="formulaBar" placeholder="Enter formula or value..." 
+                                       class="flex-1 px-3 py-1 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <button onclick="applyFormula()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 rounded text-sm transition-colors">
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Spreadsheet Grid -->
+                        <div class="overflow-auto max-h-96 border border-gray-700 rounded-lg">
+                            <table id="spreadsheetTable" class="w-full text-sm">
+                                <thead class="bg-gray-800 sticky top-0">
+                                    <tr id="headerRow">
+                                        <th class="px-2 py-1 border border-gray-600 text-center w-12">#</th>
+                                        <!-- Column headers will be generated -->
+                                    </tr>
+                                </thead>
+                                <tbody id="spreadsheetBody">
+                                    <!-- Spreadsheet rows will be generated -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pre-built Templates -->
+                        <div class="mt-6">
+                            <h4 class="text-lg font-bold text-white mb-4">Financial Templates</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="loadTemplate('budget')" class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors">
+                                    <h5 class="font-bold text-emerald-400 mb-2">Budget Planning</h5>
+                                    <p class="text-gray-400 text-sm">Monthly budget template with income, expenses, and variance analysis</p>
+                                </button>
+                                <button onclick="loadTemplate('cashflow')" class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors">
+                                    <h5 class="font-bold text-blue-400 mb-2">Cash Flow Analysis</h5>
+                                    <p class="text-gray-400 text-sm">Track cash inflows and outflows with running balances</p>
+                                </button>
+                                <button onclick="loadTemplate('pnl')" class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors">
+                                    <h5 class="font-bold text-purple-400 mb-2">P&L Statement</h5>
+                                    <p class="text-gray-400 text-sm">Profit and loss statement with revenue and expense categories</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoices Tab -->
+                <div id="invoicesContent" class="tab-content hidden">
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Invoice Management</h3>
+                        <div id="invoicesList" class="space-y-4">
+                            <!-- Invoices will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grant Tracking Tab -->
+                <div id="grantsContent" class="tab-content hidden">
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Grant Funding Tracker</h3>
+                        <div id="grantsList" class="space-y-4">
+                            <!-- Grant tracking will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div id="reportsContent" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card-gradient rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Monthly Revenue</h3>
+                            <div id="revenueChart" class="h-48 bg-gray-800 rounded-lg flex items-center justify-center">
+                                <span class="text-gray-400">Revenue chart will be rendered here</span>
+                            </div>
+                        </div>
+                        <div class="card-gradient rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Expense Breakdown</h3>
+                            <div id="expenseChart" class="h-48 bg-gray-800 rounded-lg flex items-center justify-center">
+                                <span class="text-gray-400">Expense chart will be rendered here</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="addTransactionModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-4">Add New Transaction</h3>
+            <form id="addTransactionForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Type</label>
+                        <select id="newTransactionType" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">Select Type</option>
+                            <option value="revenue">Revenue</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Amount (USD)</label>
+                        <input type="number" id="newTransactionAmount" step="0.01" min="0" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Category</label>
+                        <select id="newTransactionCategory" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">Select Category</option>
+                            <option value="operations">Operations</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="salaries">Salaries</option>
+                            <option value="grants">Grants</option>
+                            <option value="equipment">Equipment</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Date</label>
+                        <input type="date" id="newTransactionDate" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-400 text-sm mb-2">Description</label>
+                        <input type="text" id="newTransactionDescription" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Reference Number</label>
+                        <input type="text" id="newTransactionReference" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Payment Method</label>
+                        <select id="newTransactionPayment" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">Select Method</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cash">Cash</option>
+                            <option value="check">Check</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="mobile_money">Mobile Money</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddTransactionModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i> Add Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allTransactions = [];
+        let currentFinanceTab = 'transactions';
+        let spreadsheetData = {};
+        let selectedCell = { row: 1, col: 'A' };
+        let columnCount = 10;
+        let rowCount = 20;
+
+        // Sample financial data
+        const sampleTransactions = [
+            {
+                id: '1',
+                type: 'revenue',
+                amount: 25000,
+                category: 'grants',
+                description: 'Education Innovation Grant Q1 2024',
+                date: '2024-01-15',
+                reference: 'EIG-Q1-2024',
+                paymentMethod: 'bank_transfer',
+                status: 'completed'
+            },
+            {
+                id: '2',
+                type: 'expense',
+                amount: 8500,
+                category: 'salaries',
+                description: 'Staff Salaries - January 2024',
+                date: '2024-01-31',
+                reference: 'SAL-JAN-2024',
+                paymentMethod: 'bank_transfer',
+                status: 'completed'
+            },
+            {
+                id: '3',
+                type: 'revenue',
+                amount: 15000,
+                category: 'operations',
+                description: 'Consulting Services - Tech Implementation',
+                date: '2024-02-10',
+                reference: 'CONS-FEB-2024',
+                paymentMethod: 'bank_transfer',
+                status: 'completed'
+            },
+            {
+                id: '4',
+                type: 'expense',
+                amount: 3200,
+                category: 'equipment',
+                description: 'Laptop and Software Licenses',
+                date: '2024-02-15',
+                reference: 'EQP-FEB-2024',
+                paymentMethod: 'credit_card',
+                status: 'completed'
+            },
+            {
+                id: '5',
+                type: 'expense',
+                amount: 1800,
+                category: 'marketing',
+                description: 'Digital Marketing Campaign - Q1',
+                date: '2024-03-01',
+                reference: 'MKT-Q1-2024',
+                paymentMethod: 'credit_card',
+                status: 'pending'
+            }
+        ];
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            allTransactions = sampleTransactions;
+            loadFinancialData();
+            initializeSpreadsheet();
+            switchFinanceTab('transactions');
+        });
+
+        function loadFinancialData() {
+            calculateFinancialSummary();
+            renderTransactions(allTransactions);
+        }
+
+        function calculateFinancialSummary() {
+            const revenue = allTransactions
+                .filter(t => t.type === 'revenue' && t.status === 'completed')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const expenses = allTransactions
+                .filter(t => t.type === 'expense' && t.status === 'completed')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const pendingCount = allTransactions
+                .filter(t => t.status === 'pending').length;
+
+            document.getElementById('totalRevenue').textContent = '$' + revenue.toLocaleString();
+            document.getElementById('totalExpenses').textContent = '$' + expenses.toLocaleString();
+            document.getElementById('netProfit').textContent = '$' + (revenue - expenses).toLocaleString();
+            document.getElementById('pendingInvoices').textContent = pendingCount;
+        }
+
+        function renderTransactions(transactions) {
+            const container = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-400">No transactions found</div>';
+                return;
+            }
+
+            container.innerHTML = transactions.map(transaction => {
+                const typeClass = transaction.type === 'revenue' ? 'transaction-card' : 'transaction-card expense';
+                const typeColor = transaction.type === 'revenue' ? 'text-green-400' : 'text-red-400';
+                const typeIcon = transaction.type === 'revenue' ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+                const statusColor = transaction.status === 'completed' ? 'text-green-400' : 'text-yellow-400';
+                const amount = (transaction.type === 'revenue' ? '+' : '-') + '$' + transaction.amount.toLocaleString();
+                
+                return '<div class="' + typeClass + ' card-gradient rounded-xl p-6 hover-scale">' +
+                    '<div class="flex items-start justify-between">' +
+                        '<div class="flex items-center space-x-4">' +
+                            '<div class="w-12 h-12 ' + (transaction.type === 'revenue' ? 'bg-green-500/20' : 'bg-red-500/20') + ' rounded-lg flex items-center justify-center">' +
+                                '<i class="' + typeIcon + ' ' + typeColor + ' text-lg"></i>' +
+                            '</div>' +
+                            '<div>' +
+                                '<h3 class="text-lg font-bold text-white">' + transaction.description + '</h3>' +
+                                '<div class="flex items-center space-x-4 text-sm text-gray-400 mt-1">' +
+                                    '<span><i class="fas fa-tag mr-1"></i>' + transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1) + '</span>' +
+                                    '<span><i class="fas fa-calendar mr-1"></i>' + new Date(transaction.date).toLocaleDateString() + '</span>' +
+                                    '<span><i class="fas fa-credit-card mr-1"></i>' + (transaction.paymentMethod || 'N/A').replace('_', ' ') + '</span>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="text-right">' +
+                            '<div class="text-2xl font-bold ' + typeColor + '">' + amount + '</div>' +
+                            '<div class="text-sm ' + statusColor + ' mt-1">' + transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">' +
+                        '<span class="text-sm text-gray-400">Ref: ' + (transaction.reference || 'N/A') + '</span>' +
+                        '<div class="flex space-x-2">' +
+                            '<button onclick="editTransaction(' + "'" + transaction.id + "'" + ')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">' +
+                                '<i class="fas fa-edit mr-1"></i> Edit' +
+                            '</button>' +
+                            '<button onclick="deleteTransaction(' + "'" + transaction.id + "'" + ')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">' +
+                                '<i class="fas fa-trash mr-1"></i> Delete' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // Tab switching
+        function switchFinanceTab(tabName) {
+            currentFinanceTab = tabName;
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('[id$="Tab"]').forEach(tab => {
+                tab.classList.remove('bg-emerald-600', 'text-white');
+                tab.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + 'Content').classList.remove('hidden');
+            
+            // Add active class to selected tab
+            const selectedTab = document.getElementById(tabName + 'Tab');
+            selectedTab.classList.remove('bg-gray-700', 'text-gray-300');
+            selectedTab.classList.add('bg-emerald-600', 'text-white');
+            
+            // Load tab-specific data
+            if (tabName === 'spreadsheet') {
+                renderSpreadsheet();
+            } else if (tabName === 'invoices') {
+                loadInvoicesData();
+            } else if (tabName === 'grants') {
+                loadGrantsData();
+            } else if (tabName === 'reports') {
+                loadReportsData();
+            }
+        }
+
+        function loadInvoicesData() {
+            const invoices = document.getElementById('invoicesList');
+            invoices.innerHTML = '<div class="text-center text-gray-400 py-8">Invoice management will be implemented here</div>';
+        }
+
+        function loadGrantsData() {
+            const grants = document.getElementById('grantsList');
+            grants.innerHTML = '<div class="text-center text-gray-400 py-8">Grant tracking will be implemented here</div>';
+        }
+
+        function loadReportsData() {
+            // Financial reports would be implemented here
+            console.log('Loading financial reports...');
+        }
+
+        // Search and filter functionality
+        document.getElementById('transactionSearch').addEventListener('input', filterTransactions);
+        document.getElementById('typeFilter').addEventListener('change', filterTransactions);
+        document.getElementById('categoryFilter').addEventListener('change', filterTransactions);
+        document.getElementById('dateFilter').addEventListener('change', filterTransactions);
+
+        function filterTransactions() {
+            const searchTerm = document.getElementById('transactionSearch').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            const filteredTransactions = allTransactions.filter(transaction => {
+                const matchesSearch = transaction.description.toLowerCase().includes(searchTerm) ||
+                                    (transaction.reference || '').toLowerCase().includes(searchTerm);
+                const matchesType = !typeFilter || transaction.type === typeFilter;
+                const matchesCategory = !categoryFilter || transaction.category === categoryFilter;
+                const matchesDate = !dateFilter || transaction.date.startsWith(dateFilter);
+                
+                return matchesSearch && matchesType && matchesCategory && matchesDate;
+            });
+            
+            renderTransactions(filteredTransactions);
+        }
+
+        // Modal functions
+        window.openAddTransactionModal = function() {
+            document.getElementById('newTransactionDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('addTransactionModal').classList.remove('hidden');
+            document.getElementById('addTransactionModal').classList.add('flex');
+        }
+
+        window.closeAddTransactionModal = function() {
+            document.getElementById('addTransactionModal').classList.add('hidden');
+            document.getElementById('addTransactionModal').classList.remove('flex');
+            document.getElementById('addTransactionForm').reset();
+        }
+
+        window.openInvoiceModal = function() {
+            showNotification('Invoice creation will be implemented', 'info');
+        }
+
+        window.exportFinancialData = function() {
+            try {
+                showNotification('Generating financial data export...', 'success');
+                
+                // Generate CSV content
+                let csvContent = '# GRANADA OS - FINANCIAL MANAGEMENT SYSTEM\\n';
+                csvContent += '# Transaction History Export\\n';
+                csvContent += '# Export Generated: ' + new Date().toISOString() + '\\n';
+                csvContent += '# Total Transactions: ' + allTransactions.length + '\\n';
+                csvContent += '#\\n';
+                csvContent += 'ID,Type,Amount,Category,Description,Date,Reference,Payment Method,Status\\n';
+                
+                allTransactions.forEach(transaction => {
+                    csvContent += [
+                        transaction.id,
+                        transaction.type,
+                        transaction.amount,
+                        transaction.category,
+                        transaction.description.replace(/,/g, ';'),
+                        transaction.date,
+                        transaction.reference || '',
+                        transaction.paymentMethod || '',
+                        transaction.status
+                    ].join(',') + '\\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.download = 'granada_os_financial_data_' + timestamp + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(url);
+                showNotification('Financial data export completed successfully', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        // Transaction management functions
+        window.editTransaction = function(transactionId) {
+            showNotification('Edit transaction functionality will be implemented', 'info');
+        }
+
+        window.deleteTransaction = function(transactionId) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                allTransactions = allTransactions.filter(t => t.id !== transactionId);
+                loadFinancialData();
+                showNotification('Transaction deleted successfully', 'success');
+            }
+        }
+
+        // Add transaction form submission
+        document.getElementById('addTransactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newTransaction = {
+                id: Date.now().toString(),
+                type: document.getElementById('newTransactionType').value,
+                amount: parseFloat(document.getElementById('newTransactionAmount').value),
+                category: document.getElementById('newTransactionCategory').value,
+                description: document.getElementById('newTransactionDescription').value,
+                date: document.getElementById('newTransactionDate').value,
+                reference: document.getElementById('newTransactionReference').value,
+                paymentMethod: document.getElementById('newTransactionPayment').value,
+                status: 'completed'
+            };
+
+            allTransactions.unshift(newTransaction);
+            loadFinancialData();
+            closeAddTransactionModal();
+            showNotification('Transaction added successfully', 'success');
+        });
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ' + 
+                (type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600') + ' text-white';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('addTransactionModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddTransactionModal();
+        });
+
+        // Spreadsheet functionality
+        function initializeSpreadsheet() {
+            // Initialize with sample financial data
+            spreadsheetData = {
+                'A1': 'Item', 'B1': 'Jan', 'C1': 'Feb', 'D1': 'Mar', 'E1': 'Q1 Total', 'F1': 'Budget', 'G1': 'Variance',
+                'A2': 'Revenue', 'B2': '25000', 'C2': '28000', 'D2': '32000', 'E2': '=B2+C2+D2', 'F2': '80000', 'G2': '=E2-F2',
+                'A3': 'Grants', 'B3': '15000', 'C3': '20000', 'D3': '18000', 'E3': '=B3+C3+D3', 'F3': '50000', 'G3': '=E3-F3',
+                'A4': 'Consulting', 'B4': '8000', 'C4': '12000', 'D4': '10000', 'E4': '=B4+C4+D4', 'F4': '25000', 'G4': '=E4-F4',
+                'A5': 'Total Revenue', 'B5': '=B2+B3+B4', 'C5': '=C2+C3+C4', 'D5': '=D2+D3+D4', 'E5': '=B5+C5+D5', 'F5': '=F2+F3+F4', 'G5': '=E5-F5',
+                'A7': 'Expenses', 'B7': '', 'C7': '', 'D7': '', 'E7': '', 'F7': '', 'G7': '',
+                'A8': 'Salaries', 'B8': '12000', 'C8': '12000', 'D8': '13000', 'E8': '=B8+C8+D8', 'F8': '40000', 'G8': '=E8-F8',
+                'A9': 'Operations', 'B9': '5000', 'C9': '6000', 'D9': '7000', 'E9': '=B9+C9+D9', 'F9': '20000', 'G9': '=E9-F9',
+                'A10': 'Marketing', 'B10': '2000', 'C10': '3000', 'D10': '2500', 'E10': '=B10+C10+D10', 'F10': '8000', 'G10': '=E10-F10',
+                'A11': 'Total Expenses', 'B11': '=B8+B9+B10', 'C11': '=C8+C9+C10', 'D11': '=D8+D9+D10', 'E11': '=B11+C11+D11', 'F11': '=F8+F9+F10', 'G11': '=E11-F11',
+                'A13': 'Net Profit', 'B13': '=B5-B11', 'C13': '=C5-C11', 'D13': '=D5-D11', 'E13': '=E5-E11', 'F13': '=F5-F11', 'G13': '=E13-F13'
+            };
+        }
+
+        function renderSpreadsheet() {
+            const headerRow = document.getElementById('headerRow');
+            const tbody = document.getElementById('spreadsheetBody');
+            
+            // Generate column headers
+            let headerHTML = '<th class="px-2 py-1 border border-gray-600 text-center w-12">#</th>';
+            for (let i = 0; i < columnCount; i++) {
+                const colName = String.fromCharCode(65 + i);
+                headerHTML += '<th class="px-2 py-1 border border-gray-600 text-center min-w-24 cursor-pointer hover:bg-gray-700" onclick="selectColumn(' + "'" + colName + "'" + ')">' + colName + '</th>';
+            }
+            headerRow.innerHTML = headerHTML;
+            
+            // Generate spreadsheet rows
+            let bodyHTML = '';
+            for (let row = 1; row <= rowCount; row++) {
+                bodyHTML += '<tr>';
+                bodyHTML += '<td class="px-2 py-1 border border-gray-600 text-center bg-gray-800 font-bold cursor-pointer hover:bg-gray-700" onclick="selectRow(' + row + ')">' + row + '</td>';
+                
+                for (let col = 0; col < columnCount; col++) {
+                    const colName = String.fromCharCode(65 + col);
+                    const cellId = colName + row;
+                    const cellValue = spreadsheetData[cellId] || '';
+                    const displayValue = cellValue.startsWith('=') ? calculateFormula(cellValue, cellId) : cellValue;
+                    
+                    bodyHTML += '<td class="px-2 py-1 border border-gray-600 min-w-24">';
+                    bodyHTML += '<input type="text" id="cell_' + cellId + '" value="' + displayValue + '" ';
+                    bodyHTML += 'class="w-full bg-transparent text-white text-sm focus:bg-gray-700 focus:outline-none" ';
+                    bodyHTML += 'onclick="selectCell(' + "'" + cellId + "'" + ')" ';
+                    bodyHTML += 'onchange="updateCell(' + "'" + cellId + "'" + ', this.value)" ';
+                    bodyHTML += 'onfocus="showFormula(' + "'" + cellId + "'" + ')">';
+                    bodyHTML += '</td>';
+                }
+                bodyHTML += '</tr>';
+            }
+            tbody.innerHTML = bodyHTML;
+        }
+
+        function selectCell(cellId) {
+            selectedCell = { row: parseInt(cellId.slice(1)), col: cellId.charAt(0) };
+            document.getElementById('currentCell').textContent = cellId;
+            
+            // Highlight selected cell
+            document.querySelectorAll('input[id^="cell_"]').forEach(input => {
+                input.classList.remove('bg-emerald-600', 'bg-emerald-700');
+            });
+            document.getElementById('cell_' + cellId).classList.add('bg-emerald-600');
+            
+            showFormula(cellId);
+        }
+
+        function showFormula(cellId) {
+            const formula = spreadsheetData[cellId] || '';
+            document.getElementById('formulaBar').value = formula;
+        }
+
+        function updateCell(cellId, value) {
+            spreadsheetData[cellId] = value;
+            if (value.startsWith('=')) {
+                const calculated = calculateFormula(value, cellId);
+                document.getElementById('cell_' + cellId).value = calculated;
+            }
+            recalculateSpreadsheet();
+        }
+
+        function calculateFormula(formula, cellId) {
+            try {
+                // Simple formula parser for basic operations
+                let expression = formula.substring(1); // Remove '='
+                
+                // Replace cell references with values
+                expression = expression.replace(/[A-Z]\\d+/g, function(match) {
+                    if (match === cellId) return '0'; // Prevent circular reference
+                    const cellValue = spreadsheetData[match] || '0';
+                    if (cellValue.startsWith('=')) {
+                        return calculateFormula(cellValue, match);
+                    }
+                    return isNaN(cellValue) ? '0' : cellValue;
+                });
+                
+                // Evaluate the expression safely
+                return Function('"use strict"; return (' + expression + ')')();
+            } catch (error) {
+                return '#ERROR';
+            }
+        }
+
+        function recalculateSpreadsheet() {
+            for (let cellId in spreadsheetData) {
+                if (spreadsheetData[cellId].startsWith('=')) {
+                    const calculated = calculateFormula(spreadsheetData[cellId], cellId);
+                    const cellElement = document.getElementById('cell_' + cellId);
+                    if (cellElement) {
+                        cellElement.value = calculated;
+                    }
+                }
+            }
+        }
+
+        window.applyFormula = function() {
+            const formula = document.getElementById('formulaBar').value;
+            const cellId = document.getElementById('currentCell').textContent;
+            updateCell(cellId, formula);
+        }
+
+        window.addSpreadsheetRow = function() {
+            rowCount++;
+            renderSpreadsheet();
+            showNotification('Row added successfully', 'success');
+        }
+
+        window.addSpreadsheetColumn = function() {
+            if (columnCount < 26) {
+                columnCount++;
+                renderSpreadsheet();
+                showNotification('Column added successfully', 'success');
+            } else {
+                showNotification('Maximum 26 columns supported', 'error');
+            }
+        }
+
+        window.calculateSpreadsheet = function() {
+            recalculateSpreadsheet();
+            showNotification('Spreadsheet recalculated', 'success');
+        }
+
+        window.exportSpreadsheet = function() {
+            try {
+                let csvContent = '# GRANADA OS - FINANCIAL SPREADSHEET\\n';
+                csvContent += '# Export Generated: ' + new Date().toISOString() + '\\n';
+                csvContent += '#\\n';
+                
+                // Generate headers
+                let headers = [];
+                for (let i = 0; i < columnCount; i++) {
+                    headers.push(String.fromCharCode(65 + i));
+                }
+                csvContent += headers.join(',') + '\\n';
+                
+                // Generate data rows
+                for (let row = 1; row <= rowCount; row++) {
+                    let rowData = [];
+                    for (let col = 0; col < columnCount; col++) {
+                        const colName = String.fromCharCode(65 + col);
+                        const cellId = colName + row;
+                        const cellValue = spreadsheetData[cellId] || '';
+                        const displayValue = cellValue.startsWith('=') ? calculateFormula(cellValue, cellId) : cellValue;
+                        rowData.push(displayValue.toString().replace(/,/g, ';'));
+                    }
+                    csvContent += rowData.join(',') + '\\n';
+                }
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.download = 'granada_os_financial_spreadsheet_' + timestamp + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(url);
+                showNotification('Spreadsheet exported successfully', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        window.loadTemplate = function(templateType) {
+            if (templateType === 'budget') {
+                spreadsheetData = {
+                    'A1': 'Budget Item', 'B1': 'Planned', 'C1': 'Actual', 'D1': 'Variance', 'E1': 'Variance %',
+                    'A2': 'Grant Revenue', 'B2': '50000', 'C2': '48000', 'D2': '=C2-B2', 'E2': '=D2/B2*100',
+                    'A3': 'Service Revenue', 'B3': '30000', 'C3': '35000', 'D3': '=C3-B3', 'E3': '=D3/B3*100',
+                    'A4': 'Total Revenue', 'B4': '=B2+B3', 'C4': '=C2+C3', 'D4': '=C4-B4', 'E4': '=D4/B4*100',
+                    'A6': 'Staff Costs', 'B6': '35000', 'C6': '36000', 'D6': '=C6-B6', 'E6': '=D6/B6*100',
+                    'A7': 'Operations', 'B7': '8000', 'C7': '7500', 'D7': '=C7-B7', 'E7': '=D7/B7*100',
+                    'A8': 'Equipment', 'B8': '5000', 'C8': '4800', 'D8': '=C8-B8', 'E8': '=D8/B8*100',
+                    'A9': 'Total Expenses', 'B9': '=B6+B7+B8', 'C9': '=C6+C7+C8', 'D9': '=C9-B9', 'E9': '=D9/B9*100',
+                    'A11': 'Net Result', 'B11': '=B4-B9', 'C11': '=C4-C9', 'D11': '=C11-B11', 'E11': '=D11/B11*100'
+                };
+            } else if (templateType === 'cashflow') {
+                spreadsheetData = {
+                    'A1': 'Month', 'B1': 'Cash In', 'C1': 'Cash Out', 'D1': 'Net Flow', 'E1': 'Running Balance',
+                    'A2': 'January', 'B2': '45000', 'C2': '38000', 'D2': '=B2-C2', 'E2': '50000+D2',
+                    'A3': 'February', 'B3': '52000', 'C3': '41000', 'D3': '=B3-C3', 'E3': '=E2+D3',
+                    'A4': 'March', 'B4': '48000', 'C4': '39000', 'D4': '=B4-C4', 'E4': '=E3+D4',
+                    'A5': 'April', 'B5': '55000', 'C5': '42000', 'D5': '=B5-C5', 'E5': '=E4+D5',
+                    'A6': 'May', 'B6': '58000', 'C6': '44000', 'D6': '=B6-C6', 'E6': '=E5+D6',
+                    'A7': 'June', 'B7': '62000', 'C7': '46000', 'D7': '=B7-C7', 'E7': '=E6+D7'
+                };
+            } else if (templateType === 'pnl') {
+                spreadsheetData = {
+                    'A1': 'P&L Statement', 'B1': 'Current Month', 'C1': 'YTD', 'D1': 'Budget', 'E1': 'Variance',
+                    'A3': 'REVENUE', 'B3': '', 'C3': '', 'D3': '', 'E3': '',
+                    'A4': 'Grant Income', 'B4': '25000', 'C4': '150000', 'D4': '180000', 'E4': '=C4-D4',
+                    'A5': 'Service Income', 'B5': '15000', 'C5': '90000', 'D5': '100000', 'E5': '=C5-D5',
+                    'A6': 'Other Income', 'B6': '3000', 'C6': '18000', 'D6': '20000', 'E6': '=C6-D6',
+                    'A7': 'Total Revenue', 'B7': '=B4+B5+B6', 'C7': '=C4+C5+C6', 'D7': '=D4+D5+D6', 'E7': '=C7-D7',
+                    'A9': 'EXPENSES', 'B9': '', 'C9': '', 'D9': '', 'E9': '',
+                    'A10': 'Salaries', 'B10': '20000', 'C10': '120000', 'D10': '140000', 'E10': '=C10-D10',
+                    'A11': 'Operations', 'B11': '8000', 'C11': '48000', 'D11': '60000', 'E11': '=C11-D11',
+                    'A12': 'Marketing', 'B12': '2000', 'C12': '12000', 'D12': '15000', 'E12': '=C12-D12',
+                    'A13': 'Equipment', 'B13': '3000', 'C13': '18000', 'D13': '25000', 'E13': '=C13-D13',
+                    'A14': 'Total Expenses', 'B14': '=B10+B11+B12+B13', 'C14': '=C10+C11+C12+C13', 'D14': '=D10+D11+D12+D13', 'E14': '=C14-D14',
+                    'A16': 'NET PROFIT', 'B16': '=B7-B14', 'C16': '=C7-C14', 'D16': '=D7-D14', 'E16': '=C16-D16'
+                };
+            }
+            renderSpreadsheet();
+            showNotification(templateType.charAt(0).toUpperCase() + templateType.slice(1) + ' template loaded', 'success');
+        }
+
+        // Make functions globally available
+        window.switchFinanceTab = switchFinanceTab;
+    </script>
+</body>
+</html>
+      `);
+      return;
+    }
+    
     // Serve default dashboard
     res.send(`
 <!DOCTYPE html>
