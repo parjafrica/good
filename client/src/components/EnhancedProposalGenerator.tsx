@@ -842,7 +842,7 @@ const EnhancedProposalGenerator: React.FC = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowExpertFlow(true)}
+                  onClick={handleSendToExpert}
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
                 >
                   <Send className="w-5 h-5" />
@@ -853,6 +853,38 @@ const EnhancedProposalGenerator: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Expert Review Flow */}
+      <AnimatePresence>
+        {showExpertFlow && savedProposalId && (
+          <ExpertReviewFlow
+            isOpen={showExpertFlow}
+            onClose={() => setShowExpertFlow(false)}
+            onSuccess={() => {
+              setShowExpertFlow(false);
+              setShowDownloadFlow(true);
+            }}
+            proposalTitle={opportunity?.title || 'Proposal'}
+            fundingAmount={`${opportunity?.currency} ${opportunity?.amountMin?.toLocaleString()} - ${opportunity?.amountMax?.toLocaleString()}`}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Download Success Flow */}
+      <AnimatePresence>
+        {showDownloadFlow && savedProposalId && (
+          <DownloadSuccessFlow
+            isOpen={showDownloadFlow}
+            onClose={() => setShowDownloadFlow(false)}
+            onExpertReview={() => {
+              setShowDownloadFlow(false);
+              setShowExpertFlow(true);
+            }}
+            proposalTitle={opportunity?.title || 'Proposal'}
+            fundingAmount={`${opportunity?.currency} ${opportunity?.amountMin?.toLocaleString()} - ${opportunity?.amountMax?.toLocaleString()}`}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

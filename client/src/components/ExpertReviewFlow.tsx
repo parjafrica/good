@@ -3,14 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle, 
   Clock, 
+  Users, 
   Mail, 
-  FileText, 
-  ArrowRight, 
+  Bell, 
+  X,
+  Send,
   Star,
+  Eye,
+  FileText,
+  Download,
+  ArrowRight,
+  Sparkles,
   Award,
-  Users,
   Target
 } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 
 interface ExpertReviewFlowProps {
   isOpen: boolean;
@@ -20,7 +27,7 @@ interface ExpertReviewFlowProps {
   fundingAmount: string;
 }
 
-export const ExpertReviewFlow: React.FC<ExpertReviewFlowProps> = ({
+const ExpertReviewFlow: React.FC<ExpertReviewFlowProps> = ({
   isOpen,
   onClose,
   onSuccess,
@@ -29,11 +36,38 @@ export const ExpertReviewFlow: React.FC<ExpertReviewFlowProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notificationType, setNotificationType] = useState('completion');
+
+  // Submit for expert review mutation
+  const submitMutation = useMutation({
+    mutationFn: async (data: { email: string; notificationType: string }) => {
+      const response = await fetch('/api/proposal/request-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proposal_id: 'temp_id', // Will be replaced with actual ID
+          email: data.email,
+          notification_type: data.notificationType
+        })
+      });
+      if (!response.ok) throw new Error('Failed to submit for review');
+      return response.json();
+    },
+    onSuccess: () => {
+      setCurrentStep(5); // Move to success step
+    },
+    onError: (error) => {
+      console.error('Submit error:', error);
+    }
+  });
+
+  const handleSubmit = () => {
+    if (!email.trim()) return;
+    submitMutation.mutate({ email, notificationType });
+  };
 
   const steps = [
     {
-      id: 'intro',
       title: 'Expert Review Process',
       content: (
         <div className="text-center space-y-6">
@@ -41,144 +75,200 @@ export const ExpertReviewFlow: React.FC<ExpertReviewFlowProps> = ({
             <Award className="w-10 h-10 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              Your Proposal is Ready for Expert Review
+            <h3 className="text-2xl font-bold text-white mb-3">
+              Ready for Expert Review
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              "{proposalTitle}" • {fundingAmount}
+            <p className="text-gray-300 mb-2">"{proposalTitle}"</p>
+            <p className="text-blue-400 font-medium">{fundingAmount}</p>
+          </div>
+          <div className="bg-gray-800 rounded-lg p-4">
+            <p className="text-gray-300 text-sm">
+              Our certified grant writing experts will review your proposal for quality, 
+              compliance, and winning potential within 24-48 hours.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-              <div className="font-medium text-blue-900 dark:text-blue-100">Expert Team</div>
-              <div className="text-blue-700 dark:text-blue-300">5+ Years Experience</div>
+        </div>
+      )
+    },
+    {
+      title: 'Review Timeline',
+      content: (
+        <div className="space-y-6">
+          <div className="text-center mb-6">
+            <Clock className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Expected Timeline</h3>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 p-4 bg-gray-800 rounded-lg">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
+              <div>
+                <p className="text-white font-medium">Initial Review</p>
+                <p className="text-gray-400 text-sm">2-4 hours</p>
+              </div>
             </div>
-            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-              <Target className="w-6 h-6 text-green-600 mx-auto mb-2" />
-              <div className="font-medium text-green-900 dark:text-green-100">Success Rate</div>
-              <div className="text-green-700 dark:text-green-300">94% Approved</div>
+            <div className="flex items-center gap-4 p-4 bg-gray-800 rounded-lg">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">2</div>
+              <div>
+                <p className="text-white font-medium">Detailed Analysis</p>
+                <p className="text-gray-400 text-sm">12-24 hours</p>
+              </div>
             </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
-              <Clock className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-              <div className="font-medium text-purple-900 dark:text-purple-100">Turnaround</div>
-              <div className="text-purple-700 dark:text-purple-300">24-48 Hours</div>
+            <div className="flex items-center gap-4 p-4 bg-gray-800 rounded-lg">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">3</div>
+              <div>
+                <p className="text-white font-medium">Final Review & Delivery</p>
+                <p className="text-gray-400 text-sm">24-48 hours</p>
+              </div>
             </div>
           </div>
         </div>
       )
     },
     {
-      id: 'process',
-      title: 'What Happens Next',
+      title: 'Expert Qualifications',
       content: (
         <div className="space-y-6">
-          <div className="flex items-start gap-4">
-            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-600 font-bold text-sm">1</span>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">Expert Analysis</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Our funding specialists review your proposal for compliance, clarity, and competitive positioning
-              </p>
-            </div>
+          <div className="text-center mb-6">
+            <Users className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Our Expert Team</h3>
           </div>
-          
-          <div className="flex items-start gap-4">
-            <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-green-600 font-bold text-sm">2</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-800 rounded-lg p-4">
+              <Star className="w-8 h-8 text-yellow-500 mb-2" />
+              <h4 className="text-white font-medium mb-1">Certified Professionals</h4>
+              <p className="text-gray-400 text-sm">Grant Writing Professional (GWP) certified experts</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">Strategic Enhancement</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Experts enhance language, strengthen arguments, and optimize for funder preferences
-              </p>
+            <div className="bg-gray-800 rounded-lg p-4">
+              <Target className="w-8 h-8 text-red-500 mb-2" />
+              <h4 className="text-white font-medium mb-1">Proven Track Record</h4>
+              <p className="text-gray-400 text-sm">$50M+ in successful grant awards</p>
             </div>
-          </div>
-          
-          <div className="flex items-start gap-4">
-            <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-purple-600 font-bold text-sm">3</span>
+            <div className="bg-gray-800 rounded-lg p-4">
+              <Eye className="w-8 h-8 text-blue-500 mb-2" />
+              <h4 className="text-white font-medium mb-1">Sector Expertise</h4>
+              <p className="text-gray-400 text-sm">Specialized knowledge across all funding sectors</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">Final Delivery</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Receive your polished, submission-ready proposal with expert recommendations
-              </p>
+            <div className="bg-gray-800 rounded-lg p-4">
+              <FileText className="w-8 h-8 text-purple-500 mb-2" />
+              <h4 className="text-white font-medium mb-1">Quality Assurance</h4>
+              <p className="text-gray-400 text-sm">Multi-tier review process for excellence</p>
             </div>
           </div>
         </div>
       )
     },
     {
-      id: 'contact',
-      title: 'Stay Connected',
+      title: 'Notification Preferences',
       content: (
         <div className="space-y-6">
-          <div className="text-center">
-            <Mail className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              Get Notified When Ready
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              We'll send you an email when your expert-reviewed proposal is complete
-            </p>
+          <div className="text-center mb-6">
+            <Mail className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Stay Updated</h3>
+            <p className="text-gray-400">We'll keep you informed throughout the review process</p>
           </div>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Email Address
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                required
+                placeholder="your.email@example.com"
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Star className="w-5 h-5 text-blue-600 mt-0.5" />
-                <div className="text-sm">
-                  <div className="font-medium text-blue-900 dark:text-blue-100">Expert Guarantee</div>
-                  <div className="text-blue-700 dark:text-blue-300">
-                    Your proposal will be reviewed by certified grant writers with proven track records
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Notification Preferences
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-750">
+                  <input
+                    type="radio"
+                    name="notificationType"
+                    value="completion"
+                    checked={notificationType === 'completion'}
+                    onChange={(e) => setNotificationType(e.target.value)}
+                    className="text-blue-600"
+                  />
+                  <div>
+                    <p className="text-white font-medium">Completion Only</p>
+                    <p className="text-gray-400 text-sm">Notify me only when review is complete</p>
                   </div>
-                </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-750">
+                  <input
+                    type="radio"
+                    name="notificationType"
+                    value="progress"
+                    checked={notificationType === 'progress'}
+                    onChange={(e) => setNotificationType(e.target.value)}
+                    className="text-blue-600"
+                  />
+                  <div>
+                    <p className="text-white font-medium">Progress Updates</p>
+                    <p className="text-gray-400 text-sm">Notify me at each review milestone</p>
+                  </div>
+                </label>
               </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'Submit for Review',
+      content: (
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+            <Send className="w-10 h-10 text-white" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-white mb-3">
+              Ready to Submit
+            </h3>
+            <p className="text-gray-300 mb-4">
+              Your proposal will be sent to our expert review team immediately.
+            </p>
+            <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+              <p className="text-blue-300 text-sm">
+                <strong>Email:</strong> {email}<br />
+                <strong>Notifications:</strong> {notificationType === 'completion' ? 'Completion Only' : 'Progress Updates'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'Submission Successful',
+      content: (
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+            <CheckCircle className="w-10 h-10 text-white" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-white mb-3">
+              Successfully Submitted!
+            </h3>
+            <p className="text-gray-300 mb-4">
+              Your proposal has been submitted for expert review. You'll receive a confirmation email shortly.
+            </p>
+            <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
+              <p className="text-green-300 text-sm">
+                Expected completion: 24-48 hours<br />
+                You'll be notified at: {email}
+              </p>
             </div>
           </div>
         </div>
       )
     }
   ];
-
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!email) return;
-    
-    setIsSubmitting(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onSuccess();
-      onClose();
-    } catch (error) {
-      console.error('Error submitting:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -188,37 +278,34 @@ export const ExpertReviewFlow: React.FC<ExpertReviewFlowProps> = ({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700"
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                {steps.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full ${
-                      index <= currentStep ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Step {currentStep + 1} of {steps.length}
-              </span>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              ✕
-            </button>
+        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-white">Expert Review Process</h2>
+            <p className="text-gray-400 text-sm">Step {currentStep + 1} of {steps.length}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="px-6 py-4">
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            />
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -227,53 +314,65 @@ export const ExpertReviewFlow: React.FC<ExpertReviewFlowProps> = ({
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                {steps[currentStep].title}
-              </h2>
               {steps[currentStep].content}
             </motion.div>
           </AnimatePresence>
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+        <div className="p-6 border-t border-gray-700 flex justify-between">
           <button
-            onClick={onClose}
-            className="px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+            disabled={currentStep === 0}
+            className="px-6 py-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            Previous
           </button>
           
           <div className="flex gap-3">
-            {currentStep < steps.length - 1 ? (
+            {currentStep < steps.length - 2 && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={handleNext}
+                onClick={() => setCurrentStep(currentStep + 1)}
                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Continue
+                Next
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
-            ) : (
+            )}
+            
+            {currentStep === steps.length - 2 && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSubmit}
-                disabled={!email || isSubmitting}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitMutation.isPending || !email.trim()}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting ? (
+                {submitMutation.isPending ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Submitting...
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="w-4 h-4" />
+                    <Send className="w-4 h-4" />
                     Submit for Expert Review
                   </>
                 )}
+              </motion.button>
+            )}
+            
+            {currentStep === steps.length - 1 && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onSuccess}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Continue
               </motion.button>
             )}
           </div>
@@ -282,3 +381,5 @@ export const ExpertReviewFlow: React.FC<ExpertReviewFlowProps> = ({
     </div>
   );
 };
+
+export default ExpertReviewFlow;
