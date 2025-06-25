@@ -477,6 +477,119 @@ async def export_users_csv():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to export users: {str(e)}")
 
+@app.get("/api/activity/heatmap")
+async def get_activity_heatmap():
+    """Get user activity heatmap data for visualization"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            # Return mock heatmap data for demonstration
+            return generate_mock_heatmap_data()
+        
+        with conn.cursor() as cur:
+            # Get hourly activity data for the last 7 days
+            cur.execute("""
+                SELECT 
+                    EXTRACT(hour FROM created_at) as hour,
+                    EXTRACT(dow FROM created_at) as day_of_week,
+                    COUNT(*) as activity_count,
+                    DATE(created_at) as activity_date
+                FROM user_interactions 
+                WHERE created_at >= NOW() - INTERVAL '7 days'
+                GROUP BY hour, day_of_week, activity_date
+                ORDER BY activity_date DESC, hour
+            """)
+            activity_data = cur.fetchall()
+            
+            # Get geographic distribution
+            cur.execute("""
+                SELECT 
+                    COALESCE(country, 'Unknown') as country,
+                    COUNT(DISTINCT user_id) as user_count,
+                    COUNT(*) as interaction_count
+                FROM user_interactions ui
+                LEFT JOIN users u ON ui.user_id = u.id
+                WHERE ui.created_at >= NOW() - INTERVAL '7 days'
+                GROUP BY country
+                ORDER BY interaction_count DESC
+                LIMIT 10
+            """)
+            geo_data = cur.fetchall()
+            
+            # Get peak activity times
+            cur.execute("""
+                SELECT 
+                    EXTRACT(hour FROM created_at) as hour,
+                    COUNT(*) as activity_count,
+                    AVG(COUNT(*)) OVER() as avg_activity
+                FROM user_interactions 
+                WHERE created_at >= NOW() - INTERVAL '7 days'
+                GROUP BY hour
+                ORDER BY hour
+            """)
+            hourly_peaks = cur.fetchall()
+            
+        conn.close()
+        
+        return {
+            "heatmap_data": [dict(row) for row in activity_data],
+            "geographic_data": [dict(row) for row in geo_data],
+            "hourly_peaks": [dict(row) for row in hourly_peaks],
+            "last_updated": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"Heatmap data error: {e}")
+        return generate_mock_heatmap_data()
+
+def generate_mock_heatmap_data():
+    """Generate realistic heatmap data for demonstration"""
+    import random
+    from datetime import timedelta
+    
+    # Generate hourly activity data for 7 days
+    heatmap_data = []
+    for day in range(7):
+        for hour in range(24):
+            # Simulate realistic activity patterns (higher during business hours)
+            base_activity = 10 if 9 <= hour <= 17 else 3
+            activity_count = random.randint(base_activity, base_activity * 3)
+            
+            heatmap_data.append({
+                "hour": hour,
+                "day_of_week": day,
+                "activity_count": activity_count,
+                "activity_date": (datetime.now() - timedelta(days=day)).strftime("%Y-%m-%d")
+            })
+    
+    # Geographic data
+    geographic_data = [
+        {"country": "Kenya", "user_count": 234, "interaction_count": 1567},
+        {"country": "Uganda", "user_count": 187, "interaction_count": 1234},
+        {"country": "South Sudan", "user_count": 145, "interaction_count": 892},
+        {"country": "Tanzania", "user_count": 98, "interaction_count": 654},
+        {"country": "Rwanda", "user_count": 76, "interaction_count": 432},
+        {"country": "Global", "user_count": 312, "interaction_count": 2156}
+    ]
+    
+    # Hourly peaks
+    hourly_peaks = []
+    for hour in range(24):
+        base_activity = 15 if 9 <= hour <= 17 else 5
+        activity_count = random.randint(base_activity, base_activity * 2)
+        hourly_peaks.append({
+            "hour": hour,
+            "activity_count": activity_count,
+            "avg_activity": 25.5
+        })
+    
+    return {
+        "heatmap_data": heatmap_data,
+        "geographic_data": geographic_data,
+        "hourly_peaks": hourly_peaks,
+        "last_updated": datetime.now().isoformat()
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8002)

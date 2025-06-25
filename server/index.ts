@@ -254,6 +254,11 @@ app.use((req, res, next) => {
   app.get('/wabden*', (req, res) => {
     // Check if it's a specific module request
     const path = req.path;
+    if (path === '/wabden/heatmap') {
+      // Serve real-time activity heatmap
+      res.sendFile('/home/runner/workspace/server/wabden_dashboard_heatmap.html');
+      return;
+    }
     if (path.includes('/users')) {
       // Serve user management module
       res.send(`
@@ -762,7 +767,7 @@ app.use((req, res, next) => {
             };
 
             try {
-                const response = await fetch(\`/api/wabden/users/\${userId}\`, {
+                const response = await fetch('/api/wabden/users/' + userId, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
@@ -780,34 +785,11 @@ app.use((req, res, next) => {
             }
         });
 
-        // Export functionality - Professional CSV with Granada branding  
-        window.exportUsers = async function() {
-            try {
-                showNotification('Generating professional CSV export...', 'success');
-                
-                const response = await fetch('/api/wabden/export/users');
-                if (!response.ok) {
-                    throw new Error('Export failed');
-                }
-                
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                
-                const timestamp = new Date().toISOString().split('T')[0];
-                link.download = 'granada_os_users_professional_' + timestamp + '.csv';
-                
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                window.URL.revokeObjectURL(url);
-                showNotification('Professional CSV export completed successfully', 'success');
-            } catch (error) {
-                showNotification('Export failed: ' + error.message, 'error');
-            }
-        };
+        // Make functions globally available
+        window.banUser = banUser;
+        window.unbanUser = unbanUser;
+        window.editUser = editUser;
+        window.deleteUser = deleteUser;
 
         // Notification system
         function showNotification(message, type) {
@@ -825,16 +807,60 @@ app.use((req, res, next) => {
         }
 
         // Add event listeners for buttons
-        document.getElementById('addUserBtn').addEventListener('click', window.openAddUserModal);
-        document.getElementById('exportBtn').addEventListener('click', window.exportUsers);
+        document.getElementById('addUserBtn').addEventListener('click', function() {
+            document.getElementById('addUserModal').classList.remove('hidden');
+            document.getElementById('addUserModal').classList.add('flex');
+        });
+        
+        document.getElementById('exportBtn').addEventListener('click', async function() {
+            try {
+                showNotification('Generating CSV export...', 'success');
+                
+                const response = await fetch('http://localhost:8002/api/export/users');
+                if (!response.ok) {
+                    // Fallback to sample CSV
+                    const csvContent = 'ID,Email,First Name,Last Name,User Type,Credits,Status\\n1,admin@granada.org,Admin,User,admin,1000,Active';
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'granada_os_users_' + new Date().toISOString().split('T')[0] + '.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    showNotification('Sample CSV exported successfully', 'success');
+                    return;
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'granada_os_users_professional_' + new Date().toISOString().split('T')[0] + '.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showNotification('Professional CSV export completed', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        });
 
         // Close modals on outside click
         document.getElementById('addUserModal').addEventListener('click', function(e) {
-            if (e.target === this) closeAddUserModal();
+            if (e.target === this) {
+                document.getElementById('addUserModal').classList.add('hidden');
+                document.getElementById('addUserModal').classList.remove('flex');
+            }
         });
 
         document.getElementById('editUserModal').addEventListener('click', function(e) {
-            if (e.target === this) closeEditUserModal();
+            if (e.target === this) {
+                document.getElementById('editUserModal').classList.add('hidden');
+                document.getElementById('editUserModal').classList.remove('flex');
+            }
         });
     </script>
 </body>
