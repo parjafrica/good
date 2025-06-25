@@ -3753,6 +3753,955 @@ app.use((req, res, next) => {
       return;
     }
     
+    if (path.includes('/bots')) {
+      // Serve Bot Control & Management module
+      res.send(`
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Control & Management - Granada OS Wabden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); }
+        .card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); backdrop-filter: blur(10px); }
+        .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .bot-card { border-left: 4px solid #06b6d4; }
+        .bot-card.active { border-left-color: #10b981; animation: pulse 2s infinite; }
+        .bot-card.inactive { border-left-color: #6b7280; }
+        .bot-card.error { border-left-color: #ef4444; }
+        .bot-card.maintenance { border-left-color: #f59e0b; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-active { background-color: #10b981; animation: pulse 2s infinite; }
+        .status-inactive { background-color: #6b7280; }
+        .status-error { background-color: #ef4444; }
+        .status-maintenance { background-color: #f59e0b; }
+        
+        .url-feed-box {
+            background: #1f2937;
+            border: 2px dashed #4b5563;
+            transition: all 0.3s ease;
+        }
+        .url-feed-box:hover {
+            border-color: #06b6d4;
+            background: #374151;
+        }
+        
+        .performance-chart {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar-gradient shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Wabden Admin
+                    </h1>
+                </div>
+                
+                <nav class="space-y-2">
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden'">
+                        <i class="fas fa-tachometer-alt text-blue-400"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/users'">
+                        <i class="fas fa-users text-green-400"></i>
+                        <span>User Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                        <i class="fas fa-bullseye text-yellow-400"></i>
+                        <span>Opportunities</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/hr'">
+                        <i class="fas fa-user-tie text-purple-400"></i>
+                        <span>HR Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/accounting'">
+                        <i class="fas fa-chart-line text-emerald-400"></i>
+                        <span>Accounting</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/submissions'">
+                        <i class="fas fa-file-alt text-orange-400"></i>
+                        <span>Submissions</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-cyan-600/30 cursor-pointer">
+                        <i class="fas fa-robot text-cyan-400"></i>
+                        <span class="text-cyan-300">Bot Control</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="bg-gray-800/50 backdrop-blur-lg shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Bot Control & Management</h2>
+                        <p class="text-gray-400 mt-1">Intelligent web scraping, automation, and opportunity discovery</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="startAllBots()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                            <i class="fas fa-play mr-2"></i> Start All Bots
+                        </button>
+                        <button onclick="stopAllBots()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                            <i class="fas fa-stop mr-2"></i> Stop All Bots
+                        </button>
+                        <button onclick="openBotSettings()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            <i class="fas fa-cog mr-2"></i> Settings
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Bot System Overview -->
+            <div class="p-6">
+                <!-- System Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Active Bots</p>
+                                <p class="text-3xl font-bold text-green-400 mt-1" id="activeBots">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-robot text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Opportunities Found</p>
+                                <p class="text-3xl font-bold text-cyan-400 mt-1" id="opportunitiesFound">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-search text-cyan-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Success Rate</p>
+                                <p class="text-3xl font-bold text-blue-400 mt-1" id="successRate">0%</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-bar text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Screenshots</p>
+                                <p class="text-3xl font-bold text-purple-400 mt-1" id="screenshotsTaken">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-camera text-purple-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Runtime</p>
+                                <p class="text-3xl font-bold text-yellow-400 mt-1" id="totalRuntime">0h</p>
+                            </div>
+                            <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- URL Feeding Interface -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">URL Feed System</h3>
+                        <div class="url-feed-box rounded-lg p-6 mb-4">
+                            <div class="text-center">
+                                <i class="fas fa-link text-cyan-400 text-3xl mb-3"></i>
+                                <h4 class="text-lg font-bold text-white mb-2">Feed URLs to Bots</h4>
+                                <p class="text-gray-400 text-sm mb-4">Add funding opportunity websites for intelligent scraping</p>
+                                <textarea id="urlInput" placeholder="Enter URLs (one per line)..." 
+                                         class="w-full h-24 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"></textarea>
+                                <div class="flex space-x-2 mt-3">
+                                    <button onclick="addUrls()" class="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors">
+                                        <i class="fas fa-plus mr-2"></i> Add URLs
+                                    </button>
+                                    <button onclick="validateUrls()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                        <i class="fas fa-check mr-2"></i> Validate
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Add Verified Sources -->
+                        <div class="mb-4">
+                            <h5 class="text-sm font-bold text-gray-400 mb-2">Quick Add Verified Sources:</h5>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="addVerifiedUrl('reliefweb')" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                                    ReliefWeb
+                                </button>
+                                <button onclick="addVerifiedUrl('grants-gov')" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                                    Grants.gov
+                                </button>
+                                <button onclick="addVerifiedUrl('eu-funding')" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                                    EU Funding
+                                </button>
+                                <button onclick="addVerifiedUrl('world-bank')" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                                    World Bank
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Performance Monitor</h3>
+                        <div class="performance-chart rounded-lg p-4 mb-4">
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <div class="text-2xl font-bold text-green-400" id="chartSuccesses">145</div>
+                                    <div class="text-sm text-gray-400">Successful Scrapes</div>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-red-400" id="chartErrors">12</div>
+                                    <div class="text-sm text-gray-400">Failed Attempts</div>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-blue-400" id="chartAvgTime">2.3s</div>
+                                    <div class="text-sm text-gray-400">Avg Response</div>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-purple-400" id="chartDataPoints">1,247</div>
+                                    <div class="text-sm text-gray-400">Data Points</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Real-time Activity Feed -->
+                        <div class="bg-gray-800 rounded-lg p-4 max-h-32 overflow-y-auto">
+                            <h5 class="text-sm font-bold text-gray-400 mb-2">Real-time Activity:</h5>
+                            <div id="activityFeed" class="space-y-1 text-xs">
+                                <!-- Activity items will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bot Fleet Management -->
+                <div class="card-gradient rounded-xl p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-white">Bot Fleet Management</h3>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="refreshBotStatus()" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
+                                <i class="fas fa-sync-alt mr-2"></i> Refresh
+                            </button>
+                            <button onclick="exportBotData()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i> Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="botFleet" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Bot cards will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Target URLs List -->
+                <div class="card-gradient rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-white">Target URLs</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-400">Total URLs: <span id="totalUrls" class="text-white">0</span></span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-800">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">URL</th>
+                                    <th class="px-4 py-3 text-left">Type</th>
+                                    <th class="px-4 py-3 text-left">Last Scraped</th>
+                                    <th class="px-4 py-3 text-left">Opportunities</th>
+                                    <th class="px-4 py-3 text-left">Status</th>
+                                    <th class="px-4 py-3 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="urlsTable" class="divide-y divide-gray-700">
+                                <!-- URL rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bot Settings Modal -->
+    <div id="botSettingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-4">Bot System Settings</h3>
+            
+            <div class="space-y-6">
+                <!-- Automation Settings -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-cyan-400 mb-3">Automation Settings</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Scraping Interval (minutes)</label>
+                            <input type="number" id="scrapingInterval" value="30" min="5" max="1440" 
+                                   class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Max Concurrent Bots</label>
+                            <input type="number" id="maxBots" value="5" min="1" max="20" 
+                                   class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Request Timeout (seconds)</label>
+                            <input type="number" id="requestTimeout" value="30" min="10" max="120" 
+                                   class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Retry Attempts</label>
+                            <input type="number" id="retryAttempts" value="3" min="1" max="10" 
+                                   class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Human Behavior Settings -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-green-400 mb-3">Human Behavior Simulation</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300">Enable Stealth Mode</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="stealthMode" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300">Random Delays</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="randomDelays" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300">Mouse Movement Simulation</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="mouseSim" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300">Scroll Behavior</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="scrollBehavior" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screenshot Settings -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-purple-400 mb-3">Screenshot & Monitoring</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Screenshot Threshold (%)</label>
+                            <input type="range" id="screenshotThreshold" min="0" max="100" value="70" 
+                                   class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>0%</span>
+                                <span id="thresholdValue">70%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300">Auto Screenshot</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="autoScreenshot" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-6">
+                <button onclick="closeBotSettings()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button onclick="saveBotSettings()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors">
+                    <i class="fas fa-save mr-2"></i> Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let botFleetData = [];
+        let targetUrls = [];
+        let systemStats = {
+            activeBots: 0,
+            opportunitiesFound: 0,
+            successRate: 0,
+            screenshotsTaken: 0,
+            totalRuntime: 0
+        };
+
+        // Sample bot fleet data
+        const sampleBots = [
+            {
+                id: 'bot-001',
+                name: 'ReliefWeb Scout',
+                status: 'active',
+                url: 'https://reliefweb.int/jobs',
+                type: 'funding',
+                lastRun: new Date(Date.now() - 300000),
+                opportunities: 23,
+                successRate: 92,
+                performance: 'excellent',
+                humanBehavior: 85,
+                region: 'Global'
+            },
+            {
+                id: 'bot-002',
+                name: 'Grants.gov Hunter',
+                status: 'active',
+                url: 'https://grants.gov',
+                type: 'government',
+                lastRun: new Date(Date.now() - 600000),
+                opportunities: 15,
+                successRate: 88,
+                performance: 'good',
+                humanBehavior: 78,
+                region: 'United States'
+            },
+            {
+                id: 'bot-003',
+                name: 'EU Funding Tracker',
+                status: 'maintenance',
+                url: 'https://ec.europa.eu/info/funding-tenders',
+                type: 'regional',
+                lastRun: new Date(Date.now() - 1800000),
+                opportunities: 8,
+                successRate: 75,
+                performance: 'average',
+                humanBehavior: 82,
+                region: 'Europe'
+            },
+            {
+                id: 'bot-004',
+                name: 'World Bank Monitor',
+                status: 'inactive',
+                url: 'https://worldbank.org/projects',
+                type: 'development',
+                lastRun: new Date(Date.now() - 3600000),
+                opportunities: 12,
+                successRate: 95,
+                performance: 'excellent',
+                humanBehavior: 90,
+                region: 'Global'
+            },
+            {
+                id: 'bot-005',
+                name: 'Foundation Directory',
+                status: 'error',
+                url: 'https://foundationdirectory.org',
+                type: 'private',
+                lastRun: new Date(Date.now() - 7200000),
+                opportunities: 0,
+                successRate: 0,
+                performance: 'poor',
+                humanBehavior: 0,
+                region: 'Global'
+            }
+        ];
+
+        // Sample target URLs
+        const sampleUrls = [
+            {
+                url: 'https://reliefweb.int/jobs',
+                type: 'Humanitarian',
+                lastScraped: new Date(Date.now() - 300000),
+                opportunities: 23,
+                status: 'active'
+            },
+            {
+                url: 'https://grants.gov/search-grants.html',
+                type: 'Government',
+                lastScraped: new Date(Date.now() - 600000),
+                opportunities: 15,
+                status: 'active'
+            },
+            {
+                url: 'https://ec.europa.eu/info/funding-tenders',
+                type: 'Regional',
+                lastScraped: new Date(Date.now() - 1800000),
+                opportunities: 8,
+                status: 'maintenance'
+            },
+            {
+                url: 'https://worldbank.org/projects',
+                type: 'Development',
+                lastScraped: new Date(Date.now() - 3600000),
+                opportunities: 12,
+                status: 'inactive'
+            }
+        ];
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            botFleetData = sampleBots;
+            targetUrls = sampleUrls;
+            loadBotSystemData();
+            startActivityFeed();
+        });
+
+        function loadBotSystemData() {
+            calculateSystemStats();
+            renderBotFleet();
+            renderTargetUrls();
+            updateActivityFeed();
+        }
+
+        function calculateSystemStats() {
+            systemStats.activeBots = botFleetData.filter(bot => bot.status === 'active').length;
+            systemStats.opportunitiesFound = botFleetData.reduce((sum, bot) => sum + bot.opportunities, 0);
+            systemStats.successRate = Math.round(botFleetData.reduce((sum, bot) => sum + bot.successRate, 0) / botFleetData.length);
+            systemStats.screenshotsTaken = 247; // Sample data
+            systemStats.totalRuntime = 18; // Sample hours
+
+            document.getElementById('activeBots').textContent = systemStats.activeBots;
+            document.getElementById('opportunitiesFound').textContent = systemStats.opportunitiesFound;
+            document.getElementById('successRate').textContent = systemStats.successRate + '%';
+            document.getElementById('screenshotsTaken').textContent = systemStats.screenshotsTaken;
+            document.getElementById('totalRuntime').textContent = systemStats.totalRuntime + 'h';
+        }
+
+        function renderBotFleet() {
+            const fleet = document.getElementById('botFleet');
+            
+            fleet.innerHTML = botFleetData.map(bot => {
+                const statusClass = 'bot-card ' + bot.status;
+                const statusColor = {
+                    'active': 'status-active',
+                    'inactive': 'status-inactive',
+                    'maintenance': 'status-maintenance',
+                    'error': 'status-error'
+                }[bot.status];
+                
+                const performanceColor = {
+                    'excellent': 'text-green-400',
+                    'good': 'text-blue-400',
+                    'average': 'text-yellow-400',
+                    'poor': 'text-red-400'
+                }[bot.performance];
+                
+                const lastRunText = formatTimeAgo(bot.lastRun);
+                
+                return '<div class="' + statusClass + ' card-gradient rounded-xl p-6 hover-scale">' +
+                    '<div class="flex items-start justify-between mb-4">' +
+                        '<div>' +
+                            '<div class="flex items-center mb-2">' +
+                                '<span class="status-indicator ' + statusColor + '"></span>' +
+                                '<h4 class="text-lg font-bold text-white">' + bot.name + '</h4>' +
+                            '</div>' +
+                            '<p class="text-gray-400 text-sm">' + bot.url + '</p>' +
+                            '<div class="flex items-center space-x-2 mt-2">' +
+                                '<span class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">' + bot.type + '</span>' +
+                                '<span class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">' + bot.region + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="text-right">' +
+                            '<div class="text-2xl font-bold text-cyan-400">' + bot.opportunities + '</div>' +
+                            '<div class="text-xs text-gray-400">Opportunities</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-2 gap-4 mb-4 text-sm">' +
+                        '<div>' +
+                            '<div class="text-gray-400">Success Rate</div>' +
+                            '<div class="font-bold text-white">' + bot.successRate + '%</div>' +
+                        '</div>' +
+                        '<div>' +
+                            '<div class="text-gray-400">Performance</div>' +
+                            '<div class="font-bold ' + performanceColor + '">' + bot.performance + '</div>' +
+                        '</div>' +
+                        '<div>' +
+                            '<div class="text-gray-400">Human Behavior</div>' +
+                            '<div class="font-bold text-white">' + bot.humanBehavior + '%</div>' +
+                        '</div>' +
+                        '<div>' +
+                            '<div class="text-gray-400">Last Run</div>' +
+                            '<div class="font-bold text-white text-xs">' + lastRunText + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex space-x-2 pt-4 border-t border-gray-700">' +
+                        '<button onclick="controlBot(' + "'" + bot.id + "'" + ', ' + "'" + (bot.status === 'active' ? 'stop' : 'start') + "'" + ')" class="flex-1 px-3 py-2 bg-' + (bot.status === 'active' ? 'red' : 'green') + '-600 hover:bg-' + (bot.status === 'active' ? 'red' : 'green') + '-700 rounded text-sm transition-colors">' +
+                            '<i class="fas fa-' + (bot.status === 'active' ? 'stop' : 'play') + ' mr-1"></i> ' + (bot.status === 'active' ? 'Stop' : 'Start') +
+                        '</button>' +
+                        '<button onclick="viewBotLogs(' + "'" + bot.id + "'" + ')" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors">' +
+                            '<i class="fas fa-list mr-1"></i> Logs' +
+                        '</button>' +
+                        '<button onclick="configurBot(' + "'" + bot.id + "'" + ')" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm transition-colors">' +
+                            '<i class="fas fa-cog mr-1"></i> Config' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderTargetUrls() {
+            const table = document.getElementById('urlsTable');
+            document.getElementById('totalUrls').textContent = targetUrls.length;
+            
+            table.innerHTML = targetUrls.map(urlData => {
+                const statusColor = {
+                    'active': 'text-green-400',
+                    'inactive': 'text-gray-400',
+                    'maintenance': 'text-yellow-400',
+                    'error': 'text-red-400'
+                }[urlData.status] || 'text-gray-400';
+                
+                return '<tr class="hover:bg-gray-800">' +
+                    '<td class="px-4 py-3">' +
+                        '<div class="text-white font-medium">' + urlData.url + '</div>' +
+                    '</td>' +
+                    '<td class="px-4 py-3">' +
+                        '<span class="px-2 py-1 bg-gray-700 rounded text-xs">' + urlData.type + '</span>' +
+                    '</td>' +
+                    '<td class="px-4 py-3 text-gray-400">' +
+                        formatTimeAgo(urlData.lastScraped) +
+                    '</td>' +
+                    '<td class="px-4 py-3">' +
+                        '<div class="text-cyan-400 font-bold">' + urlData.opportunities + '</div>' +
+                    '</td>' +
+                    '<td class="px-4 py-3">' +
+                        '<span class="' + statusColor + '">' + urlData.status + '</span>' +
+                    '</td>' +
+                    '<td class="px-4 py-3">' +
+                        '<div class="flex space-x-2">' +
+                            '<button onclick="testUrl(' + "'" + urlData.url + "'" + ')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">' +
+                                'Test' +
+                            '</button>' +
+                            '<button onclick="removeUrl(' + "'" + urlData.url + "'" + ')" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">' +
+                                'Remove' +
+                            '</button>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 60) return diffMins + 'm ago';
+            if (diffHours < 24) return diffHours + 'h ago';
+            return diffDays + 'd ago';
+        }
+
+        function startActivityFeed() {
+            updateActivityFeed();
+            // Update activity feed every 5 seconds
+            setInterval(updateActivityFeed, 5000);
+        }
+
+        function updateActivityFeed() {
+            const feed = document.getElementById('activityFeed');
+            const activities = [
+                'Bot-001 scraped 3 new opportunities from ReliefWeb',
+                'Bot-002 completed scan of Grants.gov sector',
+                'Screenshot taken: Success score 78%',
+                'Bot-003 entering maintenance mode',
+                'AI analysis completed for 15 data points'
+            ];
+            
+            const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const existingItems = feed.children;
+            if (existingItems.length >= 5) {
+                feed.removeChild(existingItems[existingItems.length - 1]);
+            }
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'text-gray-300';
+            newItem.innerHTML = '<span class="text-cyan-400">' + timestamp + '</span> - ' + randomActivity;
+            feed.insertBefore(newItem, feed.firstChild);
+        }
+
+        // Bot Control Functions
+        window.startAllBots = function() {
+            botFleetData.forEach(bot => {
+                if (bot.status !== 'error') {
+                    bot.status = 'active';
+                }
+            });
+            loadBotSystemData();
+            showNotification('All available bots started successfully', 'success');
+        }
+
+        window.stopAllBots = function() {
+            botFleetData.forEach(bot => {
+                if (bot.status === 'active') {
+                    bot.status = 'inactive';
+                }
+            });
+            loadBotSystemData();
+            showNotification('All bots stopped', 'success');
+        }
+
+        window.controlBot = function(botId, action) {
+            const bot = botFleetData.find(b => b.id === botId);
+            if (bot) {
+                if (action === 'start' && bot.status !== 'error') {
+                    bot.status = 'active';
+                    showNotification('Bot ' + bot.name + ' started', 'success');
+                } else if (action === 'stop') {
+                    bot.status = 'inactive';
+                    showNotification('Bot ' + bot.name + ' stopped', 'success');
+                }
+                loadBotSystemData();
+            }
+        }
+
+        window.viewBotLogs = function(botId) {
+            const bot = botFleetData.find(b => b.id === botId);
+            if (bot) {
+                showNotification('Viewing logs for ' + bot.name, 'info');
+            }
+        }
+
+        window.configurBot = function(botId) {
+            const bot = botFleetData.find(b => b.id === botId);
+            if (bot) {
+                showNotification('Configuring ' + bot.name, 'info');
+            }
+        }
+
+        // URL Management Functions
+        window.addUrls = function() {
+            const urlInput = document.getElementById('urlInput');
+            const urls = urlInput.value.split('\\n').filter(url => url.trim());
+            
+            urls.forEach(url => {
+                if (url.trim() && !targetUrls.find(u => u.url === url.trim())) {
+                    targetUrls.push({
+                        url: url.trim(),
+                        type: 'Custom',
+                        lastScraped: new Date(),
+                        opportunities: 0,
+                        status: 'inactive'
+                    });
+                }
+            });
+            
+            urlInput.value = '';
+            renderTargetUrls();
+            showNotification(urls.length + ' URLs added successfully', 'success');
+        }
+
+        window.validateUrls = function() {
+            const urlInput = document.getElementById('urlInput');
+            const urls = urlInput.value.split('\\n').filter(url => url.trim());
+            
+            let validCount = 0;
+            urls.forEach(url => {
+                try {
+                    new URL(url.trim());
+                    validCount++;
+                } catch (e) {
+                    // Invalid URL
+                }
+            });
+            
+            showNotification(validCount + ' of ' + urls.length + ' URLs are valid', validCount === urls.length ? 'success' : 'error');
+        }
+
+        window.addVerifiedUrl = function(source) {
+            const verifiedUrls = {
+                'reliefweb': 'https://reliefweb.int/jobs',
+                'grants-gov': 'https://grants.gov/search-grants.html',
+                'eu-funding': 'https://ec.europa.eu/info/funding-tenders',
+                'world-bank': 'https://worldbank.org/projects'
+            };
+            
+            const url = verifiedUrls[source];
+            if (url && !targetUrls.find(u => u.url === url)) {
+                targetUrls.push({
+                    url: url,
+                    type: source.charAt(0).toUpperCase() + source.slice(1).replace('-', ' '),
+                    lastScraped: new Date(),
+                    opportunities: 0,
+                    status: 'inactive'
+                });
+                
+                renderTargetUrls();
+                showNotification('Verified source added: ' + source, 'success');
+            } else if (targetUrls.find(u => u.url === url)) {
+                showNotification('URL already exists', 'error');
+            }
+        }
+
+        window.testUrl = function(url) {
+            showNotification('Testing URL: ' + url, 'info');
+        }
+
+        window.removeUrl = function(url) {
+            targetUrls = targetUrls.filter(u => u.url !== url);
+            renderTargetUrls();
+            showNotification('URL removed successfully', 'success');
+        }
+
+        window.refreshBotStatus = function() {
+            loadBotSystemData();
+            showNotification('Bot status refreshed', 'success');
+        }
+
+        window.exportBotData = function() {
+            try {
+                let csvContent = '# GRANADA OS - BOT SYSTEM EXPORT\\n';
+                csvContent += '# Export Generated: ' + new Date().toISOString() + '\\n';
+                csvContent += '# Active Bots: ' + systemStats.activeBots + '\\n';
+                csvContent += '# Total Opportunities: ' + systemStats.opportunitiesFound + '\\n';
+                csvContent += '#\\n';
+                csvContent += 'Bot ID,Name,Status,URL,Type,Region,Opportunities,Success Rate,Performance,Human Behavior,Last Run\\n';
+                
+                botFleetData.forEach(bot => {
+                    csvContent += [
+                        bot.id,
+                        bot.name,
+                        bot.status,
+                        bot.url,
+                        bot.type,
+                        bot.region,
+                        bot.opportunities,
+                        bot.successRate,
+                        bot.performance,
+                        bot.humanBehavior,
+                        bot.lastRun.toISOString()
+                    ].join(',') + '\\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.download = 'granada_os_bot_data_' + timestamp + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(url);
+                showNotification('Bot data exported successfully', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        // Settings Modal Functions
+        window.openBotSettings = function() {
+            document.getElementById('botSettingsModal').classList.remove('hidden');
+            document.getElementById('botSettingsModal').classList.add('flex');
+        }
+
+        window.closeBotSettings = function() {
+            document.getElementById('botSettingsModal').classList.add('hidden');
+            document.getElementById('botSettingsModal').classList.remove('flex');
+        }
+
+        window.saveBotSettings = function() {
+            // Get all settings values
+            const settings = {
+                scrapingInterval: document.getElementById('scrapingInterval').value,
+                maxBots: document.getElementById('maxBots').value,
+                requestTimeout: document.getElementById('requestTimeout').value,
+                retryAttempts: document.getElementById('retryAttempts').value,
+                stealthMode: document.getElementById('stealthMode').checked,
+                randomDelays: document.getElementById('randomDelays').checked,
+                mouseSim: document.getElementById('mouseSim').checked,
+                scrollBehavior: document.getElementById('scrollBehavior').checked,
+                screenshotThreshold: document.getElementById('screenshotThreshold').value,
+                autoScreenshot: document.getElementById('autoScreenshot').checked
+            };
+            
+            closeBotSettings();
+            showNotification('Bot settings saved successfully', 'success');
+        }
+
+        // Update threshold display
+        document.getElementById('screenshotThreshold').addEventListener('input', function() {
+            document.getElementById('thresholdValue').textContent = this.value + '%';
+        });
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ' + 
+                (type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600') + ' text-white';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('botSettingsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBotSettings();
+        });
+    </script>
+</body>
+</html>
+      `);
+      return;
+    }
+    
     // Serve default dashboard
     res.send(`
 <!DOCTYPE html>
