@@ -22,7 +22,7 @@ import {
   Award,
   Users
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '.././contexts/AuthContext';
 
 interface SidebarProps {
   collapsed: boolean;

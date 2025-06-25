@@ -14,7 +14,7 @@ import {
   MapPin,
   Flag
 } from 'lucide-react';
-import { realDonorSearchEngine } from '../../services/realDonorSearchEngine';
+import { realDonorSearchEngine } from '.././services/realDonorSearchEngine';
 
 interface BotStatus {
   id: string;

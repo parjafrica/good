@@ -14,7 +14,7 @@ import {
   Check,
   Quote
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 
 type UserType = 'ngo' | 'student' | 'business' | 'general' | null;
 

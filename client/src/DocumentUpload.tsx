@@ -5,7 +5,7 @@ import {
   X, Loader, Sparkles, File, FileImage,
   Send
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 
 interface DocumentUploadProps {
   onUploadComplete?: (opportunityId: string, analysis: any) => void;

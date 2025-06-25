@@ -23,7 +23,7 @@ import {
   BookOpen,
   Gift
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 
 const DonorDashboard: React.FC = () => {
   const navigate = useNavigate();

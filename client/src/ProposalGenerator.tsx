@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, FileText, Sparkles, Download, Copy, RefreshCw, CheckCircle, Gem, Upload, File, X, Play, Pause, Square, FileImage, FileSpreadsheet, File as FilePdf } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { aiService } from '../services/aiService';
+import { useAuth } from './contexts/AuthContext';
+import { aiService } from './services/aiService';
 
 interface UploadedFile {
   id: string;

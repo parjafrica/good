@@ -30,7 +30,7 @@ import {
   TrendingUp,
   Users
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Proposal {

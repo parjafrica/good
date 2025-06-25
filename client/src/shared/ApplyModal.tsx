@@ -13,7 +13,7 @@ import {
   MessageCircle,
   ExternalLink
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '.././contexts/AuthContext';
 
 interface ApplyModalProps {
   isOpen: boolean;

@@ -20,11 +20,11 @@ import {
   LogOut,
   Menu
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '.././contexts/AuthContext';
 import ThemeSelector from '../ThemeSelector';
-import { notificationService } from '../../services/notificationService';
-import { Notification } from '../../types';
-import { realDonorSearchEngine } from '../../services/realDonorSearchEngine';
+import { notificationService } from '.././services/notificationService';
+import { Notification } from '.././types';
+import { realDonorSearchEngine } from '.././services/realDonorSearchEngine';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();

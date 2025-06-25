@@ -32,10 +32,10 @@ import {
   FileText,
   MapPin
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { paymentService, PaymentMethod, MobileMoneyProvider } from '../services/paymentService';
-import { realDonorSearchEngine } from '../services/realDonorSearchEngine';
+import { paymentService, PaymentMethod, MobileMoneyProvider } from './services/paymentService';
+import { realDonorSearchEngine } from './services/realDonorSearchEngine';
 
 interface CreditPackage {
   id: string;

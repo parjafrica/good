@@ -6,7 +6,7 @@ import {
   Bookmark, BookmarkCheck, Send, Building, X, ArrowRight,
   Sparkles, RefreshCw, Database, AlertCircle, Bot, UserCheck, Coins
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import ApplyButton from './DonorDiscovery/ApplyButton';
 import ViewDetailsButton from './DonorDiscovery/ViewDetailsButton';
 

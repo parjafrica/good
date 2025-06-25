@@ -26,9 +26,9 @@ import {
   MapPin,
   Flag
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { DashboardStats, ActivityItem } from '../types';
-import { realDonorSearchEngine } from '../services/realDonorSearchEngine';
+import { useAuth } from './contexts/AuthContext';
+import { DashboardStats, ActivityItem } from './types';
+import { realDonorSearchEngine } from './services/realDonorSearchEngine';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();

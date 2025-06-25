@@ -18,9 +18,9 @@ import {
   Wallet,
   MapPin
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { paymentService, PaymentMethod, MobileMoneyProvider } from '../services/paymentService';
-import { realDonorSearchEngine } from '../services/realDonorSearchEngine';
+import { useAuth } from './contexts/AuthContext';
+import { paymentService, PaymentMethod, MobileMoneyProvider } from './services/paymentService';
+import { realDonorSearchEngine } from './services/realDonorSearchEngine';
 
 interface CreditPackage {
   id: string;

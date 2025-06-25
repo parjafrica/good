@@ -22,7 +22,7 @@ import {
   Users,
   Target
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();

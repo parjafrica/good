@@ -1,36 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Header from './components/shared/Header';
-import Sidebar from './components/shared/Sidebar';
-import Dashboard from './components/Dashboard';
-import DonorDashboard from './components/DonorDashboard';
-import DonorDiscovery from './components/DonorDiscovery';
-import EnhancedProposalGenerator from './components/EnhancedProposalGenerator';
-import ProposalManager from './components/ProposalManager';
-import ProjectManager from './components/ProjectManager';
-import AIAssistant from './components/AIAssistant';
-import Settings from './components/Settings';
-import Funding from './components/Funding';
-import Documents from './components/Documents';
-import Analytics from './components/Analytics';
-import CreditsPurchase from './components/CreditsPurchase';
-import NGOPipeline from './components/NGOPipeline';
-import AdminDashboard from './components/AdminDashboard';
-import EnhancedAdminDashboard from './components/EnhancedAdminDashboard';
-import AuthenticAdminDashboard from './components/AuthenticAdminDashboard';
-import DatabaseAdminPanel from './components/DatabaseAdminPanel';
-
-import AdminBotPanel from './components/AdminBotPanel';
-import AdminProposalReviewPanel from './components/AdminProposalReviewPanel';
-import MobileNavigation from './components/shared/MobileNavigation';
+import Header from './shared/Header';
+import Sidebar from './shared/Sidebar';
+import Dashboard from './Dashboard';
+import DonorDashboard from './DonorDashboard';
+import DonorDiscovery from './DonorDiscovery';
+import ProposalManager from './ProposalManager';
+import ProposalGenerator from './ProposalGenerator';
+import ProjectManager from './ProjectManager';
+import AIAssistant from './AIAssistant';
+import Settings from './Settings';
+import Funding from './Funding';
+import Documents from './Documents';
+import Analytics from './Analytics';
+import CreditsPurchase from './CreditsPurchase';
+import NGOPipeline from './NGOPipeline';
+import RealAdminDashboard from './RealAdminDashboard';
+import MobileNavigation from './shared/MobileNavigation';
 import LandingPage from './LandingPage';
-import StudentDashboard from './components/StudentDashboard';
-import HumanHelpPage from './pages/HumanHelpPage';
-import CreditsPage from './pages/CreditsPage';
-import PurchasePage from './pages/PurchasePage';
-import HumanHelpButton from './components/shared/HumanHelpButton';
-import AdminLink from './components/shared/AdminLink';
+import StudentDashboard from './StudentDashboard';
+import HumanHelpPage from './HumanHelpPage';
+import CreditsPage from './CreditsPage';
+import PurchasePage from './PurchasePage';
+import HumanHelpButton from './shared/HumanHelpButton';
+import AdminLink from './shared/AdminLink';
 
 import AddictionProvider from './contexts/AddictionContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -80,7 +74,7 @@ function App() {
                     <Route path="/donor-dashboard" element={<DonorDashboard />} />
                     <Route path="/student" element={<StudentDashboard />} />
                     <Route path="/donor-discovery" element={<DonorDiscovery />} />
-                    <Route path="/proposal-generator" element={<EnhancedProposalGenerator />} />
+                    <Route path="/proposal-generator" element={<ProposalGenerator />} />
                     <Route path="/proposals" element={<ProposalManager />} />
                     <Route path="/projects" element={<ProjectManager />} />
                     <Route path="/ai-assistant" element={<AIAssistant />} />
@@ -92,9 +86,7 @@ function App() {
                     <Route path="/credits" element={<CreditsPage />} />
                     <Route path="/purchase/:packageId" element={<PurchasePage />} />
                     <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                    <Route path="/admin" element={<DatabaseAdminPanel />} />
-                    <Route path="/admin/bots" element={<AdminBotPanel />} />
-                    <Route path="/admin/proposals" element={<AdminProposalReviewPanel />} />
+                    <Route path="/admin" element={<RealAdminDashboard />} />
                   </Routes>
                 </main>
               </div>

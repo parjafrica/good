@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, CreditTransaction } from '../types';
+import { User, CreditTransaction } from './types';
 
 interface AuthContextType {
   user: User | null;

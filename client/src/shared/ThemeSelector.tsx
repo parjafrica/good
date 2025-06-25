@@ -17,7 +17,7 @@ import {
   User,
   Users
 } from 'lucide-react';
-import { useTheme, Theme } from '../../contexts/ThemeContext';
+import { useTheme, Theme } from '.././contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
 interface ThemeOption {

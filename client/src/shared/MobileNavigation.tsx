@@ -22,7 +22,7 @@ import {
   Award,
   Users
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '.././contexts/AuthContext';
 
 const MobileNavigation: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

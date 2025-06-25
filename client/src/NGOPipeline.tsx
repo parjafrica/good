@@ -20,8 +20,8 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { ngoTemplateGenerator, NGODetails, BrandAssets, DocumentTemplate } from '../services/ngoTemplateGenerator';
+import { useAuth } from './contexts/AuthContext';
+import { ngoTemplateGenerator, NGODetails, BrandAssets, DocumentTemplate } from './services/ngoTemplateGenerator';
 
 const NGOPipeline: React.FC = () => {
   const { user, deductCredits } = useAuth();

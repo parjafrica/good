@@ -15,7 +15,7 @@ import {
   ArrowDown,
   Minus
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 
 interface MetricCard {
   id: string;
