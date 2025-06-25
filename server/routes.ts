@@ -646,17 +646,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const proposalId = `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       // Insert into database using storage interface
-      const db = storage.db;
-      const [proposal] = await db.insert(proposals)
+      const [proposal] = await storage.db.insert(proposals)
         .values({
-          id: proposalId,
-          userId: user_id || 'anonymous',
-          opportunityId: opportunity_id,
           title: content.title || 'Draft Proposal',
-          content: JSON.stringify(content),
-          status: 'pending_review', // Send directly to admin review
-          createdAt: new Date(),
-          updatedAt: new Date()
+          description: 'Generated proposal from opportunity analysis',
+          status: 'pending_review',
+          content: content,
+          createdBy: user_id
         })
         .returning();
 
@@ -672,19 +668,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { proposal_id, email, notification_type } = req.body;
       
       // Store notification request in database
-      const db = storage.db;
-      await db.insert(proposals)
-        .values({
-          id: proposal_id,
-          notificationEmail: email
+      await storage.db.update(proposals)
+
+        .set({
+          notificationEmail: email,
+          updatedAt: new Date()
         })
-        .onConflictDoUpdate({
-          target: proposals.id,
-          set: {
-            notificationEmail: email,
-            updatedAt: new Date()
-          }
-        });
+        .where(eq(proposals.id, proposal_id));
 
       res.json({ success: true });
     } catch (error) {
@@ -725,8 +715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/submissions', async (req, res) => {
     try {
-      const db = storage.db;
-      const submissions = await db.select({
+      const submissions = await storage.db.select({
         id: proposals.id,
         user_name: proposals.userId,
         user_email: proposals.notificationEmail,
@@ -777,11 +766,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { status } = req.body;
       
-      const db = storage.db;
       await db.update(proposals)
         .set({
-          status: status,
-          updatedAt: new Date()
+          status: status
         })
         .where(storage.eq(proposals.id, id));
 
@@ -795,8 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin proposal review routes
   app.get('/api/admin/proposals/pending', async (req, res) => {
     try {
-      const db = storage.db;
-      const pendingProposals = await db.select({
+      const pendingProposals = await storage.db.select({
         id: proposals.id,
         title: proposals.title,
         user_name: proposals.userId,
@@ -833,13 +819,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { content, admin_notes, status } = req.body;
       
-      const db = storage.db;
       await db.update(proposals)
         .set({
-          content: JSON.stringify(content),
-          adminNotes: admin_notes,
-          status: status,
-          updatedAt: new Date()
+          content: content,
+          status: status
         })
         .where(storage.eq(proposals.id, id));
 
@@ -855,16 +838,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { content, admin_notes, send_email } = req.body;
       
-      const db = storage.db;
-      
       // Update proposal status
-      const [updatedProposal] = await db.update(proposals)
+      const [updatedProposal] = await storage.db.update(proposals)
         .set({
-          content: JSON.stringify(content),
-          adminNotes: admin_notes,
-          status: 'completed',
-          completedAt: new Date(),
-          updatedAt: new Date()
+          content: content,
+          status: 'completed'
         })
         .where(storage.eq(proposals.id, id))
         .returning();
