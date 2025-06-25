@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}HR Management - Granada OS Wabden{% endblock %}
+{% block page_title %}HR Management{% endblock %}
+{% block page_subtitle %}Human resources, recruitment, and employee management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- HR Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="card-gradient rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase tracking-wide">Total Staff</p>
+                    <p class="text-3xl font-bold text-white mt-1">{{ total_staff + total_admins }}</p>
+                    <p class="text-purple-400 text-sm mt-1">Active employees</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-users text-purple-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-gradient rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase tracking-wide">Departments</p>
+                    <p class="text-3xl font-bold text-white mt-1">6</p>
+                    <p class="text-blue-400 text-sm mt-1">Active departments</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-sitemap text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-gradient rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase tracking-wide">Open Positions</p>
+                    <p class="text-3xl font-bold text-white mt-1">3</p>
+                    <p class="text-green-400 text-sm mt-1">Recruiting now</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-plus text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-gradient rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="400">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase tracking-wide">On Leave</p>
+                    <p class="text-3xl font-bold text-white mt-1">2</p>
+                    <p class="text-orange-400 text-sm mt-1">Currently away</p>
+                </div>
+                <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar-times text-orange-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HR Navigation Tabs -->
+    <div class="card-gradient rounded-xl p-6" data-aos="fade-up" data-aos-delay="500">
+        <div class="flex space-x-1 mb-6">
+            <button onclick="showTab('employees')" class="tab-btn px-4 py-2 rounded-lg transition-all duration-300 bg-blue-600 text-white">
+                <i class="fas fa-users mr-2"></i> Employees
+            </button>
+            <button onclick="showTab('recruitment')" class="tab-btn px-4 py-2 rounded-lg transition-all duration-300 bg-gray-700 text-gray-300 hover:bg-gray-600">
+                <i class="fas fa-search mr-2"></i> Recruitment
+            </button>
+            <button onclick="showTab('performance')" class="tab-btn px-4 py-2 rounded-lg transition-all duration-300 bg-gray-700 text-gray-300 hover:bg-gray-600">
+                <i class="fas fa-chart-bar mr-2"></i> Performance
+            </button>
+            <button onclick="showTab('leave')" class="tab-btn px-4 py-2 rounded-lg transition-all duration-300 bg-gray-700 text-gray-300 hover:bg-gray-600">
+                <i class="fas fa-calendar mr-2"></i> Leave Management
+            </button>
+        </div>
+
+        <!-- Employees Tab -->
+        <div id="employees-tab" class="tab-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">Employee Directory</h3>
+                <div class="flex items-center space-x-4">
+                    <input type="text" id="employeeSearch" placeholder="Search employees..." 
+                           class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="openAddEmployeeModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i> Add Employee
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for employee in employees %}
+                <div class="bg-gray-800/50 rounded-xl p-6 hover:bg-gray-700/50 transition-all duration-300 employee-card">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold">{{ employee.name.split()[0][0] }}{{ employee.name.split()[1][0] if employee.name.split()|length > 1 else '' }}</span>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-medium">{{ employee.name }}</h4>
+                            <p class="text-gray-400 text-sm">{{ employee.position }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">Department:</span>
+                            <span class="text-white text-sm">{{ employee.department }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">Hire Date:</span>
+                            <span class="text-white text-sm">{{ employee.hire_date }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">Status:</span>
+                            <span class="px-2 py-1 bg-{{ 'green' if employee.status == 'Active' else 'orange' }}-500/20 text-{{ 'green' if employee.status == 'Active' else 'orange' }}-400 rounded-full text-xs">
+                                {{ employee.status }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="editEmployee({{ employee.id }})" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </button>
+                        <button onclick="viewEmployee({{ employee.id }})" class="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-eye mr-1"></i> View
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recruitment Tab -->
+        <div id="recruitment-tab" class="tab-content hidden">
+            <h3 class="text-xl font-bold text-white mb-6">Recruitment Pipeline</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="space-y-4">
+                    <h4 class="text-lg font-medium text-white border-b border-gray-700 pb-2">Open Positions</h4>
+                    <div class="space-y-3">
+                        <div class="bg-gray-800/50 rounded-lg p-4">
+                            <h5 class="text-white font-medium">Senior Developer</h5>
+                            <p class="text-gray-400 text-sm">Engineering • Remote</p>
+                            <p class="text-blue-400 text-sm mt-2">5 applications</p>
+                        </div>
+                        <div class="bg-gray-800/50 rounded-lg p-4">
+                            <h5 class="text-white font-medium">Marketing Manager</h5>
+                            <p class="text-gray-400 text-sm">Marketing • Hybrid</p>
+                            <p class="text-blue-400 text-sm mt-2">8 applications</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-lg font-medium text-white border-b border-gray-700 pb-2">In Review</h4>
+                    <div class="space-y-3">
+                        <div class="bg-gray-800/50 rounded-lg p-4">
+                            <h5 class="text-white font-medium">John Smith</h5>
+                            <p class="text-gray-400 text-sm">Senior Developer</p>
+                            <p class="text-yellow-400 text-sm mt-2">Technical Interview</p>
+                        </div>
+                        <div class="bg-gray-800/50 rounded-lg p-4">
+                            <h5 class="text-white font-medium">Sarah Johnson</h5>
+                            <p class="text-gray-400 text-sm">Marketing Manager</p>
+                            <p class="text-yellow-400 text-sm mt-2">Final Interview</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-lg font-medium text-white border-b border-gray-700 pb-2">Recent Hires</h4>
+                    <div class="space-y-3">
+                        <div class="bg-gray-800/50 rounded-lg p-4">
+                            <h5 class="text-white font-medium">Mike Chen</h5>
+                            <p class="text-gray-400 text-sm">Data Analyst</p>
+                            <p class="text-green-400 text-sm mt-2">Started this week</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Tab -->
+        <div id="performance-tab" class="tab-content hidden">
+            <h3 class="text-xl font-bold text-white mb-6">Performance Reviews</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-lg font-medium text-white mb-4">Upcoming Reviews</h4>
+                    <div class="space-y-3">
+                        {% for i in range(3) %}
+                        <div class="bg-gray-800/50 rounded-lg p-4 flex items-center justify-between">
+                            <div>
+                                <h5 class="text-white font-medium">Employee {{ i + 1 }}</h5>
+                                <p class="text-gray-400 text-sm">Annual Review Due</p>
+                            </div>
+                            <span class="text-orange-400 text-sm">{{ (7 - i) }} days</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-medium text-white mb-4">Performance Metrics</h4>
+                    <canvas id="performanceChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Management Tab -->
+        <div id="leave-tab" class="tab-content hidden">
+            <h3 class="text-xl font-bold text-white mb-6">Leave Management</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-lg font-medium text-white mb-4">Pending Requests</h4>
+                    <div class="space-y-3">
+                        <div class="bg-gray-800/50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="text-white font-medium">Emily Rodriguez</h5>
+                                <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">Pending</span>
+                            </div>
+                            <p class="text-gray-400 text-sm">Vacation Leave • 5 days</p>
+                            <p class="text-gray-400 text-sm">Dec 20 - Dec 24, 2024</p>
+                            <div class="flex space-x-2 mt-3">
+                                <button class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors">Approve</button>
+                                <button class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">Reject</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-medium text-white mb-4">Leave Calendar</h4>
+                    <div class="bg-gray-800/50 rounded-lg p-4">
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-2">
+                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-sm">
+                            {% for day in range(1, 32) %}
+                            <div class="w-8 h-8 flex items-center justify-center rounded {{ 'bg-red-500/20 text-red-400' if day in [15, 22] else 'text-white hover:bg-gray-700' }}">
+                                {{ day }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div id="addEmployeeModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold text-white mb-4">Add New Employee</h3>
+        <form id="addEmployeeForm" class="space-y-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Full Name</label>
+                <input type="text" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Position</label>
+                <input type="text" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Department</label>
+                <select class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="Operations">Operations</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="HR">Human Resources</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Analytics">Analytics</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Hire Date</label>
+                <input type="date" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeAddEmployeeModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                    Add Employee
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Tab functionality
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-gray-700', 'text-gray-300');
+    });
+    
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    event.target.classList.remove('bg-gray-700', 'text-gray-300');
+    event.target.classList.add('bg-blue-600', 'text-white');
+}
+
+// Employee search
+document.getElementById('employeeSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.employee-card');
+    
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Modal functions
+function openAddEmployeeModal() {
+    document.getElementById('addEmployeeModal').classList.remove('hidden');
+    document.getElementById('addEmployeeModal').classList.add('flex');
+}
+
+function closeAddEmployeeModal() {
+    document.getElementById('addEmployeeModal').classList.add('hidden');
+    document.getElementById('addEmployeeModal').classList.remove('flex');
+}
+
+function editEmployee(id) {
+    alert('Edit employee functionality would be implemented here');
+}
+
+function viewEmployee(id) {
+    alert('View employee details functionality would be implemented here');
+}
+
+// Performance chart
+const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+const performanceChart = new Chart(performanceCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+        datasets: [{
+            label: 'Average Performance Score',
+            data: [85, 88, 92, 89],
+            backgroundColor: 'rgba(139, 92, 246, 0.6)',
+            borderColor: '#8B5CF6',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    color: '#9CA3AF'
+                }
+            },
+            x: {
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    color: '#9CA3AF'
+                }
+            }
+        }
+    }
+});
+
+// Close modal on outside click
+document.getElementById('addEmployeeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddEmployeeModal();
+    }
+});
+
+// Add employee form submission
+document.getElementById('addEmployeeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Implementation would go here
+    alert('Employee added successfully!');
+    closeAddEmployeeModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Granada OS - Wabden{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%);
+        }
+        .card-gradient {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+            backdrop-filter: blur(10px);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .sidebar-gradient {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar-gradient shadow-2xl" data-aos="slide-right">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Wabden System
+                    </h1>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="/" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group">
+                        <i class="fas fa-tachometer-alt text-blue-400 group-hover:text-blue-300"></i>
+                        <span class="group-hover:text-blue-300">Dashboard</span>
+                    </a>
+                    <a href="/users" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group">
+                        <i class="fas fa-users text-green-400 group-hover:text-green-300"></i>
+                        <span class="group-hover:text-green-300">User Management</span>
+                    </a>
+                    <a href="/opportunities" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group">
+                        <i class="fas fa-bullseye text-yellow-400 group-hover:text-yellow-300"></i>
+                        <span class="group-hover:text-yellow-300">Opportunities</span>
+                    </a>
+                    <a href="/hr" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group">
+                        <i class="fas fa-user-tie text-purple-400 group-hover:text-purple-300"></i>
+                        <span class="group-hover:text-purple-300">HR Management</span>
+                    </a>
+                    <a href="/accounting" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group">
+                        <i class="fas fa-chart-line text-emerald-400 group-hover:text-emerald-300"></i>
+                        <span class="group-hover:text-emerald-300">Accounting</span>
+                    </a>
+                    <a href="/submissions" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group">
+                        <i class="fas fa-file-alt text-orange-400 group-hover:text-orange-300"></i>
+                        <span class="group-hover:text-orange-300">Submissions</span>
+                    </a>
+                    <a href="/bots" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 group">
+                        <i class="fas fa-robot text-cyan-400 group-hover:text-cyan-300"></i>
+                        <span class="group-hover:text-cyan-300">Bot Control</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="bg-gray-800/50 backdrop-blur-lg shadow-lg p-6" data-aos="fade-down">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">{% block page_title %}Dashboard{% endblock %}</h2>
+                        <p class="text-gray-400 mt-1">{% block page_subtitle %}Granada OS Administrative Control{% endblock %}</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <p class="text-sm text-gray-400">Admin Session</p>
+                            <p class="text-xs text-blue-400">{{ datetime.now().strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                        <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-shield text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Initialize AOS animations
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+
+        // Add active state to nav items
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath || 
+                    (currentPath === '/wabden' && item.getAttribute('href') === '/')) {
+                    item.classList.add('bg-blue-600/30', 'glow-effect');
+                }
+            });
+        });
+
+        // Add smooth hover effects
+        document.querySelectorAll('.hover-scale').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            element.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

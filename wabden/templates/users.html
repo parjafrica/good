@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Granada OS Wabden{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block page_subtitle %}Comprehensive user administration and analytics{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- User Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {% for user_type, count in user_type_stats.items() %}
+        <div class="card-gradient rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase tracking-wide">{{ user_type.title() }}s</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ count }}</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user text-blue-400"></i>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- User Management Actions -->
+    <div class="card-gradient rounded-xl p-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-white">User Database</h3>
+            <div class="flex items-center space-x-4">
+                <input type="text" id="userSearch" placeholder="Search users..." 
+                       class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i> Add User
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-700">
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium">User</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Type</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Credits</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Proposals</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Spent</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors user-row">
+                        <td class="py-4 px-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm font-bold">{{ (user[2] or user[1][0]).upper() }}</span>
+                                </div>
+                                <div>
+                                    <p class="text-white font-medium">{{ user[2] or 'N/A' }} {{ user[3] or '' }}</p>
+                                    <p class="text-gray-400 text-sm">{{ user[1] }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="px-2 py-1 bg-{{ 'blue' if user[4] == 'student' else 'green' if user[4] == 'ngo' else 'purple' }}-500/20 text-{{ 'blue' if user[4] == 'student' else 'green' if user[4] == 'ngo' else 'purple' }}-400 rounded-full text-xs">
+                                {{ user[4].title() }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="text-white font-medium">{{ user[5] or 0 }}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="text-gray-300">{{ user[9] or 0 }}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="text-emerald-400">${{ "%.2f"|format(user[10] or 0) }}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            {% if user[6] %}
+                            <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs">Banned</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Active</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4">
+                            <div class="flex items-center space-x-2">
+                                {% if user[6] %}
+                                <button onclick="unbanUser('{{ user[0] }}')" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors">
+                                    <i class="fas fa-unlock mr-1"></i> Unban
+                                </button>
+                                {% else %}
+                                <button onclick="banUser('{{ user[0] }}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">
+                                    <i class="fas fa-ban mr-1"></i> Ban
+                                </button>
+                                {% endif %}
+                                <button onclick="editUser('{{ user[0] }}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">
+                                    <i class="fas fa-edit mr-1"></i> Edit
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- User Activity Timeline -->
+    <div class="card-gradient rounded-xl p-6" data-aos="fade-up" data-aos-delay="400">
+        <h3 class="text-xl font-bold text-white mb-6">Recent User Activity</h3>
+        <div class="space-y-4">
+            {% for i in range(5) %}
+            <div class="flex items-center space-x-4 p-4 bg-gray-800/50 rounded-lg">
+                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <div class="flex-1">
+                    <p class="text-white">New user registration</p>
+                    <p class="text-gray-400 text-sm">user{{ i + 1 }}@example.com joined the platform</p>
+                </div>
+                <span class="text-gray-400 text-sm">{{ (5 - i) }} hours ago</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold text-white mb-4">Edit User</h3>
+        <form id="editUserForm" class="space-y-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Credits</label>
+                <input type="number" id="userCredits" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">User Type</label>
+                <select id="userType" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="student">Student</option>
+                    <option value="ngo">NGO</option>
+                    <option value="business">Business</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Search functionality
+document.getElementById('userSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('.user-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// User management functions
+async function banUser(userId) {
+    if (confirm('Are you sure you want to ban this user?')) {
+        try {
+            const response = await fetch(`/api/users/${userId}/ban`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error banning user');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+}
+
+async function unbanUser(userId) {
+    try {
+        const response = await fetch(`/api/users/${userId}/unban`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error unbanning user');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+function editUser(userId) {
+    document.getElementById('editUserModal').classList.remove('hidden');
+    document.getElementById('editUserModal').classList.add('flex');
+}
+
+function closeEditModal() {
+    document.getElementById('editUserModal').classList.add('hidden');
+    document.getElementById('editUserModal').classList.remove('flex');
+}
+
+// Close modal on outside click
+document.getElementById('editUserModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+</script>
+{% endblock %}
