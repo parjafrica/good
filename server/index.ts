@@ -37,12 +37,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
-
-  // Redirect old admin to new system
+  // Redirect to new comprehensive admin system
   app.get('/admin*', (req, res) => {
     res.redirect('http://localhost:9000/admin');
   });
+
+  const server = await registerRoutes(app);
 
   const isProduction = process.env.NODE_ENV === "production";
   if (isProduction) {

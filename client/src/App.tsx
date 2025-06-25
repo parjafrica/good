@@ -19,28 +19,7 @@ import NGOPipeline from './NGOPipeline';
 
 import MobileNavigation from './shared/MobileNavigation';
 
-// Admin Redirect Component
-const AdminRedirect = () => {
-  React.useEffect(() => {
-    window.location.href = 'http://localhost:9000/admin';
-  }, []);
 
-  return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <h2 className="text-2xl font-bold mb-2">Redirecting to Admin System...</h2>
-        <p className="text-gray-400 mb-4">Enhanced interface with HR, Accounting & Submissions</p>
-        <p className="text-sm text-gray-500">
-          If you're not redirected automatically, 
-          <a href="http://localhost:9000/admin" className="text-blue-400 hover:text-blue-300 ml-1">
-            click here
-          </a>
-        </p>
-      </div>
-    </div>
-  );
-};
 import LandingPage from './LandingPage';
 import StudentDashboard from './StudentDashboard';
 import HumanHelpPage from './HumanHelpPage';
@@ -109,7 +88,14 @@ function App() {
                     <Route path="/credits" element={<CreditsPage />} />
                     <Route path="/purchase/:packageId" element={<PurchasePage />} />
                     <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                    <Route path="/admin" element={<AdminRedirect />} />
+                    <Route path="/admin" element={
+                      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+                        <div className="text-center">
+                          <h2 className="text-2xl font-bold mb-4">Admin Route Disabled</h2>
+                          <p className="text-gray-400">Admin functionality temporarily disabled for testing</p>
+                        </div>
+                      </div>
+                    } />
                   </Routes>
                 </main>
               </div>

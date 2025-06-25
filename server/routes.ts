@@ -7,15 +7,10 @@ import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Admin routes redirect to new system
-  app.get('/admin', (req, res) => {
-    res.redirect('http://localhost:9000/admin');
-  });
-
-  app.get('/admin/*', (req, res) => {
-    const path = req.path.replace('/admin', '');
-    res.redirect(`http://localhost:9000/admin${path}`);
-  });
+  // Admin routes disabled for testing
+  // app.get('/admin', (req, res) => {
+  //   res.redirect('http://localhost:9000/admin');
+  // });
   // Legacy admin routes removed - new admin system on port 9000
 
   // Authentication routes
