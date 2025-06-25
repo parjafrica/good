@@ -1373,6 +1373,649 @@ app.use((req, res, next) => {
       return;
     }
     
+    if (path.includes('/hr')) {
+      // Serve HR Management module
+      res.send(`
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Management - Granada OS Wabden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); }
+        .card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); backdrop-filter: blur(10px); }
+        .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .employee-card { border-left: 4px solid #8b5cf6; }
+        .employee-card.active { border-left-color: #10b981; }
+        .employee-card.inactive { border-left-color: #ef4444; }
+        .employee-card.probation { border-left-color: #f59e0b; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar-gradient shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Wabden Admin
+                    </h1>
+                </div>
+                
+                <nav class="space-y-2">
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden'">
+                        <i class="fas fa-tachometer-alt text-blue-400"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/users'">
+                        <i class="fas fa-users text-green-400"></i>
+                        <span>User Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                        <i class="fas fa-bullseye text-yellow-400"></i>
+                        <span>Opportunities</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-purple-600/30 cursor-pointer">
+                        <i class="fas fa-user-tie text-purple-400"></i>
+                        <span class="text-purple-300">HR Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/accounting'">
+                        <i class="fas fa-chart-line text-emerald-400"></i>
+                        <span>Accounting</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/submissions'">
+                        <i class="fas fa-file-alt text-orange-400"></i>
+                        <span>Submissions</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/bots'">
+                        <i class="fas fa-robot text-cyan-400"></i>
+                        <span>Bot Control</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="bg-gray-800/50 backdrop-blur-lg shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">HR Management</h2>
+                        <p class="text-gray-400 mt-1">Human Resources administration and workforce management</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="openAddEmployeeModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                            <i class="fas fa-user-plus mr-2"></i> Add Employee
+                        </button>
+                        <button onclick="openRecruitmentModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            <i class="fas fa-search mr-2"></i> Recruitment
+                        </button>
+                        <button onclick="exportHRData()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                            <i class="fas fa-download mr-2"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- HR Tabs -->
+            <div class="p-6">
+                <div class="flex space-x-1 mb-6">
+                    <button onclick="switchTab('employees')" id="employeesTab" class="px-4 py-2 bg-purple-600 text-white rounded-lg">Employees</button>
+                    <button onclick="switchTab('recruitment')" id="recruitmentTab" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Recruitment</button>
+                    <button onclick="switchTab('performance')" id="performanceTab" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Performance</button>
+                    <button onclick="switchTab('analytics')" id="analyticsTab" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Analytics</button>
+                </div>
+
+                <!-- Employees Tab -->
+                <div id="employeesContent" class="tab-content">
+                    <!-- Loading State -->
+                    <div id="employeesLoading" class="flex items-center justify-center py-12">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                        <span class="ml-3 text-gray-400">Loading employees...</span>
+                    </div>
+
+                    <!-- Employee Statistics -->
+                    <div id="employeeStats" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 hidden">
+                        <!-- Stats will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <div id="employeeSearchSection" class="card-gradient rounded-xl p-6 mb-6 hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <input type="text" id="employeeSearch" placeholder="Search employees..." 
+                                   class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <select id="departmentFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                                <option value="">All Departments</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Operations">Operations</option>
+                                <option value="Finance">Finance</option>
+                                <option value="HR">Human Resources</option>
+                                <option value="Marketing">Marketing</option>
+                            </select>
+                            <select id="statusFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="probation">Probation</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <select id="positionFilter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white">
+                                <option value="">All Positions</option>
+                                <option value="manager">Manager</option>
+                                <option value="senior">Senior</option>
+                                <option value="junior">Junior</option>
+                                <option value="intern">Intern</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Employees Grid -->
+                    <div id="employeesGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 hidden">
+                        <!-- Employees will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Recruitment Tab -->
+                <div id="recruitmentContent" class="tab-content hidden">
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Recruitment Pipeline</h3>
+                        <div id="recruitmentPipeline" class="space-y-4">
+                            <!-- Recruitment data will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Tab -->
+                <div id="performanceContent" class="tab-content hidden">
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Performance Reviews</h3>
+                        <div id="performanceReviews" class="space-y-4">
+                            <!-- Performance data will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analyticsContent" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card-gradient rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Department Distribution</h3>
+                            <div id="departmentChart" class="h-48 bg-gray-800 rounded-lg flex items-center justify-center">
+                                <span class="text-gray-400">Chart will be rendered here</span>
+                            </div>
+                        </div>
+                        <div class="card-gradient rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Hiring Trends</h3>
+                            <div id="hiringChart" class="h-48 bg-gray-800 rounded-lg flex items-center justify-center">
+                                <span class="text-gray-400">Chart will be rendered here</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="addEmployeeModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-4">Add New Employee</h3>
+            <form id="addEmployeeForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">First Name</label>
+                        <input type="text" id="newEmployeeFirstName" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Last Name</label>
+                        <input type="text" id="newEmployeeLastName" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Email</label>
+                        <input type="email" id="newEmployeeEmail" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Phone</label>
+                        <input type="tel" id="newEmployeePhone" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Department</label>
+                        <select id="newEmployeeDepartment" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Select Department</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Finance">Finance</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Marketing">Marketing</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Position</label>
+                        <input type="text" id="newEmployeePosition" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Salary</label>
+                        <input type="number" id="newEmployeeSalary" min="0" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Start Date</label>
+                        <input type="date" id="newEmployeeStartDate" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddEmployeeModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i> Add Employee
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allEmployees = [];
+        let currentTab = 'employees';
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployees();
+            switchTab('employees');
+        });
+
+        async function loadEmployees() {
+            try {
+                // Sample employee data for demonstration
+                allEmployees = [
+                    {
+                        id: '1',
+                        firstName: 'Sarah',
+                        lastName: 'Johnson',
+                        email: 'sarah.johnson@granada.os',
+                        phone: '+256-701-234567',
+                        department: 'Engineering',
+                        position: 'Senior Software Engineer',
+                        salary: 120000,
+                        startDate: '2023-01-15',
+                        status: 'active',
+                        avatar: 'https://via.placeholder.com/50'
+                    },
+                    {
+                        id: '2',
+                        firstName: 'David',
+                        lastName: 'Mukasa',
+                        email: 'david.mukasa@granada.os',
+                        phone: '+256-702-345678',
+                        department: 'Operations',
+                        position: 'Operations Manager',
+                        salary: 95000,
+                        startDate: '2022-08-20',
+                        status: 'active',
+                        avatar: 'https://via.placeholder.com/50'
+                    },
+                    {
+                        id: '3',
+                        firstName: 'Grace',
+                        lastName: 'Achieng',
+                        email: 'grace.achieng@granada.os',
+                        phone: '+254-701-456789',
+                        department: 'Finance',
+                        position: 'Financial Analyst',
+                        salary: 75000,
+                        startDate: '2024-02-01',
+                        status: 'probation',
+                        avatar: 'https://via.placeholder.com/50'
+                    },
+                    {
+                        id: '4',
+                        firstName: 'John',
+                        lastName: 'Wani',
+                        email: 'john.wani@granada.os',
+                        phone: '+211-915-567890',
+                        department: 'HR',
+                        position: 'HR Specialist',
+                        salary: 65000,
+                        startDate: '2023-06-10',
+                        status: 'active',
+                        avatar: 'https://via.placeholder.com/50'
+                    },
+                    {
+                        id: '5',
+                        firstName: 'Mary',
+                        lastName: 'Nakato',
+                        email: 'mary.nakato@granada.os',
+                        phone: '+256-703-678901',
+                        department: 'Marketing',
+                        position: 'Marketing Coordinator',
+                        salary: 55000,
+                        startDate: '2023-11-01',
+                        status: 'active',
+                        avatar: 'https://via.placeholder.com/50'
+                    }
+                ];
+
+                renderEmployeeStats();
+                renderEmployees(allEmployees);
+                
+                document.getElementById('employeesLoading').classList.add('hidden');
+                document.getElementById('employeeStats').classList.remove('hidden');
+                document.getElementById('employeeSearchSection').classList.remove('hidden');
+                document.getElementById('employeesGrid').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading employees:', error);
+                document.getElementById('employeesLoading').innerHTML = '<div class="text-red-400">Error loading employees. Please refresh the page.</div>';
+            }
+        }
+
+        function renderEmployeeStats() {
+            const statsContainer = document.getElementById('employeeStats');
+            const stats = [
+                { 
+                    label: 'Total Employees', 
+                    count: allEmployees.length, 
+                    color: 'purple', 
+                    icon: 'fas fa-users' 
+                },
+                { 
+                    label: 'Active', 
+                    count: allEmployees.filter(e => e.status === 'active').length, 
+                    color: 'green', 
+                    icon: 'fas fa-user-check' 
+                },
+                { 
+                    label: 'On Probation', 
+                    count: allEmployees.filter(e => e.status === 'probation').length, 
+                    color: 'yellow', 
+                    icon: 'fas fa-user-clock' 
+                },
+                { 
+                    label: 'Departments', 
+                    count: [...new Set(allEmployees.map(e => e.department))].length, 
+                    color: 'blue', 
+                    icon: 'fas fa-building' 
+                }
+            ];
+
+            statsContainer.innerHTML = stats.map(stat => 
+                '<div class="card-gradient rounded-xl p-6 hover-scale">' +
+                    '<div class="flex items-center justify-between">' +
+                        '<div>' +
+                            '<p class="text-gray-400 text-sm uppercase tracking-wide">' + stat.label + '</p>' +
+                            '<p class="text-3xl font-bold text-white mt-1">' + stat.count + '</p>' +
+                        '</div>' +
+                        '<div class="w-12 h-12 bg-' + stat.color + '-500/20 rounded-lg flex items-center justify-center">' +
+                            '<i class="' + stat.icon + ' text-' + stat.color + '-400 text-xl"></i>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        function renderEmployees(employees) {
+            const grid = document.getElementById('employeesGrid');
+            
+            if (employees.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">No employees found</div>';
+                return;
+            }
+
+            grid.innerHTML = employees.map(emp => {
+                const statusClass = emp.status === 'active' ? 'active' : emp.status === 'probation' ? 'probation' : 'inactive';
+                const statusText = emp.status.charAt(0).toUpperCase() + emp.status.slice(1);
+                const statusColor = emp.status === 'active' ? 'text-green-400' : emp.status === 'probation' ? 'text-yellow-400' : 'text-red-400';
+                const formattedSalary = emp.salary ? '$' + emp.salary.toLocaleString() : 'Not specified';
+                
+                return '<div class="employee-card ' + statusClass + ' card-gradient rounded-xl p-6 hover-scale">' +
+                    '<div class="flex items-start justify-between mb-4">' +
+                        '<div class="flex items-center space-x-3">' +
+                            '<div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">' +
+                                emp.firstName.charAt(0) + emp.lastName.charAt(0) +
+                            '</div>' +
+                            '<div>' +
+                                '<h3 class="text-lg font-bold text-white">' + emp.firstName + ' ' + emp.lastName + '</h3>' +
+                                '<p class="text-gray-400 text-sm">' + emp.position + '</p>' +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="px-2 py-1 bg-gray-700 rounded-full text-xs ' + statusColor + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="space-y-2 mb-4">' +
+                        '<div class="flex items-center text-sm text-gray-300">' +
+                            '<i class="fas fa-envelope mr-2 text-gray-400"></i>' +
+                            '<span>' + emp.email + '</span>' +
+                        '</div>' +
+                        '<div class="flex items-center text-sm text-gray-300">' +
+                            '<i class="fas fa-phone mr-2 text-gray-400"></i>' +
+                            '<span>' + (emp.phone || 'Not provided') + '</span>' +
+                        '</div>' +
+                        '<div class="flex items-center text-sm text-gray-300">' +
+                            '<i class="fas fa-building mr-2 text-gray-400"></i>' +
+                            '<span>' + emp.department + '</span>' +
+                        '</div>' +
+                        '<div class="flex items-center text-sm text-gray-300">' +
+                            '<i class="fas fa-dollar-sign mr-2 text-gray-400"></i>' +
+                            '<span>' + formattedSalary + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex items-center justify-between">' +
+                        '<span class="text-xs text-gray-400">Started: ' + new Date(emp.startDate).toLocaleDateString() + '</span>' +
+                        '<div class="flex space-x-2">' +
+                            '<button onclick="editEmployee(' + "'" + emp.id + "'" + ')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">' +
+                                '<i class="fas fa-edit mr-1"></i> Edit' +
+                            '</button>' +
+                            '<button onclick="viewEmployee(' + "'" + emp.id + "'" + ')" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors">' +
+                                '<i class="fas fa-eye mr-1"></i> View' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('[id$="Tab"]').forEach(tab => {
+                tab.classList.remove('bg-purple-600', 'text-white');
+                tab.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + 'Content').classList.remove('hidden');
+            
+            // Add active class to selected tab
+            const selectedTab = document.getElementById(tabName + 'Tab');
+            selectedTab.classList.remove('bg-gray-700', 'text-gray-300');
+            selectedTab.classList.add('bg-purple-600', 'text-white');
+            
+            // Load tab-specific data
+            if (tabName === 'recruitment') {
+                loadRecruitmentData();
+            } else if (tabName === 'performance') {
+                loadPerformanceData();
+            } else if (tabName === 'analytics') {
+                loadAnalyticsData();
+            }
+        }
+
+        function loadRecruitmentData() {
+            const pipeline = document.getElementById('recruitmentPipeline');
+            pipeline.innerHTML = '<div class="text-center text-gray-400 py-8">Recruitment pipeline will be implemented here</div>';
+        }
+
+        function loadPerformanceData() {
+            const reviews = document.getElementById('performanceReviews');
+            reviews.innerHTML = '<div class="text-center text-gray-400 py-8">Performance reviews will be implemented here</div>';
+        }
+
+        function loadAnalyticsData() {
+            // Analytics charts would be implemented here
+            console.log('Loading HR analytics...');
+        }
+
+        // Search and filter functionality
+        document.getElementById('employeeSearch').addEventListener('input', filterEmployees);
+        document.getElementById('departmentFilter').addEventListener('change', filterEmployees);
+        document.getElementById('statusFilter').addEventListener('change', filterEmployees);
+        document.getElementById('positionFilter').addEventListener('change', filterEmployees);
+
+        function filterEmployees() {
+            const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
+            const departmentFilter = document.getElementById('departmentFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const positionFilter = document.getElementById('positionFilter').value;
+            
+            const filteredEmployees = allEmployees.filter(emp => {
+                const matchesSearch = (emp.firstName + ' ' + emp.lastName).toLowerCase().includes(searchTerm) ||
+                                    emp.email.toLowerCase().includes(searchTerm) ||
+                                    emp.position.toLowerCase().includes(searchTerm);
+                const matchesDepartment = !departmentFilter || emp.department === departmentFilter;
+                const matchesStatus = !statusFilter || emp.status === statusFilter;
+                const matchesPosition = !positionFilter || emp.position.toLowerCase().includes(positionFilter.toLowerCase());
+                
+                return matchesSearch && matchesDepartment && matchesStatus && matchesPosition;
+            });
+            
+            renderEmployees(filteredEmployees);
+        }
+
+        // Modal functions
+        window.openAddEmployeeModal = function() {
+            document.getElementById('addEmployeeModal').classList.remove('hidden');
+            document.getElementById('addEmployeeModal').classList.add('flex');
+        }
+
+        window.closeAddEmployeeModal = function() {
+            document.getElementById('addEmployeeModal').classList.add('hidden');
+            document.getElementById('addEmployeeModal').classList.remove('flex');
+            document.getElementById('addEmployeeForm').reset();
+        }
+
+        window.openRecruitmentModal = function() {
+            showNotification('Recruitment module will be implemented', 'info');
+        }
+
+        window.exportHRData = function() {
+            try {
+                showNotification('Generating HR data export...', 'success');
+                
+                // Generate CSV content
+                let csvContent = '# GRANADA OS - HR MANAGEMENT SYSTEM\\n';
+                csvContent += '# Employee Directory Export\\n';
+                csvContent += '# Export Generated: ' + new Date().toISOString() + '\\n';
+                csvContent += '# Total Employees: ' + allEmployees.length + '\\n';
+                csvContent += '#\\n';
+                csvContent += 'ID,First Name,Last Name,Email,Phone,Department,Position,Salary,Start Date,Status\\n';
+                
+                allEmployees.forEach(emp => {
+                    csvContent += [
+                        emp.id,
+                        emp.firstName,
+                        emp.lastName,
+                        emp.email,
+                        emp.phone || '',
+                        emp.department,
+                        emp.position,
+                        emp.salary || '',
+                        emp.startDate,
+                        emp.status
+                    ].join(',') + '\\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.download = 'granada_os_hr_data_' + timestamp + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(url);
+                showNotification('HR data export completed successfully', 'success');
+            } catch (error) {
+                showNotification('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        // Employee management functions
+        window.editEmployee = function(employeeId) {
+            showNotification('Edit employee functionality will be implemented', 'info');
+        }
+
+        window.viewEmployee = function(employeeId) {
+            showNotification('View employee details will be implemented', 'info');
+        }
+
+        // Add employee form submission
+        document.getElementById('addEmployeeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newEmployee = {
+                id: Date.now().toString(),
+                firstName: document.getElementById('newEmployeeFirstName').value,
+                lastName: document.getElementById('newEmployeeLastName').value,
+                email: document.getElementById('newEmployeeEmail').value,
+                phone: document.getElementById('newEmployeePhone').value,
+                department: document.getElementById('newEmployeeDepartment').value,
+                position: document.getElementById('newEmployeePosition').value,
+                salary: parseInt(document.getElementById('newEmployeeSalary').value) || 0,
+                startDate: document.getElementById('newEmployeeStartDate').value,
+                status: 'probation'
+            };
+
+            allEmployees.push(newEmployee);
+            renderEmployeeStats();
+            renderEmployees(allEmployees);
+            closeAddEmployeeModal();
+            showNotification('Employee added successfully', 'success');
+        });
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ' + 
+                (type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600') + ' text-white';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('addEmployeeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddEmployeeModal();
+        });
+
+        // Make functions globally available
+        window.switchTab = switchTab;
+    </script>
+</body>
+</html>
+      `);
+      return;
+    }
+    
     // Serve default dashboard
     res.send(`
 <!DOCTYPE html>
