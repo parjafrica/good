@@ -647,10 +647,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/proposal/save-draft', async (req, res) => {
     try {
       const { user_id, opportunity_id, content } = req.body;
-      const { nanoid } = await import('nanoid');
-      
-      // Generate unique ID for proposal
-      const proposalId = nanoid();
+      // Generate unique ID for proposal  
+      const proposalId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
       
       // Use db directly from import
       const { db } = await import('./db');
@@ -1380,8 +1378,15 @@ This section demonstrates our commitment to meeting all requirements while deliv
     try {
       const { opportunityId, userId } = req.body;
       
-      // For now, just return success
-      // In a real implementation, you'd save to a user_saved_opportunities table
+      // Track user interaction
+      await storage.db.insert(storage.db.schema.userInteractions).values({
+        user_id: userId || 'anonymous',
+        action_type: 'opportunity_saved',
+        action_details: `Saved opportunity ${opportunityId}`,
+        timestamp: new Date(),
+        metadata: { opportunityId }
+      });
+      
       res.json({ success: true });
     } catch (error) {
       console.error('Error saving opportunity:', error);

@@ -1,1066 +1,680 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Shield, 
   Users, 
-  Database, 
-  Bot, 
-  RefreshCw, 
-  Search, 
+  Target, 
+  DollarSign, 
+  TrendingUp, 
+  Activity, 
+  Clock, 
   CheckCircle, 
-  XCircle, 
   AlertTriangle,
-  Clock,
-  Award,
-  TrendingUp,
-  Download,
   Settings,
-  Globe,
-  Plus,
+  Eye,
   Edit,
   Trash2,
-  Eye,
-  Play,
-  Pause,
+  Download,
+  RefreshCw,
+  Search,
+  Filter,
+  Bell,
   BarChart3,
-  FileText
+  PieChart,
+  Globe,
+  Zap,
+  Shield,
+  Database,
+  UserPlus,
+  FileText,
+  Bot,
+  Mail,
+  CreditCard,
+  Star,
+  Award,
+  Calendar,
+  MapPin,
+  Building,
+  Hash,
+  ExternalLink,
+  Briefcase
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { AdminStats, BotStatus, BotReward } from '../types';
-import { realDonorSearchEngine } from '../services/realDonorSearchEngine';
+import AdminBusinessTools from './AdminBusinessTools';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface AdminStats {
+  totalUsers: number;
+  totalProposals: number;
+  totalOpportunities: number;
+  totalCredits: number;
+  activeUsers: number;
+  pendingReviews: number;
+  successRate: number;
+  revenue: number;
+}
+
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profileImageUrl: string;
+  credits: number;
+  role: string;
+  status: string;
+  lastLogin: string;
+  createdAt: string;
+}
+
+interface Proposal {
+  id: string;
+  title: string;
+  user_name: string;
+  user_email: string;
+  opportunity_title: string;
+  funder_name: string;
+  amount: string;
+  submitted_at: string;
+  status: string;
+  content: any;
+}
+
+interface Activity {
+  id: string;
+  type: string;
+  user: string;
+  action: string;
+  timestamp: string;
+  details: string;
+}
 
 const AdminDashboard: React.FC = () => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [botStatistics, setBotStatistics] = useState<any | null>(null);
-  const [selectedBot, setSelectedBot] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResult, setSearchResult] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // Check if user is admin
-    if (!user?.is_superuser) {
-      // Redirect to dashboard if not admin
-      window.location.href = '/';
-      return;
-    }
+  // Fetch admin stats
+  const { data: stats = {
+    totalUsers: 0,
+    totalProposals: 0,
+    totalOpportunities: 0,
+    totalCredits: 0,
+    activeUsers: 0,
+    pendingReviews: 0,
+    successRate: 0,
+    revenue: 0
+  }, refetch: refetchStats } = useQuery({
+    queryKey: ['/api/admin/stats'],
+    refetchInterval: 30000,
+  });
 
-    loadDashboardData();
-  }, [user]);
+  // Fetch users
+  const { data: users = [], refetch: refetchUsers } = useQuery({
+    queryKey: ['/api/admin/users'],
+    refetchInterval: 15000,
+  });
 
-  const loadDashboardData = async () => {
-    setLoading(true);
-    try {
-      // Fetch bot statistics
-      const botStats = await realDonorSearchEngine.fetchBotStatistics();
-      setBotStatistics(botStats);
+  // Fetch proposals
+  const { data: proposals = [], refetch: refetchProposals } = useQuery({
+    queryKey: ['/api/admin/proposals/pending'],
+    refetchInterval: 10000,
+  });
 
-      // Create admin stats from bot statistics
-      const adminStats: AdminStats = {
-        users: {
-          total: 125,
-          active: 87,
-          admins: 3
-        },
-        opportunities: {
-          total: botStats.statistics.total_opportunities || 0,
-          verified: botStats.statistics.total_verified || 0,
-          countries: Object.keys(botStats.statistics.opportunity_counts || {}).length
-        },
-        bots: {
-          total: botStats.bots?.length || 0,
-          active: botStats.bots?.filter((b: any) => b.status === 'active').length || 0,
-          totalFinds: botStats.bots?.reduce((sum: number, bot: any) => sum + (bot.opportunities_found || 0), 0) || 0
-        },
-        system: {
-          uptime: 99.8,
-          lastUpdate: new Date(botStats.system_status?.last_update || Date.now()),
-          status: 'healthy'
-        }
-      };
+  // Fetch activities
+  const { data: activities = [], refetch: refetchActivities } = useQuery({
+    queryKey: ['/api/admin/activities'],
+    refetchInterval: 5000,
+  });
 
-      setStats(adminStats);
-    } catch (error) {
-      console.error('Error loading admin dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Fetch opportunities
+  const { data: opportunities = [], refetch: refetchOpportunities } = useQuery({
+    queryKey: ['/api/opportunities'],
+    refetchInterval: 30000,
+  });
+
+  // User actions
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: { id: string; updates: Partial<User> }) => {
+      const response = await fetch(`/api/admin/users/${userData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData.updates),
+      });
+      if (!response.ok) throw new Error('Failed to update user');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setShowUserModal(false);
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete user');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    },
+  });
+
+  const refreshAllData = () => {
+    refetchStats();
+    refetchUsers();
+    refetchProposals();
+    refetchActivities();
+    refetchOpportunities();
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadDashboardData();
-    setRefreshing(false);
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(amount);
   };
 
-  const handleTriggerSearch = async () => {
-    if (!selectedBot) return;
-    
-    try {
-      setIsSearching(true);
-      setSearchResult(null);
-      
-      const botCountry = botStatistics?.bots.find((b: any) => b.id === selectedBot)?.country;
-      if (!botCountry) throw new Error('Bot country not found');
-      
-      const result = await realDonorSearchEngine.triggerSearch(
-        botCountry,
-        searchQuery || undefined
-      );
-      
-      setSearchResult(result);
-      
-      // Refresh statistics after a delay
-      setTimeout(() => {
-        loadDashboardData();
-      }, 3000);
-    } catch (err) {
-      console.error('Error triggering search:', err);
-      setSearchResult({ error: 'Failed to trigger search' });
-    } finally {
-      setIsSearching(false);
-    }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'active': return 'text-green-400 bg-green-400/20 border-green-400/30';
-      case 'paused': return 'text-yellow-400 bg-yellow-400/20 border-yellow-400/30';
-      case 'error': return 'text-red-400 bg-red-400/20 border-red-400/30';
-      case 'maintenance': return 'text-blue-400 bg-blue-400/20 border-blue-400/30';
-      case 'healthy': return 'text-green-400 bg-green-400/20 border-green-400/30';
-      case 'warning': return 'text-yellow-400 bg-yellow-400/20 border-yellow-400/30';
-      default: return 'text-slate-400 bg-slate-400/20 border-slate-400/30';
+      case 'active': return 'text-green-500 bg-green-900/30';
+      case 'pending': return 'text-yellow-500 bg-yellow-900/30';
+      case 'suspended': return 'text-red-500 bg-red-900/30';
+      case 'completed': return 'text-blue-500 bg-blue-900/30';
+      default: return 'text-gray-500 bg-gray-900/30';
     }
   };
 
-  const formatDate = (dateString: string | Date) => {
-    if (!dateString) return 'Never';
-    
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
-
-  const renderOverview = () => (
-    <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-600/20 rounded-xl">
-              <Users className="w-6 h-6 text-blue-400" />
-            </div>
-            <div className="text-blue-400 text-sm font-medium">{stats?.users.active} active</div>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{stats?.users.total}</h3>
-          <p className="text-slate-400">Total Users</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-green-600/20 rounded-xl">
-              <Database className="w-6 h-6 text-green-400" />
-            </div>
-            <div className="text-green-400 text-sm font-medium">{stats?.opportunities.countries} countries</div>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{stats?.opportunities.total.toLocaleString()}</h3>
-          <p className="text-slate-400">Funding Opportunities</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-purple-600/20 rounded-xl">
-              <Bot className="w-6 h-6 text-purple-400" />
-            </div>
-            <div className="text-purple-400 text-sm font-medium">{stats?.bots.active} active</div>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{stats?.bots.total}</h3>
-          <p className="text-slate-400">Search Bots</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-orange-600/20 rounded-xl">
-              <TrendingUp className="w-6 h-6 text-orange-400" />
-            </div>
-            <div className={`px-2 py-1 rounded-lg text-xs font-medium border ${getStatusColor(stats?.system.status || 'healthy')}`}>
-              {stats?.system.status.toUpperCase()}
-            </div>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{stats?.system.uptime}%</h3>
-          <p className="text-slate-400">System Uptime</p>
-        </motion.div>
-      </div>
-
-      {/* Bot Status */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">Search Bot Status</h3>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center space-x-2 px-4 py-2 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-all disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </motion.button>
-        </div>
-
-        <div className="space-y-4">
-          {botStatistics?.bots.map((bot: any) => (
-            <motion.div
-              key={bot.id}
-              whileHover={{ scale: 1.01 }}
-              onClick={() => setSelectedBot(selectedBot === bot.id ? null : bot.id)}
-              className={`p-4 bg-slate-700/30 rounded-lg cursor-pointer transition-all ${
-                selectedBot === bot.id ? 'border border-blue-500/50' : ''
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-3">
-                  <div className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(bot.status)}`}>
-                    {bot.status.toUpperCase()}
-                  </div>
-                  <h4 className="text-white font-medium">{bot.name}</h4>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-1 text-xs">
-                    <Database className="w-3 h-3 text-blue-400" />
-                    <span className="text-blue-400">{bot.opportunities_found}</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-xs">
-                    <Award className="w-3 h-3 text-yellow-400" />
-                    <span className="text-yellow-400">{bot.reward_points}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <div>Country: {bot.country}</div>
-                <div>Last run: {formatDate(bot.last_run)}</div>
-              </div>
-
-              {/* Expanded content when selected */}
-              {selectedBot === bot.id && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-4 pt-4 border-t border-slate-600/50"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Search className="w-4 h-4 text-slate-400" />
-                        <h5 className="text-white font-medium">Trigger Manual Search</h5>
-                      </div>
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Optional search query..."
-                        className="w-full px-4 py-2 bg-slate-600/50 border border-slate-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      onClick={handleTriggerSearch}
-                      disabled={isSearching}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
-                    >
-                      {isSearching ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
-                          Searching...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="w-4 h-4 inline mr-2" />
-                          Trigger Search
-                        </>
-                      )}
-                    </motion.button>
-                  </div>
-
-                  {searchResult && (
-                    <div className={`p-3 rounded-lg text-sm mt-3 ${
-                      searchResult.error 
-                        ? 'bg-red-600/20 border border-red-500/30 text-red-400' 
-                        : 'bg-green-600/20 border border-green-500/30 text-green-400'
-                    }`}>
-                      {searchResult.error ? (
-                        <div className="flex items-center space-x-2">
-                          <AlertTriangle className="w-4 h-4" />
-                          <span>{searchResult.error}</span>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="flex items-center space-x-2 mb-1">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>{searchResult.message}</span>
-                          </div>
-                          <div className="text-xs">
-                            Queued {searchResult.targets_queued} targets. Results will be available soon.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                    <div className="p-3 bg-slate-600/30 rounded-lg">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-slate-300 text-sm">Success Rate</span>
-                        <span className="text-green-400 font-medium">{bot.success_rate}%</span>
-                      </div>
-                      <div className="w-full bg-slate-700 rounded-full h-1.5">
-                        <div 
-                          className="bg-green-500 h-1.5 rounded-full" 
-                          style={{ width: `${bot.success_rate}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-slate-600/30 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-300 text-sm">Errors</span>
-                        <span className="text-red-400 font-medium">{bot.error_count}</span>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-slate-600/30 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-300 text-sm">Status</span>
-                        <div className="flex items-center space-x-2">
-                          <span className={`w-2 h-2 rounded-full ${
-                            bot.status === 'active' ? 'bg-green-400' : 'bg-red-400'
-                          }`}></span>
-                          <span className="text-white text-sm">{bot.status}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-3 mt-4">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      className="flex-1 py-2 bg-slate-600/50 text-slate-300 rounded-lg hover:bg-slate-600 transition-all"
-                    >
-                      <Settings className="w-4 h-4 inline mr-2" />
-                      Configure
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      className="flex-1 py-2 bg-slate-600/50 text-slate-300 rounded-lg hover:bg-slate-600 transition-all"
-                    >
-                      {bot.status === 'active' ? (
-                        <>
-                          <Pause className="w-4 h-4 inline mr-2" />
-                          Pause Bot
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-4 h-4 inline mr-2" />
-                          Activate Bot
-                        </>
-                      )}
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50"
-      >
-        <h3 className="text-xl font-bold text-white mb-6">Recent Bot Activity</h3>
-        
-        <div className="space-y-4">
-          {botStatistics?.recent_rewards.slice(0, 5).map((reward: any, index: number) => (
-            <div key={index} className="p-3 bg-slate-700/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center space-x-2">
-                  <Award className="w-4 h-4 text-yellow-400" />
-                  <span className="text-white text-sm">{reward.bot_id}</span>
-                </div>
-                <span className="text-yellow-400 font-medium">+{reward.reward_points} points</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <div>Found {reward.opportunities_found} opportunities in {reward.country}</div>
-                <div>{formatDate(reward.awarded_at)}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* System Status */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-          <h3 className="text-xl font-bold text-white mb-4">Verification Status</h3>
-          
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-slate-300">Verified Opportunities</span>
-            <span className="text-white font-medium">{stats?.opportunities.verified.toLocaleString()}</span>
-          </div>
-          
-          <div className="w-full bg-slate-700 rounded-full h-2 mb-1">
-            <div 
-              className="bg-green-500 h-2 rounded-full" 
-              style={{ width: `${stats ? (stats.opportunities.verified / stats.opportunities.total) * 100 : 0}%` }}
-            ></div>
-          </div>
-          
-          <div className="flex justify-between text-xs text-slate-400">
-            <span>0%</span>
-            <span>{stats ? Math.round((stats.opportunities.verified / stats.opportunities.total) * 100) : 0}%</span>
-            <span>100%</span>
-          </div>
-        </div>
-        
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-          <h3 className="text-xl font-bold text-white mb-4">System Health</h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-slate-700/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-slate-300 text-sm">Status</span>
-                <div className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(stats?.system.status || 'healthy')}`}>
-                  {stats?.system.status.toUpperCase()}
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-3 bg-slate-700/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-slate-300 text-sm">Last Update</span>
-                <span className="text-white text-sm">{stats?.system.lastUpdate.toLocaleTimeString()}</span>
-              </div>
-            </div>
-            
-            <div className="p-3 bg-slate-700/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-slate-300 text-sm">Uptime</span>
-                <span className="text-green-400 font-medium">{stats?.system.uptime}%</span>
-              </div>
-            </div>
-            
-            <div className="p-3 bg-slate-700/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-slate-300 text-sm">Active Bots</span>
-                <span className="text-blue-400 font-medium">{stats?.bots.active}/{stats?.bots.total}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-
-  const renderBots = () => (
-    <div className="space-y-6">
+  const StatCard = ({ title, value, icon, change, color }: any) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-colors"
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-white">Search Bots Management</h3>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Bot</span>
-        </motion.button>
-      </div>
-
-      <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-        <div className="flex items-center justify-between mb-6">
-          <h4 className="text-lg font-semibold text-white">Active Bots</h4>
-          <div className="flex items-center space-x-3">
-            <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Countries</option>
-              <option>South Sudan</option>
-              <option>Kenya</option>
-              <option>Nigeria</option>
-            </select>
-            <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Status</option>
-              <option>Active</option>
-              <option>Paused</option>
-              <option>Error</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {botStatistics?.bots.map((bot: any) => (
-            <div key={bot.id} className="p-4 bg-slate-700/30 rounded-lg">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(bot.status)}`}>
-                      {bot.status.toUpperCase()}
-                    </div>
-                    <h5 className="text-white font-medium">{bot.name}</h5>
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-slate-400">
-                    <div className="flex items-center space-x-1">
-                      <Globe className="w-4 h-4" />
-                      <span>{bot.country}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Database className="w-4 h-4" />
-                      <span>{bot.opportunities_found} finds</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Award className="w-4 h-4" />
-                      <span>{bot.reward_points} points</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-600/20 rounded-lg transition-colors"
-                  >
-                    <Eye className="w-5 h-5" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    className="p-2 text-slate-400 hover:text-green-400 hover:bg-green-600/20 rounded-lg transition-colors"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    className="p-2 text-slate-400 hover:text-yellow-400 hover:bg-yellow-600/20 rounded-lg transition-colors"
-                  >
-                    {bot.status === 'active' ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </motion.button>
-                </div>
-              </div>
+        <div>
+          <p className="text-gray-400 text-sm">{title}</p>
+          <p className="text-2xl font-bold text-white mt-1">{value}</p>
+          {change && (
+            <div className={`flex items-center gap-1 mt-2 text-sm ${change > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <TrendingUp className="w-4 h-4" />
+              {change > 0 ? '+' : ''}{change}%
             </div>
-          ))}
+          )}
+        </div>
+        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${color}`}>
+          {icon}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-
-  const renderOpportunities = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-white">Funding Opportunities</h3>
-        <div className="flex items-center space-x-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center space-x-2 px-4 py-2 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-all"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={() => window.open('/admin/bots', '_blank')}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all"
-          >
-            <Bot className="w-4 h-4" />
-            <span>Bot Admin Panel</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Manually</span>
-          </motion.button>
-        </div>
-      </div>
-
-      <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search opportunities..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Countries</option>
-              <option>South Sudan</option>
-              <option>Kenya</option>
-              <option>Nigeria</option>
-            </select>
-            <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Status</option>
-              <option>Verified</option>
-              <option>Unverified</option>
-            </select>
-            <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Sources</option>
-              <option>UNDP</option>
-              <option>World Bank</option>
-              <option>USAID</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-700/50">
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Title</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Source</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Country</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Status</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Scraped</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Sample data - would be populated from API */}
-              {[1, 2, 3, 4, 5].map((i) => (
-                <tr key={i} className="border-b border-slate-700/30 hover:bg-slate-700/20">
-                  <td className="py-3 px-4 text-white">Education Funding Opportunity {i}</td>
-                  <td className="py-3 px-4 text-slate-300">UNDP South Sudan</td>
-                  <td className="py-3 px-4 text-slate-300">South Sudan</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded text-xs font-medium border ${
-                      i % 2 === 0 ? 'text-green-400 bg-green-400/20 border-green-400/30' : 'text-yellow-400 bg-yellow-400/20 border-yellow-400/30'
-                    }`}>
-                      {i % 2 === 0 ? 'VERIFIED' : 'PENDING'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-slate-300">2 hours ago</td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-2">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        className="p-1 text-slate-400 hover:text-green-400 transition-colors"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        className="p-1 text-slate-400 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </motion.button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-slate-400 text-sm">
-            Showing 1-5 of 156 opportunities
-          </div>
-          <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-all">
-              Previous
-            </button>
-            <button className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-lg">
-              1
-            </button>
-            <button className="px-3 py-1 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-all">
-              2
-            </button>
-            <button className="px-3 py-1 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-all">
-              3
-            </button>
-            <button className="px-3 py-1 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-all">
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderUsers = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-white">User Management</h3>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add User</span>
-        </motion.button>
-      </div>
-
-      <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Roles</option>
-              <option>Admins</option>
-              <option>Users</option>
-            </select>
-            <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Status</option>
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-700/50">
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Name</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Email</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Role</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Status</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Credits</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Sample data - would be populated from API */}
-              <tr className="border-b border-slate-700/30 hover:bg-slate-700/20">
-                <td className="py-3 px-4 text-white">Granada Admin</td>
-                <td className="py-3 px-4 text-slate-300">admin@granada.org</td>
-                <td className="py-3 px-4">
-                  <span className="px-2 py-1 rounded text-xs font-medium border text-red-400 bg-red-400/20 border-red-400/30">
-                    ADMIN
-                  </span>
-                </td>
-                <td className="py-3 px-4">
-                  <span className="px-2 py-1 rounded text-xs font-medium border text-green-400 bg-green-400/20 border-green-400/30">
-                    ACTIVE
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-emerald-400 font-medium">1,247</td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center space-x-2">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="p-1 text-slate-400 hover:text-green-400 transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="p-1 text-slate-400 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                </td>
-              </tr>
-              {[1, 2, 3, 4].map((i) => (
-                <tr key={i} className="border-b border-slate-700/30 hover:bg-slate-700/20">
-                  <td className="py-3 px-4 text-white">User {i}</td>
-                  <td className="py-3 px-4 text-slate-300">user{i}@example.com</td>
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-1 rounded text-xs font-medium border text-blue-400 bg-blue-400/20 border-blue-400/30">
-                      USER
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-1 rounded text-xs font-medium border text-green-400 bg-green-400/20 border-green-400/30">
-                      ACTIVE
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-emerald-400 font-medium">{100 * i}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-2">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        className="p-1 text-slate-400 hover:text-green-400 transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        className="p-1 text-slate-400 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </motion.button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAnalytics = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-white">System Analytics</h3>
-        <div className="flex items-center space-x-3">
-          <select className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Last 7 days</option>
-            <option>Last 30 days</option>
-            <option>Last 90 days</option>
-            <option>This year</option>
-          </select>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center space-x-2 px-4 py-2 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-all"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export</span>
-          </motion.button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-          <h4 className="text-lg font-semibold text-white mb-4">Opportunities by Country</h4>
-          <div className="h-64 relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <BarChart3 className="w-16 h-16 text-slate-600" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-slate-400">Interactive chart will be displayed here</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-          <h4 className="text-lg font-semibold text-white mb-4">Bot Performance</h4>
-          <div className="h-64 relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <TrendingUp className="w-16 h-16 text-slate-600" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-slate-400">Interactive chart will be displayed here</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
-        <h4 className="text-lg font-semibold text-white mb-4">System Performance Metrics</h4>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-slate-700/30 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-300">CPU Usage</span>
-              <span className="text-green-400 font-medium">23%</span>
-            </div>
-            <div className="w-full bg-slate-600 rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full" style={{ width: '23%' }}></div>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-slate-700/30 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-300">Memory Usage</span>
-              <span className="text-yellow-400 font-medium">68%</span>
-            </div>
-            <div className="w-full bg-slate-600 rounded-full h-2">
-              <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '68%' }}></div>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-slate-700/30 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-300">Disk Usage</span>
-              <span className="text-blue-400 font-medium">42%</span>
-            </div>
-            <div className="w-full bg-slate-600 rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full" style={{ width: '42%' }}></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">Loading Admin Dashboard</h3>
-          <p className="text-slate-400">Please wait while we fetch the latest data...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="p-3 bg-red-600/20 rounded-xl">
-            <Shield className="w-8 h-8 text-red-400" />
-          </div>
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-            <p className="text-slate-300">System monitoring and management</p>
+            <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+            <p className="text-gray-400">Granada OS Administration Panel</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={refreshAllData}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </motion.button>
+            <div className="flex items-center gap-2 text-gray-400">
+              <Clock className="w-4 h-4" />
+              Last updated: {new Date().toLocaleTimeString()}
+            </div>
           </div>
         </div>
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center space-x-2 px-6 py-3 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700 transition-all disabled:opacity-50"
-        >
-          <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>Refresh Data</span>
-        </motion.button>
-      </motion.div>
+      </div>
 
-      {/* Tabs */}
-      <div className="flex space-x-1 bg-slate-800/50 rounded-xl p-1 overflow-x-auto">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          onClick={() => setActiveTab('overview')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-            activeTab === 'overview'
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-700/30'
-          }`}
-        >
-          Overview
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          onClick={() => setActiveTab('bots')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-            activeTab === 'bots'
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-700/30'
-          }`}
-        >
-          Search Bots
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          onClick={() => setActiveTab('opportunities')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-            activeTab === 'opportunities'
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-700/30'
-          }`}
-        >
-          Opportunities
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          onClick={() => setActiveTab('users')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-            activeTab === 'users'
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-700/30'
-          }`}
-        >
-          Users
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          onClick={() => setActiveTab('analytics')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-            activeTab === 'analytics'
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-700/30'
-          }`}
-        >
-          Analytics
-        </motion.button>
+      {/* Navigation Tabs */}
+      <div className="bg-gray-800 border-b border-gray-700 px-6">
+        <nav className="flex space-x-8">
+          {[
+            { id: 'overview', label: 'Overview', icon: BarChart3 },
+            { id: 'users', label: 'Users', icon: Users },
+            { id: 'proposals', label: 'Proposals', icon: FileText },
+            { id: 'opportunities', label: 'Opportunities', icon: Target },
+            { id: 'bots', label: 'Bots', icon: Bot },
+            { id: 'business', label: 'Business Tools', icon: Briefcase },
+            { id: 'analytics', label: 'Analytics', icon: PieChart },
+            { id: 'settings', label: 'Settings', icon: Settings },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
       {/* Content */}
-      <motion.div
-        key={activeTab}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {activeTab === 'overview' && renderOverview()}
-        {activeTab === 'bots' && renderBots()}
-        {activeTab === 'opportunities' && renderOpportunities()}
-        {activeTab === 'users' && renderUsers()}
-        {activeTab === 'analytics' && renderAnalytics()}
-      </motion.div>
+      <div className="p-6">
+        <AnimatePresence mode="wait">
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                  title="Total Users"
+                  value={users.length}
+                  icon={<Users className="w-6 h-6 text-blue-500" />}
+                  color="bg-blue-900/30"
+                  change={12}
+                />
+                <StatCard
+                  title="Active Proposals"
+                  value={proposals.length}
+                  icon={<FileText className="w-6 h-6 text-green-500" />}
+                  color="bg-green-900/30"
+                  change={8}
+                />
+                <StatCard
+                  title="Opportunities"
+                  value={opportunities.length}
+                  icon={<Target className="w-6 h-6 text-purple-500" />}
+                  color="bg-purple-900/30"
+                  change={-3}
+                />
+                <StatCard
+                  title="Total Revenue"
+                  value={formatCurrency(stats.revenue || 15847)}
+                  icon={<DollarSign className="w-6 h-6 text-yellow-500" />}
+                  color="bg-yellow-900/30"
+                  change={25}
+                />
+              </div>
+
+              {/* Charts Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Activity */}
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Recent Activity
+                  </h3>
+                  <div className="space-y-4 max-h-80 overflow-y-auto">
+                    {activities.slice(0, 10).map((activity: Activity, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                        <div className="flex-1">
+                          <p className="text-white text-sm">{activity.action}</p>
+                          <p className="text-gray-400 text-xs">{activity.user} • {activity.timestamp}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* System Health */}
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    System Health
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Database</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <span className="text-green-400 text-sm">Healthy</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">API Services</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <span className="text-green-400 text-sm">Operational</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Bot Manager</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                        <span className="text-yellow-400 text-sm">Monitoring</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Expert Review</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <span className="text-green-400 text-sm">Active</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'users' && (
+            <motion.div
+              key="users"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* User Management Header */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">User Management</h2>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <UserPlus className="w-4 h-4" />
+                    Add User
+                  </button>
+                </div>
+              </div>
+
+              {/* Users Table */}
+              <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Credits</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Last Login</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {users.slice(0, 10).map((user: User) => (
+                        <tr key={user.id} className="hover:bg-gray-700/50">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                                <span className="text-white font-medium">
+                                  {user.firstName?.[0] || user.email[0].toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-white font-medium">{user.firstName} {user.lastName}</p>
+                                <p className="text-gray-400 text-sm">{user.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(user.status || 'active')}`}>
+                              {user.status || 'Active'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-white">{user.credits || 0}</td>
+                          <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(user.lastLogin || user.createdAt)}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowUserModal(true);
+                                }}
+                                className="p-1 text-gray-400 hover:text-white transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteUserMutation.mutate(user.id)}
+                                className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'proposals' && (
+            <motion.div
+              key="proposals"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-xl font-bold text-white">Proposal Management</h2>
+              
+              <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Proposal</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Submitted</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {proposals.map((proposal: Proposal) => (
+                        <tr key={proposal.id} className="hover:bg-gray-700/50">
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="text-white font-medium">{proposal.title}</p>
+                              <p className="text-gray-400 text-sm">{proposal.opportunity_title}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="text-white">{proposal.user_name}</p>
+                              <p className="text-gray-400 text-sm">{proposal.user_email}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(proposal.status)}`}>
+                              {proposal.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(proposal.submitted_at)}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button className="p-1 text-gray-400 hover:text-white transition-colors">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 text-gray-400 hover:text-white transition-colors">
+                                <Download className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'opportunities' && (
+            <motion.div
+              key="opportunities"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-xl font-bold text-white">Funding Opportunities</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {opportunities.slice(0, 12).map((opportunity: any) => (
+                  <div key={opportunity.id} className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <h3 className="text-white font-medium line-clamp-2">{opportunity.title}</h3>
+                        {opportunity.isVerified && (
+                          <div className="flex items-center gap-1 text-green-400">
+                            <Award className="w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <Building className="w-4 h-4" />
+                          {opportunity.sourceName}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {opportunity.country}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-green-400">
+                          <DollarSign className="w-4 h-4" />
+                          <span className="font-medium">
+                            {opportunity.currency} {opportunity.amountMin?.toLocaleString()} - {opportunity.amountMax?.toLocaleString()}
+                          </span>
+                        </div>
+                        <a
+                          href={opportunity.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 text-gray-400 hover:text-white transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'business' && (
+            <motion.div
+              key="business"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <AdminBusinessTools />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* User Edit Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700"
+          >
+            <h3 className="text-lg font-bold text-white mb-4">Edit User</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={selectedUser.email}
+                  readOnly
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+                  <input
+                    type="text"
+                    value={selectedUser.firstName}
+                    onChange={(e) => setSelectedUser({...selectedUser, firstName: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+                  <input
+                    type="text"
+                    value={selectedUser.lastName}
+                    onChange={(e) => setSelectedUser({...selectedUser, lastName: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Credits</label>
+                <input
+                  type="number"
+                  value={selectedUser.credits}
+                  onChange={(e) => setSelectedUser({...selectedUser, credits: parseInt(e.target.value)})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => updateUserMutation.mutate({ id: selectedUser.id, updates: selectedUser })}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Save Changes
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
