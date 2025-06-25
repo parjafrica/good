@@ -18,6 +18,7 @@ import CreditsPurchase from './components/CreditsPurchase';
 import NGOPipeline from './components/NGOPipeline';
 import AdminDashboard from './components/AdminDashboard';
 import AdminBotPanel from './components/AdminBotPanel';
+import AdminProposalReviewPanel from './components/AdminProposalReviewPanel';
 import MobileNavigation from './components/shared/MobileNavigation';
 import LandingPage from './LandingPage';
 import StudentDashboard from './components/StudentDashboard';
@@ -88,6 +89,7 @@ function App() {
                     <Route path="/ngo-pipeline" element={<NGOPipeline />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/bots" element={<AdminBotPanel />} />
+                    <Route path="/admin/proposals" element={<AdminProposalReviewPanel />} />
                   </Routes>
                 </main>
               </div>
