@@ -669,10 +669,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store notification request in database
       await storage.db.update(proposals)
-
         .set({
-          notificationEmail: email,
-          updatedAt: new Date()
+          description: email  // Store email in description field for now
         })
         .where(eq(proposals.id, proposal_id));
 
@@ -715,29 +713,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/submissions', async (req, res) => {
     try {
-      const submissions = await storage.db.select({
-        id: proposals.id,
-        user_name: proposals.userId,
-        user_email: proposals.notificationEmail,
-        submission_type: proposals.status,
-        title: proposals.title,
-        status: proposals.status,
-        submitted_at: proposals.createdAt,
-        priority: proposals.status // Map to priority logic
-      })
+      const submissions = await storage.db.select()
       .from(proposals)
       .orderBy(proposals.createdAt);
 
-      // Add mock priority and type for better UX
-      const enhancedSubmissions = submissions.map(sub => ({
-        ...sub,
+      // Map to expected format
+      const mappedSubmissions = submissions.map(sub => ({
+        id: sub.id,
+        user_name: sub.createdBy || 'Anonymous User',
+        user_email: sub.description || 'no-email@example.com',
         submission_type: 'proposal',
-        priority: sub.status === 'pending_review' ? 'high' : 'medium',
-        user_name: sub.user_name || 'Anonymous User',
-        user_email: sub.user_email || 'no-email@example.com'
+        title: sub.title,
+        status: sub.status,
+        submitted_at: sub.createdAt,
+        priority: sub.status === 'pending_review' ? 'high' : 'medium'
       }));
 
-      res.json({ submissions: enhancedSubmissions });
+      res.json({ submissions: mappedSubmissions });
     } catch (error) {
       console.error('Admin submissions error:', error);
       res.status(500).json({ error: 'Failed to fetch submissions' });
@@ -766,11 +758,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { status } = req.body;
       
-      await db.update(proposals)
+      await storage.db.update(proposals)
         .set({
           status: status
         })
-        .where(storage.eq(proposals.id, id));
+        .where(eq(proposals.id, id));
 
       res.json({ success: true });
     } catch (error) {
@@ -782,32 +774,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin proposal review routes
   app.get('/api/admin/proposals/pending', async (req, res) => {
     try {
-      const pendingProposals = await storage.db.select({
-        id: proposals.id,
-        title: proposals.title,
-        user_name: proposals.userId,
-        user_email: proposals.notificationEmail,
-        opportunity_title: proposals.title,
-        funder_name: proposals.title,
-        amount: proposals.title,
-        submitted_at: proposals.createdAt,
-        status: proposals.status,
-        content: proposals.content,
-        admin_notes: proposals.adminNotes
-      })
+      const pendingProposals = await storage.db.select()
       .from(proposals)
       .where(eq(proposals.status, 'pending_review'));
 
-      // Enhance with mock data for better UX
-      const enhancedProposals = pendingProposals.map(p => ({
-        ...p,
-        user_name: p.user_name || 'Anonymous User',
-        user_email: p.user_email || 'no-email@example.com',
+      // Map to expected format
+      const mappedProposals = pendingProposals.map(p => ({
+        id: p.id,
+        title: p.title,
+        user_name: p.createdBy || 'Anonymous User',
+        user_email: p.description || 'no-email@example.com',
+        opportunity_title: p.title,
         funder_name: 'Test Foundation',
-        amount: '$50,000 - $250,000'
+        amount: '$50,000 - $250,000',
+        submitted_at: p.createdAt,
+        status: p.status,
+        content: p.content,
+        admin_notes: p.description
       }));
 
-      res.json({ proposals: enhancedProposals });
+      res.json({ proposals: mappedProposals });
     } catch (error) {
       console.error('Fetch pending proposals error:', error);
       res.status(500).json({ error: 'Failed to fetch proposals' });
@@ -819,12 +805,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { content, admin_notes, status } = req.body;
       
-      await db.update(proposals)
+      await storage.db.update(proposals)
         .set({
           content: content,
           status: status
         })
-        .where(storage.eq(proposals.id, id));
+        .where(eq(proposals.id, id));
 
       res.json({ success: true });
     } catch (error) {
@@ -844,7 +830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: content,
           status: 'completed'
         })
-        .where(storage.eq(proposals.id, id))
+        .where(eq(proposals.id, id))
         .returning();
 
       // Send email notification if requested
