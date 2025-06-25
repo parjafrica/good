@@ -4,11 +4,13 @@
 Granada OS is a comprehensive funding opportunities platform successfully migrated from Bolt to Replit. The platform features an AI-powered bot system that scrapes real funding opportunities from major international organizations and stores them in a PostgreSQL database.
 
 ## Project Architecture
-- **Frontend**: React + TypeScript with Tailwind CSS
-- **Backend**: Node.js/Express with TypeScript
+- **Frontend**: React + TypeScript with Tailwind CSS (port 5000)
+- **Backend**: FastAPI with Python (ports 8000-8001) + Node.js/Express (port 5000)
 - **Database**: PostgreSQL (Neon) with Drizzle ORM
+- **FastAPI Services**: 
+  - Main API (port 8000) - Opportunities, proposals, admin
+  - Bot Service (port 8001) - Web scraping and automation
 - **Bot System**: Python with Selenium and DeepSeek AI integration
-- **API Integration**: RESTful endpoints serving funding opportunities
 
 ## Recent Changes (June 25, 2025)
 - Successfully migrated from Bolt/Supabase to Replit/PostgreSQL
@@ -67,6 +69,11 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - Created missing AdminBotPanelStandalone component for admin routes
 - Resolved authentication context import issues across all page components
 - Successfully restored application functionality with all components loading properly
+- **FASTAPI MIGRATION**: Removed Flask components and implemented FastAPI architecture
+- Created comprehensive FastAPI main service (port 8000) with funding opportunities API
+- Built dedicated bot management service (port 8001) for web scraping operations
+- Cleaned up Flask dependencies and established proper FastAPI backend services
+- Updated project to use FastAPI for all Python backend operations
 
 
 ## Current Database Content
