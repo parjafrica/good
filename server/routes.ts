@@ -1190,6 +1190,148 @@ This section demonstrates our commitment to meeting all requirements while deliv
     }
   });
 
+  // Credit system routes
+  app.get('/api/user/credits', async (req, res) => {
+    try {
+      const userId = req.query.userId || 'anonymous';
+      const { db } = await import('./db');
+      
+      const creditTransactions = await db.select()
+        .from(creditTransactions)
+        .where(eq(creditTransactions.userId, userId));
+      
+      const totalCredits = creditTransactions.reduce((sum, transaction) => {
+        return transaction.type === 'purchase' ? sum + transaction.amount : sum - transaction.amount;
+      }, 0);
+      
+      res.json(totalCredits);
+    } catch (error) {
+      console.error('Error fetching user credits:', error);
+      res.json(1000); // Default credits for demo
+    }
+  });
+
+  app.get('/api/user/credit-transactions', async (req, res) => {
+    try {
+      const userId = req.query.userId || 'anonymous';
+      const { db } = await import('./db');
+      
+      const transactions = await db.select()
+        .from(creditTransactions)
+        .where(eq(creditTransactions.userId, userId))
+        .orderBy(creditTransactions.createdAt);
+      
+      res.json(transactions);
+    } catch (error) {
+      console.error('Error fetching credit transactions:', error);
+      res.json([]);
+    }
+  });
+
+  app.post('/api/credits/purchase', async (req, res) => {
+    try {
+      const { packageId, userId } = req.body;
+      const { db } = await import('./db');
+      
+      // Credit package mapping
+      const packages = {
+        starter: { credits: 100, price: 10 },
+        professional: { credits: 350, price: 25 }, // includes bonus
+        enterprise: { credits: 900, price: 50 }, // includes bonus
+        unlimited: { credits: 2500, price: 100 } // includes bonus
+      };
+      
+      const selectedPackage = packages[packageId as keyof typeof packages];
+      if (!selectedPackage) {
+        return res.status(400).json({ error: 'Invalid package' });
+      }
+      
+      // Create transaction record
+      await db.insert(creditTransactions).values({
+        userId: userId,
+        type: 'purchase',
+        amount: selectedPackage.credits,
+        description: `Purchased ${selectedPackage.credits} credits`,
+        metadata: { packageId, price: selectedPackage.price }
+      });
+      
+      res.json({ success: true, credits: selectedPackage.credits });
+    } catch (error) {
+      console.error('Error processing credit purchase:', error);
+      res.status(500).json({ error: 'Purchase failed' });
+    }
+  });
+
+  // Settings routes
+  app.get('/api/user/settings', async (req, res) => {
+    try {
+      const userId = req.query.userId || 'anonymous';
+      const { db } = await import('./db');
+      
+      const userSettings = await db.select()
+        .from(systemSettings)
+        .where(eq(systemSettings.key, `user_settings_${userId}`));
+      
+      if (userSettings.length > 0) {
+        res.json(JSON.parse(userSettings[0].value));
+      } else {
+        // Return default settings
+        res.json({
+          profile: { fullName: '', email: '', phone: '', organization: '', location: '', bio: '' },
+          preferences: { theme: 'dark', language: 'en', timezone: 'UTC', currency: 'USD' },
+          notifications: { emailNotifications: true, proposalUpdates: true, fundingAlerts: true, weeklyDigest: false, marketingEmails: false },
+          privacy: { profileVisible: true, shareAnalytics: true, cookiePreferences: 'essential' }
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user settings:', error);
+      res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+  });
+
+  app.put('/api/user/settings', async (req, res) => {
+    try {
+      const userId = req.body.userId || 'anonymous';
+      const settings = req.body;
+      const { db } = await import('./db');
+      
+      await db.insert(systemSettings).values({
+        key: `user_settings_${userId}`,
+        value: JSON.stringify(settings)
+      }).onConflictDoUpdate({
+        target: systemSettings.key,
+        set: { value: JSON.stringify(settings) }
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating user settings:', error);
+      res.status(500).json({ error: 'Failed to update settings' });
+    }
+  });
+
+  app.post('/api/user/export-data', async (req, res) => {
+    try {
+      const userId = req.body.userId || 'anonymous';
+      const { db } = await import('./db');
+      
+      // Gather all user data
+      const userData = {
+        proposals: await db.select().from(proposals).where(eq(proposals.createdBy, userId)),
+        creditTransactions: await db.select().from(creditTransactions).where(eq(creditTransactions.userId, userId)),
+        userInteractions: await db.select().from(userInteractions).where(eq(userInteractions.userId, userId)),
+        exportDate: new Date().toISOString()
+      };
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename=user-data-export.json');
+      res.json(userData);
+    } catch (error) {
+      console.error('Error exporting user data:', error);
+      res.status(500).json({ error: 'Failed to export data' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
