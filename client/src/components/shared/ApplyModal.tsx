@@ -120,21 +120,21 @@ const ApplyModal: React.FC<ApplyModalProps> = ({
                   
                   <motion.button
                     whileHover={{ scale: 1.02 }}
-                    onClick={() => setSelectedOption('ai')}
+                    onClick={() => setSelectedOption('expert')}
                     className={`w-full flex items-center space-x-4 p-4 rounded-xl border transition-all ${
-                      selectedOption === 'ai'
+                      selectedOption === 'expert'
                         ? 'bg-purple-600/20 border-purple-500/30 text-purple-400'
                         : 'bg-slate-700/30 border-slate-600/50 text-slate-300 hover:bg-slate-700/50'
                     }`}
                   >
                     <div className={`p-2 rounded-lg ${
-                      selectedOption === 'ai' ? 'bg-purple-600/30' : 'bg-slate-600/50'
+                      selectedOption === 'expert' ? 'bg-purple-600/30' : 'bg-slate-600/50'
                     }`}>
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div className="flex-1 text-left">
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-medium">AI Proposal Generator</h4>
+                        <h4 className="font-medium">Expert Proposal Generator</h4>
                         <div className="flex items-center space-x-1 px-2 py-0.5 bg-purple-600/20 rounded-lg">
                           <Gem className="w-3 h-3 text-purple-400" />
                           <span className="text-xs text-purple-400">5</span>

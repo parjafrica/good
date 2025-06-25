@@ -376,7 +376,7 @@ const DonorDiscovery: React.FC = () => {
                       <div className="p-2 bg-purple-600/30 rounded-lg"><Sparkles className="w-5 h-5 text-purple-400" /></div>
                       <div className="text-left">
                         <div className="text-white font-medium">Generate Proposal</div>
-                        <div className="text-purple-300 text-sm">AI-powered proposal creation</div>
+                        <div className="text-purple-300 text-sm">Expert-powered proposal creation</div>
                         <div className="text-purple-200 text-xs mt-1">Cost: 25 credits</div>
                       </div>
                     </div>

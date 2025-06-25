@@ -109,13 +109,13 @@ const UserGuide: React.FC = () => {
       ]
     },
     '/proposal-generator': {
-      title: 'AI Proposal Generator Guide',
+      title: 'Expert Proposal Generator Guide',
       steps: [
         {
-          title: 'Welcome to AI Proposal Generator',
+          title: 'Welcome to Expert Proposal Generator',
           content: (
             <div>
-              <p className="mb-3">Create professional grant proposals in minutes using our AI-powered generator.</p>
+              <p className="mb-3">Create professional grant proposals in minutes using our expert-powered generator.</p>
               <p>You can input information through text, voice recordings, or document uploads.</p>
             </div>
           )

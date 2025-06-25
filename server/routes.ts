@@ -653,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: 'Generated proposal from opportunity analysis',
           status: 'pending_review',
           content: content,
-          createdBy: user_id
+          createdBy: user_id === 'anonymous' ? null : user_id
         })
         .returning();
 

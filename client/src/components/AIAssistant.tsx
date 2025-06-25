@@ -34,7 +34,7 @@ interface AICapability {
   examples: string[];
 }
 
-const AIAssistant: React.FC = () => {
+const ExpertAssistant: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -441,4 +441,4 @@ const AIAssistant: React.FC = () => {
   );
 };
 
-export default AIAssistant;
+export default ExpertAssistant;
