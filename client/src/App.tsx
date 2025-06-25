@@ -16,7 +16,7 @@ import Documents from './Documents';
 import Analytics from './Analytics';
 import CreditsPurchase from './CreditsPurchase';
 import NGOPipeline from './NGOPipeline';
-import AdminDashboard from './AdminDashboard';
+
 import MobileNavigation from './shared/MobileNavigation';
 
 // Admin Redirect Component
