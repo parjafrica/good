@@ -330,10 +330,10 @@ app.use((req, res, next) => {
                         <p class="text-gray-400 mt-1">Comprehensive user administration and analytics</p>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <button onclick="openAddUserModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                        <button id="addUserBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
                             <i class="fas fa-user-plus mr-2"></i> Add User
                         </button>
-                        <button onclick="exportUsers()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                        <button id="exportBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
                             <i class="fas fa-download mr-2"></i> Export
                         </button>
                     </div>
@@ -823,6 +823,10 @@ app.use((req, res, next) => {
                 setTimeout(() => document.body.removeChild(notification), 300);
             }, 3000);
         }
+
+        // Add event listeners for buttons
+        document.getElementById('addUserBtn').addEventListener('click', window.openAddUserModal);
+        document.getElementById('exportBtn').addEventListener('click', window.exportUsers);
 
         // Close modals on outside click
         document.getElementById('addUserModal').addEventListener('click', function(e) {
