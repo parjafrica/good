@@ -152,12 +152,19 @@ def get_all_users():
                 cur.execute("""
                     SELECT id, email, first_name as firstName, last_name as lastName, 
                            user_type as userType, credits, is_banned as isBanned,
-                           created_at as createdAt, last_login as lastLogin
+                           created_at as createdAt
                     FROM users 
                     ORDER BY created_at DESC
                 """)
                 users = cur.fetchall()
-                return [dict(user) for user in users]
+                result = []
+                for user in users:
+                    user_dict = dict(user)
+                    # Convert datetime to string for JSON serialization
+                    if user_dict.get('createdAt'):
+                        user_dict['createdAt'] = user_dict['createdAt'].isoformat()
+                    result.append(user_dict)
+                return result
         except Exception as e:
             print(f"Database query error: {e}")
         finally:

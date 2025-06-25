@@ -44,25 +44,30 @@ app.use((req, res, next) => {
     res.status(404).json({ error: 'Not found' });
   });
 
-  // Proxy wabden admin API routes to Python backend
+  // Wabden admin API routes - use storage directly with fallback data
   app.get('/api/wabden/users', async (req, res) => {
     try {
+      // Try Python API first
       const response = await fetch('http://localhost:8002/api/users');
-      const data = await response.json();
-      res.json(data);
-    } catch (error) {
-      console.error('Python API error:', error);
-      // Fallback to storage if Python API unavailable
-      try {
-        const users = await storage.getAllUsers();
-        const userStats = users.reduce((acc, user) => {
-          acc[user.userType] = (acc[user.userType] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        res.json({ users, userStats });
-      } catch (fallbackError) {
-        res.status(500).json({ error: 'Failed to fetch users' });
+      if (response.ok) {
+        const data = await response.json();
+        res.json(data);
+        return;
       }
+    } catch (error) {
+      console.error('Python API unavailable, using fallback:', error);
+    }
+    
+    // Fallback to storage
+    try {
+      const users = await storage.getAllUsers();
+      const userStats = users.reduce((acc, user) => {
+        acc[user.userType] = (acc[user.userType] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      res.json({ users, userStats });
+    } catch (fallbackError) {
+      res.status(500).json({ error: 'Failed to fetch users' });
     }
   });
 
@@ -541,7 +546,7 @@ app.use((req, res, next) => {
 
         async function unbanUser(userId) {
             try {
-                const response = await fetch(\`/api/wabden/users/\${userId}/unban\`, {
+                const response = await fetch('/api/wabden/users/' + userId + '/unban', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -557,24 +562,12 @@ app.use((req, res, next) => {
             }
         }
 
-        function editUser(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (!user) return;
 
-            document.getElementById('editUserId').value = user.id;
-            document.getElementById('editUserFirstName').value = user.firstName || '';
-            document.getElementById('editUserLastName').value = user.lastName || '';
-            document.getElementById('editUserType').value = user.userType;
-            document.getElementById('editUserCredits').value = user.credits || 0;
-            
-            document.getElementById('editUserModal').classList.remove('hidden');
-            document.getElementById('editUserModal').classList.add('flex');
-        }
 
         async function deleteUser(userId) {
             if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
                 try {
-                    const response = await fetch(\`/api/wabden/users/\${userId}\`, {
+                    const response = await fetch('/api/wabden/users/' + userId, {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' }
                     });
@@ -591,22 +584,41 @@ app.use((req, res, next) => {
             }
         }
 
-        // Modal functions
-        function openAddUserModal() {
+        // Modal functions - make globally available
+        window.openAddUserModal = function() {
             document.getElementById('addUserModal').classList.remove('hidden');
             document.getElementById('addUserModal').classList.add('flex');
         }
 
-        function closeAddUserModal() {
+        window.closeAddUserModal = function() {
             document.getElementById('addUserModal').classList.add('hidden');
             document.getElementById('addUserModal').classList.remove('flex');
             document.getElementById('addUserForm').reset();
         }
 
-        function closeEditUserModal() {
+        window.closeEditUserModal = function() {
             document.getElementById('editUserModal').classList.add('hidden');
             document.getElementById('editUserModal').classList.remove('flex');
         }
+
+        window.editUser = function(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editUserFirstName').value = user.firstName || '';
+            document.getElementById('editUserLastName').value = user.lastName || '';
+            document.getElementById('editUserType').value = user.userType;
+            document.getElementById('editUserCredits').value = user.credits || 0;
+            
+            document.getElementById('editUserModal').classList.remove('hidden');
+            document.getElementById('editUserModal').classList.add('flex');
+        }
+
+        // Make functions globally available
+        window.banUser = banUser;
+        window.unbanUser = unbanUser; 
+        window.deleteUser = deleteUser;
 
         // Add User Form submission
         document.getElementById('addUserForm').addEventListener('submit', async (e) => {
@@ -670,8 +682,8 @@ app.use((req, res, next) => {
             }
         });
 
-        // Export functionality - Professional CSV with Granada branding
-        async function exportUsers() {
+        // Export functionality - Professional CSV with Granada branding  
+        window.exportUsers = async function() {
             try {
                 showNotification('Generating professional CSV export...', 'success');
                 
@@ -697,7 +709,7 @@ app.use((req, res, next) => {
             } catch (error) {
                 showNotification('Export failed: ' + error.message, 'error');
             }
-        }
+        };
 
         // Notification system
         function showNotification(message, type) {
