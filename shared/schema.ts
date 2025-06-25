@@ -11,17 +11,20 @@ export const sessions = pgTable("sessions", {
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").unique().notNull(),
-  password: text("password").notNull(),
+  hashedPassword: text("hashed_password").notNull(),
   fullName: text("full_name").notNull(),
   firstName: text("first_name"),
   lastName: text("last_name"),
-  userType: text("user_type").notNull().default("student"),
-  organization: text("organization"),
+  userType: text("user_type").notNull().default("user"),
+
   country: text("country"),
   sector: text("sector"),
+  organizationType: text("organization_type"),
   credits: integer("credits").default(100),
   isActive: boolean("is_active").default(true),
   isBanned: boolean("is_banned").default(false),
+  isSuperuser: boolean("is_superuser").default(false),
+  organizationId: uuid("organization_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

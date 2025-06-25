@@ -41,17 +41,23 @@ export class PostgresStorage implements IStorage {
   }
 
   async createUser(insertUser: any): Promise<User> {
-    const hashedPassword = await bcrypt.hash(insertUser.hashedPassword || 'temp_password', 12);
+    const hashedPassword = await bcrypt.hash(insertUser.password || 'temp_password', 12);
     const result = await db.insert(users).values({
-      id: insertUser.id,
       email: insertUser.email,
-      fullName: insertUser.fullName,
       hashedPassword,
-      isActive: true,
-      isSuperuser: false,
-      organizationId: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      fullName: insertUser.fullName,
+      firstName: insertUser.firstName,
+      lastName: insertUser.lastName,
+      userType: insertUser.userType || 'user',
+      organization: insertUser.organization,
+      country: insertUser.country,
+      sector: insertUser.sector,
+      organizationType: insertUser.organizationType,
+      credits: insertUser.credits || 100,
+      isActive: insertUser.isActive !== false,
+      isBanned: insertUser.isBanned || false,
+      isSuperuser: insertUser.isSuperuser || false,
+      organizationId: insertUser.organizationId,
     }).returning();
     return result[0];
   }

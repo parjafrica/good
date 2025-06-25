@@ -117,6 +117,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Wabden Admin API Routes
+  app.get('/api/wabden/users', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json({ success: true, users });
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ error: 'Failed to fetch users' });
+    }
+  });
+
+  app.post('/api/wabden/users', async (req, res) => {
+    try {
+      const { email, firstName, lastName, userType, credits } = req.body;
+      
+      const newUser = await storage.createUser({
+        email,
+        firstName,
+        lastName,
+        userType: userType || 'user',
+        credits: credits || 100,
+        fullName: `${firstName} ${lastName}`,
+        password: 'temp_password_' + Date.now(),
+        organization: null,
+        country: null,
+        sector: null,
+        organizationType: null,
+        isBanned: false,
+        isActive: true,
+        isSuperuser: false,
+        organizationId: null
+      });
+
+      res.json({ success: true, user: newUser });
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  });
+
+  app.post('/api/wabden/users/:id/toggle-ban', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const updatedUser = await storage.updateUser(id, {
+        isBanned: !user.isBanned
+      });
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ error: 'Failed to update user' });
+    }
+  });
+
+  app.get('/api/wabden/opportunities', async (req, res) => {
+    try {
+      const opportunities = await storage.getDonorOpportunities({});
+      res.json({ success: true, opportunities });
+    } catch (error) {
+      console.error('Error fetching opportunities:', error);
+      res.status(500).json({ error: 'Failed to fetch opportunities' });
+    }
+  });
+
   // Bot status (replacing Supabase edge function)
   app.get("/api/bot-status", async (req, res) => {
     try {
