@@ -249,6 +249,9 @@ const EnhancedProposalGenerator: React.FC = () => {
 
   const saveDraftToDatabase = async () => {
     try {
+      // Show loading feedback
+      alert('Sending your proposal to our expert review team...');
+      
       const proposalData = {
         user_id: user?.id || 'anonymous',
         opportunity_id: opportunity?.id,
@@ -276,10 +279,17 @@ const EnhancedProposalGenerator: React.FC = () => {
         console.log('Draft saved to database:', data.proposal_id);
         setSavedProposalId(data.proposal_id);
         setProposalStatus(data.status || 'pending_review');
+        
+        // Show success feedback
+        alert('🎉 Success! Your proposal has been sent to our expert review team. You will be notified via email when the review is complete.');
+        
         return data.proposal_id;
+      } else {
+        throw new Error('Failed to save proposal');
       }
     } catch (error) {
       console.error('Error saving draft to database:', error);
+      alert('❌ Sorry, there was an error sending your proposal. Please try again or contact support.');
     }
     return null;
   };
@@ -810,6 +820,25 @@ const EnhancedProposalGenerator: React.FC = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    // Generate downloadable content
+                    const proposalContent = sections.map(section => 
+                      `${section.title}\n${'='.repeat(section.title.length)}\n\n${section.content || 'Content not yet generated'}\n\n`
+                    ).join('');
+                    
+                    const fullProposal = `GRANT PROPOSAL\n\nTitle: ${opportunity?.title}\nFunder: ${opportunity?.sourceName}\nAmount: ${opportunity?.currency} ${opportunity?.amountMin?.toLocaleString()} - ${opportunity?.amountMax?.toLocaleString()}\n\n${proposalContent}`;
+                    
+                    const blob = new Blob([fullProposal], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${opportunity?.title?.replace(/[^a-zA-Z0-9]/g, '_')}_proposal_draft.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    // Show success feedback
+                    alert('Draft proposal downloaded successfully!');
+                  }}
                   className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
                 >
                   <Download className="w-5 h-5" />
@@ -819,7 +848,12 @@ const EnhancedProposalGenerator: React.FC = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={saveDraftToDatabase}
+                  onClick={async () => {
+                    const success = await saveDraftToDatabase();
+                    if (success) {
+                      // Additional success actions can go here
+                    }
+                  }}
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
                 >
                   <Send className="w-5 h-5" />

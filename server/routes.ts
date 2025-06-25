@@ -645,8 +645,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate unique ID for proposal
       const proposalId = `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Insert into database using storage interface
-      const [proposal] = await storage.db.insert(proposals)
+      // Use db directly from import
+      const { db } = await import('./db');
+      const [proposal] = await db.insert(proposals)
         .values({
           title: content.title || 'Draft Proposal',
           description: 'Generated proposal from opportunity analysis',
@@ -668,7 +669,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { proposal_id, email, notification_type } = req.body;
       
       // Store notification request in database
-      await storage.db.update(proposals)
+      const { db } = await import('./db');
+      await db.update(proposals)
         .set({
           description: email  // Store email in description field for now
         })
@@ -689,7 +691,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalUsers = users.length;
 
       // Get proposal counts
-      const proposalCounts = await storage.db.select()
+      const { db } = await import('./db');
+      const proposalCounts = await db.select()
         .from(proposals);
       
       const activeProposals = proposalCounts.filter(p => p.status === 'pending_review' || p.status === 'in_review').length;
@@ -713,7 +716,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/submissions', async (req, res) => {
     try {
-      const submissions = await storage.db.select()
+      const { db } = await import('./db');
+      const submissions = await db.select()
       .from(proposals)
       .orderBy(proposals.createdAt);
 
@@ -758,7 +762,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { status } = req.body;
       
-      await storage.db.update(proposals)
+      const { db } = await import('./db');
+      await db.update(proposals)
         .set({
           status: status
         })
@@ -774,7 +779,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin proposal review routes
   app.get('/api/admin/proposals/pending', async (req, res) => {
     try {
-      const pendingProposals = await storage.db.select()
+      const { db } = await import('./db');
+      const pendingProposals = await db.select()
       .from(proposals)
       .where(eq(proposals.status, 'pending_review'));
 
@@ -805,7 +811,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { content, admin_notes, status } = req.body;
       
-      await storage.db.update(proposals)
+      const { db } = await import('./db');
+      await db.update(proposals)
         .set({
           content: content,
           status: status
@@ -825,7 +832,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { content, admin_notes, send_email } = req.body;
       
       // Update proposal status
-      const [updatedProposal] = await storage.db.update(proposals)
+      const { db } = await import('./db');
+      const [updatedProposal] = await db.update(proposals)
         .set({
           content: content,
           status: 'completed'
