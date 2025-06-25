@@ -1137,18 +1137,18 @@ app.use((req, res, next) => {
                     '<div class="flex items-center justify-between">' +
                         '<div class="flex space-x-2">' +
                             (opp.isVerified ? 
-                                '<button onclick="unverifyOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-xs transition-colors">' +
+                                '<button onclick="unverifyOpportunity(' + "'" + opp.id + "'" + ')" class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-xs transition-colors">' +
                                     '<i class="fas fa-times mr-1"></i> Unverify' +
                                 '</button>' :
-                                '<button onclick="verifyOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors">' +
+                                '<button onclick="verifyOpportunity(' + "'" + opp.id + "'" + ')" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors">' +
                                     '<i class="fas fa-check mr-1"></i> Verify' +
                                 '</button>'
                             ) +
-                            '<button onclick="editOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">' +
+                            '<button onclick="editOpportunity(' + "'" + opp.id + "'" + ')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">' +
                                 '<i class="fas fa-edit mr-1"></i> Edit' +
                             '</button>' +
                         '</div>' +
-                        '<button onclick="deleteOpportunity(\'' + opp.id + '\')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">' +
+                        '<button onclick="deleteOpportunity(' + "'" + opp.id + "'" + ')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">' +
                             '<i class="fas fa-trash mr-1"></i> Delete' +
                         '</button>' +
                     '</div>' +
@@ -1208,7 +1208,7 @@ app.use((req, res, next) => {
             document.getElementById('addOpportunityForm').reset();
         }
 
-        // Opportunity management functions
+        // Opportunity management functions - make globally available
         window.verifyOpportunity = async function(opportunityId) {
             try {
                 const response = await fetch('/api/wabden/opportunities/' + opportunityId + '/verify', {
