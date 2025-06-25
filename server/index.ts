@@ -46,7 +46,21 @@ app.use((req, res, next) => {
 
   // Secure wabden admin redirect
   app.get('/wabden', (req, res) => {
-    res.redirect('http://localhost:9000');
+    res.redirect('http://localhost:5001');
+  });
+
+  // Proxy wabden requests to admin service
+  app.use('/wabden-api', (req, res) => {
+    const fetch = require('node-fetch');
+    const url = `http://localhost:5001${req.path}`;
+    fetch(url, {
+      method: req.method,
+      headers: req.headers,
+      body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined
+    })
+    .then((response: any) => response.json())
+    .then((data: any) => res.json(data))
+    .catch((error: any) => res.status(500).json({ error: 'Admin service unavailable' }));
   });
 
   const isProduction = process.env.NODE_ENV === "production";

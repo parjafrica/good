@@ -18,8 +18,8 @@ def main():
     print("🛡️  Granada OS - Wabden Admin System")
     print("=====================================")
     print("🔐 Secure administrative dashboard")
-    print("🌐 Starting on port 9000...")
-    print("📍 Access: http://localhost:9000/wabden")
+    print("🌐 Starting on port 5001...")
+    print("📍 Access: http://localhost:5000/wabden")
     print("")
     
     # Register signal handler
@@ -34,7 +34,7 @@ def main():
             sys.executable, "-m", "uvicorn", 
             "main:app", 
             "--host", "0.0.0.0", 
-            "--port", "9000", 
+            "--port", "5001", 
             "--reload",
             "--log-level", "info"
         ])

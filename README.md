@@ -1,56 +1,94 @@
 # Granada OS - Funding Opportunities Platform
 
+## Quick Start
+
+### Option 1: Single Script (Recommended)
+```bash
+./start.sh
+```
+
+### Option 2: Manual Steps
+1. **Install all dependencies:**
+   ```bash
+   npm install
+   cd wabden && python -m pip install -r requirements.txt
+   ```
+
+2. **Start the application:**
+   ```bash
+   npx concurrently "npm run dev" "npm run dev:wabden"
+   ```
+
+3. **Access the application:**
+   - Main App: http://localhost:5000
+   - Admin Panel: http://localhost:5000/wabden
+
 ## Project Structure
 
 ```
-├── server/                 # Backend (Express.js + TypeScript + Python)
-│   ├── *.ts               # TypeScript API routes and logic
-│   ├── *.py               # Python bot management and AI processing
-│   └── __pycache__/       # Python cache
-├── shared/                # Shared schemas and types
-│   └── schema.ts          # Database schemas with Drizzle ORM
-├── client/                # Frontend React application
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── pages/         # Page components
-│   │   └── main.tsx       # Entry point
-│   └── index.html
-├── src/                   # Organized source code
-│   ├── admin/             # Admin dashboard components
-│   ├── user-dashboard/    # User-facing components
-│   └── shared/            # Shared utilities and hooks
-└── pyproject.toml         # Python dependencies
+├── client/                 # React frontend
+├── server/                 # Express.js backend + API routes
+├── wabden/                 # Secure admin dashboard (FastAPI)
+├── shared/                 # Shared schemas and types
+└── package.json           # Unified dependency management
 ```
 
-## Key Features
+## Development
 
-- **Expert-driven system** with personalized content delivery
-- **Real-time bot scraping** of funding opportunities
-- **PostgreSQL database** with authentic data
-- **Admin dashboard** with user management and business tools
-- **Python AI integration** with DeepSeek for proposal generation
+### Single Command Setup
+```bash
+npm install              # Installs all Node.js dependencies
+npm run install:all      # Installs both Node.js and Python dependencies
+npm run dev:all          # Starts both main app and admin system
+```
 
-## Getting Started
+### Individual Services
+```bash
+npm run dev              # Main application only (port 5000)
+npm run dev:wabden       # Admin system only (port 5001)
+```
 
-1. Install dependencies: `npm install`
-2. Start development server: `npm run dev`
-3. Access admin panel: `/admin`
-4. Access user dashboard: `/`
+## Admin Access
+
+The admin system uses the secure URL `/wabden` for enhanced security. It includes:
+
+- **Dashboard**: Real-time system metrics and analytics
+- **User Management**: User administration with ban/unban, credit adjustments
+- **Opportunities**: Funding opportunity verification and management
+- **HR Management**: Employee directory, recruitment pipeline, performance reviews
+- **Accounting**: Financial management, revenue tracking, expense monitoring
+- **Submissions**: User proposal and research request management
+- **Bot Control**: Web scraping automation and intelligent bot management
 
 ## Database
 
-Uses PostgreSQL with Drizzle ORM. All data is authentic from verified sources including:
-- ReliefWeb API
-- UN Jobs
-- Grants.gov
-- GrantSpace
-- European Commission
+- **PostgreSQL** with Drizzle ORM
+- Real funding opportunities from verified sources
+- Comprehensive user tracking and analytics
+- Database migrations: `npm run db:push`
 
-## Tech Stack
+## Features
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS
-- **Backend**: Express.js, TypeScript, Python
-- **Database**: PostgreSQL (Neon)
-- **ORM**: Drizzle ORM
-- **AI**: DeepSeek integration
-- **Bot System**: Selenium, BeautifulSoup
+- **Expert-driven system** with personalized content delivery
+- **Real-time bot scraping** of funding opportunities  
+- **AI-powered proposal generation** with DeepSeek integration
+- **Multi-port architecture** unified on single development server
+- **Comprehensive admin dashboard** with advanced analytics
+- **Dark theme** as system-wide standard
+
+## Environment Variables
+
+Required environment variables:
+- `DATABASE_URL` - PostgreSQL connection string
+- `OPENAI_API_KEY` - For AI proposal generation (optional)
+
+## Security
+
+- Admin routes secured with non-obvious URL patterns
+- Database-driven authentication system
+- Real-time user interaction tracking
+- Comprehensive audit logging
+
+## Support
+
+For technical issues or feature requests, refer to the admin dashboard analytics or system logs.
