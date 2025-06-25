@@ -94,6 +94,21 @@ async def admin_bots_page(request: Request):
     """Serve bots management page"""
     return templates.TemplateResponse("bots.html", {"request": request})
 
+@app.get("/admin/submissions", response_class=HTMLResponse)
+async def admin_submissions_page(request: Request):
+    """Serve submissions management page"""
+    return templates.TemplateResponse("submissions.html", {"request": request})
+
+@app.get("/admin/hr", response_class=HTMLResponse)
+async def admin_hr_page(request: Request):
+    """Serve HR management page"""
+    return templates.TemplateResponse("hr.html", {"request": request})
+
+@app.get("/admin/accounting", response_class=HTMLResponse)
+async def admin_accounting_page(request: Request):
+    """Serve accounting management page"""
+    return templates.TemplateResponse("accounting.html", {"request": request})
+
 @app.get("/admin/analytics", response_class=HTMLResponse)
 async def admin_analytics_page(request: Request):
     """Serve analytics page"""

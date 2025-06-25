@@ -13,6 +13,32 @@
                     colors: {
                         gray: {
                             950: '#030712'
+                        },
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'bounce-subtle': 'bounceSubtle 1s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceSubtle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-2px)' }
                         }
                     }
                 }
@@ -21,6 +47,9 @@
     </script>
     <link href="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body class="bg-gray-950 text-white min-h-screen">
     <!-- Header -->
@@ -49,8 +78,8 @@
 
     <div class="flex">
         <!-- Sidebar -->
-        <nav class="w-64 bg-gray-900 min-h-screen border-r border-gray-800">
-            <div class="p-4 space-y-2">
+        <nav class="w-64 bg-gray-900 min-h-screen border-r border-gray-800 overflow-y-auto">
+            <div class="p-4 space-y-1">
                 <a href="/admin" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="dashboard">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                     <div>
@@ -83,6 +112,30 @@
                     </div>
                 </a>
                 
+                <a href="/admin/submissions" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="submissions">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">Submissions</div>
+                        <div class="text-xs text-gray-400">Proposals & Requests</div>
+                    </div>
+                </a>
+                
+                <a href="/admin/hr" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="hr">
+                    <i data-lucide="users-2" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">Human Resources</div>
+                        <div class="text-xs text-gray-400">Staff & Recruitment</div>
+                    </div>
+                </a>
+                
+                <a href="/admin/accounting" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="accounting">
+                    <i data-lucide="calculator" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">Accounting</div>
+                        <div class="text-xs text-gray-400">Finance & Budgets</div>
+                    </div>
+                </a>
+                
                 <a href="/admin/analytics" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="analytics">
                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                     <div>
@@ -110,6 +163,13 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+        
+        // Initialize AOS animations
+        AOS.init({
+            duration: 600,
+            easing: 'ease-in-out',
+            once: true
+        });
         
         // Update current time
         function updateTime() {

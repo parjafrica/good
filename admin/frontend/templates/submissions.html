@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+
+{% block title %}User Submissions - Granada OS Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6" data-aos="fade-up">
+    <div class="flex items-center justify-between">
+        <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            User Submissions & Requests
+        </h2>
+        <div class="flex space-x-4">
+            <select id="status-filter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" onchange="loadSubmissions()">
+                <option value="">All Status</option>
+                <option value="draft">Draft</option>
+                <option value="submitted">Submitted</option>
+                <option value="under_review">Under Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
+            <select id="type-filter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" onchange="loadSubmissions()">
+                <option value="">All Types</option>
+                <option value="proposal">Project Proposals</option>
+                <option value="research">Research Papers</option>
+                <option value="funding">Funding Applications</option>
+                <option value="support">Support Requests</option>
+                <option value="partnership">Partnership Requests</option>
+            </select>
+            <button onclick="exportSubmissions()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-105">
+                <i data-lucide="download" class="w-4 h-4 inline mr-2"></i>
+                Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm">Total Submissions</p>
+                    <p class="text-3xl font-bold" id="total-submissions">0</p>
+                </div>
+                <i data-lucide="file-text" class="w-8 h-8 text-blue-200"></i>
+            </div>
+            <div class="mt-4 flex items-center">
+                <i data-lucide="trending-up" class="w-4 h-4 text-blue-200 mr-1"></i>
+                <span class="text-sm text-blue-200">+12% this month</span>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-yellow-100 text-sm">Pending Review</p>
+                    <p class="text-3xl font-bold" id="pending-submissions">0</p>
+                </div>
+                <i data-lucide="clock" class="w-8 h-8 text-yellow-200"></i>
+            </div>
+            <div class="mt-4 flex items-center">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-yellow-200 mr-1"></i>
+                <span class="text-sm text-yellow-200">Needs attention</span>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm">Approved</p>
+                    <p class="text-3xl font-bold" id="approved-submissions">0</p>
+                </div>
+                <i data-lucide="check-circle" class="w-8 h-8 text-green-200"></i>
+            </div>
+            <div class="mt-4 flex items-center">
+                <i data-lucide="thumbs-up" class="w-4 h-4 text-green-200 mr-1"></i>
+                <span class="text-sm text-green-200">Success rate: 78%</span>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-red-500 to-rose-500 rounded-xl p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-red-100 text-sm">Rejected</p>
+                    <p class="text-3xl font-bold" id="rejected-submissions">0</p>
+                </div>
+                <i data-lucide="x-circle" class="w-8 h-8 text-red-200"></i>
+            </div>
+            <div class="mt-4 flex items-center">
+                <i data-lucide="info" class="w-4 h-4 text-red-200 mr-1"></i>
+                <span class="text-sm text-red-200">Needs revision</span>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-purple-100 text-sm">This Week</p>
+                    <p class="text-3xl font-bold" id="weekly-submissions">0</p>
+                </div>
+                <i data-lucide="calendar" class="w-8 h-8 text-purple-200"></i>
+            </div>
+            <div class="mt-4 flex items-center">
+                <i data-lucide="zap" class="w-4 h-4 text-purple-200 mr-1"></i>
+                <span class="text-sm text-purple-200">Active period</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800" data-aos="fade-up" data-aos-delay="400">
+        <h3 class="text-xl font-bold mb-4 flex items-center">
+            <i data-lucide="zap" class="w-5 h-5 mr-2 text-yellow-500"></i>
+            Quick Actions
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button onclick="bulkApprove()" class="p-4 bg-green-600 hover:bg-green-700 rounded-lg transition-all duration-300 transform hover:scale-105">
+                <i data-lucide="check-circle-2" class="w-6 h-6 mb-2 mx-auto"></i>
+                <h4 class="font-medium">Bulk Approve</h4>
+                <p class="text-sm text-green-200">Approve selected items</p>
+            </button>
+            
+            <button onclick="reviewQueue()" class="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 transform hover:scale-105">
+                <i data-lucide="eye" class="w-6 h-6 mb-2 mx-auto"></i>
+                <h4 class="font-medium">Review Queue</h4>
+                <p class="text-sm text-blue-200">Priority review items</p>
+            </button>
+            
+            <button onclick="generateReport()" class="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg transition-all duration-300 transform hover:scale-105">
+                <i data-lucide="file-bar-chart" class="w-6 h-6 mb-2 mx-auto"></i>
+                <h4 class="font-medium">Generate Report</h4>
+                <p class="text-sm text-purple-200">Monthly summary</p>
+            </button>
+            
+            <button onclick="configureWorkflow()" class="p-4 bg-orange-600 hover:bg-orange-700 rounded-lg transition-all duration-300 transform hover:scale-105">
+                <i data-lucide="settings" class="w-6 h-6 mb-2 mx-auto"></i>
+                <h4 class="font-medium">Workflow Config</h4>
+                <p class="text-sm text-orange-200">Review processes</p>
+            </button>
+        </div>
+    </div>
+
+    <!-- Submissions Table -->
+    <div class="bg-gray-900 rounded-xl overflow-hidden border border-gray-800" data-aos="fade-up" data-aos-delay="600">
+        <div class="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
+            <h3 class="text-lg font-bold">Recent Submissions</h3>
+            <div class="flex space-x-2">
+                <button onclick="loadSubmissions()" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                    <i data-lucide="refresh-cw" class="w-4 h-4 inline mr-1"></i>
+                    Refresh
+                </button>
+                <button onclick="toggleView()" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                    <i data-lucide="layout-grid" class="w-4 h-4 inline mr-1"></i>
+                    Grid View
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-800">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            <input type="checkbox" id="select-all" class="rounded" onchange="toggleSelectAll()">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Submitter</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="submissions-tbody" class="divide-y divide-gray-800">
+                    <!-- Submissions will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between bg-gray-900 rounded-lg p-4 border border-gray-800" data-aos="fade-up" data-aos-delay="800">
+        <div class="text-sm text-gray-400">
+            Showing <span id="showing-count">0</span> of <span id="total-count">0</span> submissions
+        </div>
+        <div class="flex space-x-2">
+            <button id="prev-btn" onclick="previousPage()" class="px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-50 transition-colors" disabled>
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <span id="page-info" class="px-3 py-2 text-gray-400">Page 1</span>
+            <button id="next-btn" onclick="nextPage()" class="px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-50 transition-colors" disabled>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Submission Detail Modal -->
+<div id="submission-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+        <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+            <h3 class="text-xl font-bold">Submission Details</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div id="submission-content" class="p-6">
+            <!-- Content will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let selectedSubmissions = new Set();
+    
+    // Mock data for demonstration
+    const mockSubmissions = [
+        {
+            id: '1',
+            title: 'Community Health Initiative - Kampala',
+            type: 'proposal',
+            submitter: 'Sarah Kones (AMREF Health)',
+            status: 'under_review',
+            date: '2025-06-24',
+            description: 'Comprehensive community health program targeting maternal and child health in urban slums',
+            budget: '$45,000',
+            documents: ['proposal.pdf', 'budget.xlsx', 'cv_director.pdf']
+        },
+        {
+            id: '2',
+            title: 'Agricultural Research on Drought-Resistant Crops',
+            type: 'research',
+            submitter: 'Prof. David Kiprotich (University of Nairobi)',
+            status: 'submitted',
+            date: '2025-06-23',
+            description: 'Research proposal on developing drought-resistant maize varieties for East Africa',
+            budget: '$125,000',
+            documents: ['research_proposal.pdf', 'methodology.pdf', 'references.pdf']
+        },
+        {
+            id: '3',
+            title: 'Technology Access for Rural Schools',
+            type: 'funding',
+            submitter: 'Brian Gitta (Slum Code Africa)',
+            status: 'approved',
+            date: '2025-06-22',
+            description: 'Digital literacy program providing computer access and training in rural schools',
+            budget: '$35,000',
+            documents: ['project_plan.pdf', 'impact_assessment.pdf']
+        },
+        {
+            id: '4',
+            title: 'Water Infrastructure Partnership Request',
+            type: 'partnership',
+            submitter: 'Grace Mapunda (Oxfam Tanzania)',
+            status: 'pending',
+            date: '2025-06-21',
+            description: 'Partnership proposal for large-scale water infrastructure development',
+            budget: '$200,000',
+            documents: ['partnership_mou.pdf', 'technical_specs.pdf']
+        },
+        {
+            id: '5',
+            title: 'Platform Feature Request: Mobile App',
+            type: 'support',
+            submitter: 'Collins Mutai (Strathmore University)',
+            status: 'rejected',
+            date: '2025-06-20',
+            description: 'Request for mobile application development for better platform access',
+            budget: 'N/A',
+            documents: ['feature_request.pdf']
+        }
+    ];
+    
+    function loadSubmissions() {
+        // Simulate loading
+        const tbody = document.getElementById('submissions-tbody');
+        tbody.innerHTML = '';
+        
+        // Update summary cards
+        document.getElementById('total-submissions').textContent = mockSubmissions.length;
+        document.getElementById('pending-submissions').textContent = mockSubmissions.filter(s => s.status === 'under_review' || s.status === 'submitted').length;
+        document.getElementById('approved-submissions').textContent = mockSubmissions.filter(s => s.status === 'approved').length;
+        document.getElementById('rejected-submissions').textContent = mockSubmissions.filter(s => s.status === 'rejected').length;
+        document.getElementById('weekly-submissions').textContent = mockSubmissions.filter(s => new Date(s.date) > new Date(Date.now() - 7*24*60*60*1000)).length;
+        
+        // Populate table
+        tbody.innerHTML = mockSubmissions.map(submission => `
+            <tr class="hover:bg-gray-800 transition-colors cursor-pointer" onclick="viewSubmission('${submission.id}')">
+                <td class="px-6 py-4" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="rounded submission-checkbox" value="${submission.id}" onchange="toggleSelection('${submission.id}')">
+                </td>
+                <td class="px-6 py-4">
+                    <div class="font-medium">${submission.title}</div>
+                    <div class="text-sm text-gray-400">${submission.description.substring(0, 60)}...</div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium ${getTypeClass(submission.type)}">
+                        ${submission.type}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-sm">${submission.submitter}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(submission.status)}">
+                        ${submission.status.replace('_', ' ')}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-400">${new Date(submission.date).toLocaleDateString()}</td>
+                <td class="px-6 py-4" onclick="event.stopPropagation()">
+                    <div class="flex space-x-2">
+                        <button onclick="reviewSubmission('${submission.id}')" class="p-1 text-blue-400 hover:bg-blue-900 rounded transition-colors" title="Review">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="approveSubmission('${submission.id}')" class="p-1 text-green-400 hover:bg-green-900 rounded transition-colors" title="Approve">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="rejectSubmission('${submission.id}')" class="p-1 text-red-400 hover:bg-red-900 rounded transition-colors" title="Reject">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        
+        // Update pagination
+        document.getElementById('showing-count').textContent = mockSubmissions.length;
+        document.getElementById('total-count').textContent = mockSubmissions.length;
+        
+        // Reinitialize icons
+        lucide.createIcons();
+    }
+    
+    function getTypeClass(type) {
+        switch(type) {
+            case 'proposal': return 'bg-blue-900 text-blue-300';
+            case 'research': return 'bg-purple-900 text-purple-300';
+            case 'funding': return 'bg-green-900 text-green-300';
+            case 'support': return 'bg-orange-900 text-orange-300';
+            case 'partnership': return 'bg-indigo-900 text-indigo-300';
+            default: return 'bg-gray-900 text-gray-300';
+        }
+    }
+    
+    function getStatusClass(status) {
+        switch(status) {
+            case 'approved': return 'bg-green-900 text-green-300';
+            case 'rejected': return 'bg-red-900 text-red-300';
+            case 'under_review': return 'bg-yellow-900 text-yellow-300';
+            case 'submitted': return 'bg-blue-900 text-blue-300';
+            case 'pending': return 'bg-purple-900 text-purple-300';
+            default: return 'bg-gray-900 text-gray-300';
+        }
+    }
+    
+    function viewSubmission(id) {
+        const submission = mockSubmissions.find(s => s.id === id);
+        if (!submission) return;
+        
+        const content = document.getElementById('submission-content');
+        content.innerHTML = `
+            <div class="space-y-6">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">${submission.title}</h4>
+                    <p class="text-gray-300">${submission.description}</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Submitter</label>
+                        <p class="text-white">${submission.submitter}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Budget</label>
+                        <p class="text-white">${submission.budget}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Type</label>
+                        <span class="px-2 py-1 rounded text-xs ${getTypeClass(submission.type)}">${submission.type}</span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
+                        <span class="px-2 py-1 rounded text-xs ${getStatusClass(submission.status)}">${submission.status}</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Documents</label>
+                    <div class="space-y-2">
+                        ${submission.documents.map(doc => `
+                            <div class="flex items-center space-x-2 p-2 bg-gray-800 rounded">
+                                <i data-lucide="file" class="w-4 h-4 text-gray-400"></i>
+                                <span class="text-sm">${doc}</span>
+                                <button class="ml-auto text-blue-400 hover:text-blue-300">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3 pt-4 border-t border-gray-800">
+                    <button onclick="approveSubmission('${id}')" class="flex-1 py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                        <i data-lucide="check" class="w-4 h-4 inline mr-2"></i>
+                        Approve
+                    </button>
+                    <button onclick="rejectSubmission('${id}')" class="flex-1 py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                        <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
+                        Reject
+                    </button>
+                    <button onclick="addComment('${id}')" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                        <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>
+                        Comment
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('submission-modal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+    
+    function closeModal() {
+        document.getElementById('submission-modal').classList.add('hidden');
+    }
+    
+    function toggleSelection(id) {
+        if (selectedSubmissions.has(id)) {
+            selectedSubmissions.delete(id);
+        } else {
+            selectedSubmissions.add(id);
+        }
+        updateSelectAllCheckbox();
+    }
+    
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.submission-checkbox');
+        
+        if (selectAll.checked) {
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+                selectedSubmissions.add(cb.value);
+            });
+        } else {
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                selectedSubmissions.delete(cb.value);
+            });
+        }
+    }
+    
+    function updateSelectAllCheckbox() {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.submission-checkbox');
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        
+        selectAll.checked = checkedCount === checkboxes.length;
+        selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+    }
+    
+    function bulkApprove() {
+        if (selectedSubmissions.size === 0) {
+            alert('Please select submissions to approve');
+            return;
+        }
+        alert(`Approving ${selectedSubmissions.size} submissions`);
+    }
+    
+    function reviewQueue() {
+        alert('Opening priority review queue');
+    }
+    
+    function generateReport() {
+        alert('Generating monthly submissions report');
+    }
+    
+    function configureWorkflow() {
+        alert('Opening workflow configuration');
+    }
+    
+    function approveSubmission(id) {
+        alert(`Approving submission ${id}`);
+        closeModal();
+    }
+    
+    function rejectSubmission(id) {
+        alert(`Rejecting submission ${id}`);
+        closeModal();
+    }
+    
+    function addComment(id) {
+        alert(`Adding comment to submission ${id}`);
+    }
+    
+    function reviewSubmission(id) {
+        viewSubmission(id);
+    }
+    
+    function exportSubmissions() {
+        alert('Exporting submissions data');
+    }
+    
+    function toggleView() {
+        alert('Switching to grid view');
+    }
+    
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadSubmissions();
+        }
+    }
+    
+    function nextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadSubmissions();
+        }
+    }
+    
+    // Load submissions on page load
+    loadSubmissions();
+</script>
+{% endblock %}
