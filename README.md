@@ -8,15 +8,14 @@
 ```
 
 ### Option 2: Manual Steps
-1. **Install all dependencies:**
+1. **Install dependencies:**
    ```bash
    npm install
-   cd wabden && python -m pip install -r requirements.txt
    ```
 
 2. **Start the application:**
    ```bash
-   npx concurrently "npm run dev" "npm run dev:wabden"
+   npm run dev
    ```
 
 3. **Access the application:**

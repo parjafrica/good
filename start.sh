@@ -18,9 +18,6 @@ echo "   - Main App: http://localhost:5000"
 echo "   - Admin Panel: http://localhost:5000/wabden"
 echo ""
 
-# Use concurrently to run both services
-npx concurrently \
-  --names "MAIN,ADMIN" \
-  --prefix-colors "blue,green" \
-  "NODE_ENV=development npx tsx server/index.ts" \
-  "cd wabden && python -m uvicorn main:app --host 0.0.0.0 --port 5001 --reload"
+# Start main service (includes admin interface)
+echo "🚀 Starting unified Granada OS application..."
+NODE_ENV=development npx tsx server/index.ts
