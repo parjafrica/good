@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DocumentUpload from './DocumentUpload';
+import IntelligentBotAssistant from './IntelligentBotAssistant';
 
 interface OpportunityDetails {
   id: string;
@@ -62,17 +63,8 @@ const EnhancedProposalGenerator: React.FC = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [realTimeTranscript, setRealTimeTranscript] = useState('');
   
-  // Proposal sections
-  const [sections, setSections] = useState<ProposalSection[]>([
-    { id: 'executive_summary', title: 'Executive Summary', content: '', isExpanded: true, isGenerating: false },
-    { id: 'problem_statement', title: 'Problem Statement', content: '', isExpanded: false, isGenerating: false },
-    { id: 'objectives', title: 'Project Objectives', content: '', isExpanded: false, isGenerating: false },
-    { id: 'methodology', title: 'Methodology', content: '', isExpanded: false, isGenerating: false },
-    { id: 'budget', title: 'Budget Breakdown', content: '', isExpanded: false, isGenerating: false },
-    { id: 'timeline', title: 'Project Timeline', content: '', isExpanded: false, isGenerating: false },
-    { id: 'evaluation', title: 'Evaluation Plan', content: '', isExpanded: false, isGenerating: false },
-    { id: 'sustainability', title: 'Sustainability', content: '', isExpanded: false, isGenerating: false }
-  ]);
+  // Proposal sections - will be dynamically generated based on opportunity analysis
+  const [sections, setSections] = useState<ProposalSection[]>([]);
   
   // AI assistance state
   const [opportunityAnalysis, setOpportunityAnalysis] = useState<any>(null);
@@ -126,12 +118,28 @@ const EnhancedProposalGenerator: React.FC = () => {
     }
   }, [activeSection]);
   
-  // Analyze opportunity when received
+  // Analyze opportunity when received and generate adaptive sections
   useEffect(() => {
     if (opportunity && !opportunityAnalysis) {
       analyzeOpportunity();
     }
   }, [opportunity]);
+
+  // Generate sections based on analysis
+  useEffect(() => {
+    if (opportunityAnalysis && opportunityAnalysis.required_sections) {
+      const adaptiveSections = opportunityAnalysis.required_sections.map((section: any, index: number) => ({
+        id: section.section_name.toLowerCase().replace(/\s+/g, '_'),
+        title: section.section_name,
+        content: '',
+        isExpanded: index === 0, // First section expanded by default
+        isGenerating: false,
+        requirements: section
+      }));
+      setSections(adaptiveSections);
+      setActiveSection(adaptiveSections[0]?.id || '');
+    }
+  }, [opportunityAnalysis]);
   
   const analyzeOpportunity = async () => {
     if (!opportunity) return;
@@ -222,10 +230,11 @@ const EnhancedProposalGenerator: React.FC = () => {
   };
   
   const generateSection = async (sectionId: string, userInput: string = '') => {
-    setSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { ...section, isGenerating: true }
-        : section
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+
+    setSections(prev => prev.map(s => 
+      s.id === sectionId ? { ...s, isGenerating: true } : s
     ));
     
     try {
@@ -233,28 +242,30 @@ const EnhancedProposalGenerator: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          section_type: sectionId,
-          opportunity_id: opportunity?.id,
+          section_name: section.title,
+          opportunity,
           user_input: userInput,
-          transcribed_text: realTimeTranscript
+          transcribed_text: realTimeTranscript,
+          section_requirements: section.requirements
         })
       });
       
       if (response.ok) {
         const data = await response.json();
-        setSections(prev => prev.map(section => 
-          section.id === sectionId 
-            ? { ...section, content: data.content, isGenerating: false }
-            : section
+        setSections(prev => prev.map(s => 
+          s.id === sectionId 
+            ? { ...s, content: data.content, isGenerating: false }
+            : s
         ));
+      } else {
+        throw new Error('Failed to generate section');
       }
     } catch (error) {
       console.error('Error generating section:', error);
-    } finally {
-      setSections(prev => prev.map(section => 
-        section.id === sectionId 
-          ? { ...section, isGenerating: false }
-          : section
+      setSections(prev => prev.map(s => 
+        s.id === sectionId 
+          ? { ...s, isGenerating: false }
+          : s
       ));
     }
   };
@@ -501,12 +512,25 @@ const EnhancedProposalGenerator: React.FC = () => {
           )}
         </motion.div>
         
+        {/* Intelligent Bot Assistant */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <IntelligentBotAssistant
+            opportunity={opportunity}
+            onSuggestion={handleBotSuggestion}
+            activeSection={activeSection}
+          />
+        </motion.div>
+        
         {/* Opportunity Analysis */}
         {opportunityAnalysis && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
             className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg"
           >
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -515,14 +539,14 @@ const EnhancedProposalGenerator: React.FC = () => {
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {opportunityAnalysis.key_requirements?.length > 0 && (
+              {opportunityAnalysis.critical_requirements?.length > 0 && (
                 <div className="bg-blue-50 dark:bg-blue-900/50 rounded-lg p-4">
                   <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
                     <Target className="w-4 h-4" />
-                    Key Requirements
+                    Critical Requirements
                   </h4>
                   <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                    {opportunityAnalysis.key_requirements.slice(0, 3).map((req: string, index: number) => (
+                    {opportunityAnalysis.critical_requirements.slice(0, 3).map((req: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <span className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                         {req}
@@ -532,34 +556,34 @@ const EnhancedProposalGenerator: React.FC = () => {
                 </div>
               )}
               
-              {opportunityAnalysis.success_factors?.length > 0 && (
+              {opportunityAnalysis.success_strategies?.length > 0 && (
                 <div className="bg-green-50 dark:bg-green-900/50 rounded-lg p-4">
                   <h4 className="font-medium text-green-900 dark:text-green-200 mb-2 flex items-center gap-2">
                     <Zap className="w-4 h-4" />
-                    Success Factors
+                    Success Strategies
                   </h4>
                   <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                    {opportunityAnalysis.success_factors.slice(0, 3).map((factor: string, index: number) => (
+                    {opportunityAnalysis.success_strategies.slice(0, 3).map((strategy: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <span className="w-1 h-1 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                        {factor}
+                        {strategy}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
               
-              {opportunityAnalysis.budget_considerations?.length > 0 && (
+              {opportunityAnalysis.competitive_edge?.length > 0 && (
                 <div className="bg-purple-50 dark:bg-purple-900/50 rounded-lg p-4">
                   <h4 className="font-medium text-purple-900 dark:text-purple-200 mb-2 flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
-                    Budget Tips
+                    Competitive Edge
                   </h4>
                   <ul className="text-sm text-purple-700 dark:text-purple-300 space-y-1">
-                    {opportunityAnalysis.budget_considerations.slice(0, 3).map((tip: string, index: number) => (
+                    {opportunityAnalysis.competitive_edge.slice(0, 3).map((edge: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <span className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0" />
-                        {tip}
+                        {edge}
                       </li>
                     ))}
                   </ul>

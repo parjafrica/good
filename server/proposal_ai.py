@@ -99,11 +99,12 @@ class ProposalAI:
             return ""
 
     def analyze_opportunity(self, opportunity: Dict) -> Dict[str, Any]:
-        """Analyze funding opportunity and provide insights"""
+        """Analyze funding opportunity and provide adaptive insights"""
         try:
             prompt = f"""
-            Analyze this funding opportunity and provide key insights for proposal writing:
+            You are an expert grant writer analyzing this funding opportunity. Analyze EVERYTHING about this opportunity and provide highly specific, adaptive insights:
             
+            FUNDING OPPORTUNITY DETAILS:
             Title: {opportunity.get('title', 'N/A')}
             Description: {opportunity.get('description', 'N/A')}
             Funding Range: ${opportunity.get('amount_min', 0):,} - ${opportunity.get('amount_max', 0):,}
@@ -111,15 +112,45 @@ class ProposalAI:
             Country: {opportunity.get('country', 'N/A')}
             Eligibility: {opportunity.get('eligibility_criteria', 'N/A')}
             Application Process: {opportunity.get('application_process', 'N/A')}
+            Source: {opportunity.get('source_name', 'N/A')}
             
-            Provide analysis in JSON format with:
+            CRITICAL ANALYSIS REQUIRED:
+            1. Identify the EXACT proposal structure this funder expects
+            2. Extract specific language, keywords, and terminology they use
+            3. Determine their unique evaluation criteria and priorities
+            4. Identify any hidden requirements or preferences
+            5. Suggest adaptive proposal sections based on their specific needs
+            
+            Respond in JSON format:
             {{
-                "key_requirements": ["requirement1", "requirement2"],
-                "success_factors": ["factor1", "factor2"],
-                "proposal_sections": ["section1", "section2"],
-                "budget_considerations": ["consideration1", "consideration2"],
-                "timeline_suggestions": ["suggestion1", "suggestion2"],
-                "competitive_advantages": ["advantage1", "advantage2"]
+                "funder_profile": {{
+                    "organization_type": "foundation/government/corporate/etc",
+                    "priorities": ["specific priority 1", "priority 2"],
+                    "preferred_language": "formal/academic/technical/community-focused",
+                    "evaluation_focus": "impact/innovation/sustainability/partnerships"
+                }},
+                "required_sections": [
+                    {{
+                        "section_name": "Exact section name they expect",
+                        "description": "What they want in this section",
+                        "key_points": ["specific point 1", "point 2"],
+                        "word_limit": "estimated length or 'varies'"
+                    }}
+                ],
+                "critical_requirements": ["must-have requirement 1", "requirement 2"],
+                "success_strategies": ["strategy 1 specific to this funder", "strategy 2"],
+                "language_style": {{
+                    "tone": "professional/academic/conversational",
+                    "terminology": ["key term 1", "term 2"],
+                    "avoid": ["what not to say"]
+                }},
+                "budget_approach": {{
+                    "format": "detailed/summary/narrative",
+                    "inclusions": ["what to include"],
+                    "restrictions": ["what they don't fund"]
+                }},
+                "evaluation_criteria": ["criterion 1", "criterion 2"],
+                "competitive_edge": ["what makes proposals stand out for this funder"]
             }}
             """
             
@@ -127,17 +158,19 @@ class ProposalAI:
             response_text = self._call_deepseek_api(messages)
             
             if response_text:
-                # Try to extract JSON from response
                 try:
-                    return json.loads(response_text)
+                    analysis = json.loads(response_text)
+                    # Ensure we have required sections
+                    if 'required_sections' not in analysis:
+                        analysis['required_sections'] = self._generate_adaptive_sections(opportunity)
+                    return analysis
                 except json.JSONDecodeError:
-                    # If not valid JSON, return structured fallback
                     return self._parse_analysis_fallback(response_text)
             
-            return self._get_default_analysis()
+            return self._get_adaptive_default_analysis(opportunity)
         except Exception as e:
             print(f"Analysis error: {e}")
-            return self._get_default_analysis()
+            return self._get_adaptive_default_analysis(opportunity)
     
     def _parse_analysis_fallback(self, text: str) -> Dict[str, Any]:
         """Parse analysis from text when JSON parsing fails"""
@@ -150,15 +183,71 @@ class ProposalAI:
             "competitive_advantages": ["Unique approach", "Strong team expertise", "Community partnerships"]
         }
     
-    def _get_default_analysis(self) -> Dict[str, Any]:
-        """Get default analysis structure"""
+    def _generate_adaptive_sections(self, opportunity: Dict) -> List[Dict]:
+        """Generate adaptive sections based on opportunity characteristics"""
+        # Analyze opportunity type and generate appropriate sections
+        sector = opportunity.get('sector', '').lower()
+        amount = opportunity.get('amount_max', 0) or opportunity.get('amount_min', 0)
+        source = opportunity.get('source_name', '').lower()
+        
+        sections = []
+        
+        # Always include core sections but adapt names and focus
+        if 'research' in sector or 'academic' in source:
+            sections.extend([
+                {"section_name": "Research Abstract", "description": "Executive summary of research approach", "key_points": ["research question", "methodology", "expected outcomes"], "word_limit": "250-300"},
+                {"section_name": "Literature Review", "description": "Current state of knowledge", "key_points": ["gaps in research", "theoretical framework"], "word_limit": "500-750"},
+                {"section_name": "Methodology", "description": "Detailed research methods", "key_points": ["data collection", "analysis plan", "validity"], "word_limit": "750-1000"}
+            ])
+        elif 'community' in sector or 'development' in sector:
+            sections.extend([
+                {"section_name": "Community Need Statement", "description": "Demonstrated community need", "key_points": ["evidence of need", "community input", "urgency"], "word_limit": "400-600"},
+                {"section_name": "Program Design", "description": "Intervention approach", "key_points": ["theory of change", "activities", "participants"], "word_limit": "600-800"},
+                {"section_name": "Community Engagement", "description": "Community involvement strategy", "key_points": ["partnerships", "stakeholder buy-in"], "word_limit": "300-500"}
+            ])
+        else:
+            # Generic but adaptive structure
+            sections.extend([
+                {"section_name": "Project Summary", "description": "Concise project overview", "key_points": ["problem", "solution", "impact"], "word_limit": "300-400"},
+                {"section_name": "Statement of Need", "description": "Problem identification and evidence", "key_points": ["data", "urgency", "target population"], "word_limit": "500-700"},
+                {"section_name": "Project Description", "description": "Detailed implementation plan", "key_points": ["activities", "timeline", "deliverables"], "word_limit": "700-1000"}
+            ])
+        
+        # Add budget section adapted to amount
+        if amount > 100000:
+            sections.append({"section_name": "Detailed Budget Narrative", "description": "Comprehensive budget justification", "key_points": ["personnel", "direct costs", "indirect costs", "cost-effectiveness"], "word_limit": "500-750"})
+        else:
+            sections.append({"section_name": "Budget Summary", "description": "Streamlined budget overview", "key_points": ["major categories", "justification"], "word_limit": "200-400"})
+        
+        # Add evaluation section
+        sections.append({"section_name": "Evaluation Plan", "description": "Impact measurement strategy", "key_points": ["metrics", "data collection", "reporting"], "word_limit": "400-600"})
+        
+        return sections
+
+    def _get_adaptive_default_analysis(self, opportunity: Dict) -> Dict[str, Any]:
+        """Get adaptive default analysis structure"""
         return {
-            "key_requirements": [],
-            "success_factors": [],
-            "proposal_sections": [],
-            "budget_considerations": [],
-            "timeline_suggestions": [],
-            "competitive_advantages": []
+            "funder_profile": {
+                "organization_type": "foundation",
+                "priorities": ["impact", "sustainability"],
+                "preferred_language": "professional",
+                "evaluation_focus": "outcomes"
+            },
+            "required_sections": self._generate_adaptive_sections(opportunity),
+            "critical_requirements": ["Clear objectives", "Measurable outcomes", "Detailed budget"],
+            "success_strategies": ["Demonstrate clear need", "Show community support", "Provide evidence of capacity"],
+            "language_style": {
+                "tone": "professional",
+                "terminology": ["impact", "outcomes", "sustainability"],
+                "avoid": ["jargon", "overpromising"]
+            },
+            "budget_approach": {
+                "format": "detailed",
+                "inclusions": ["personnel", "program costs", "evaluation"],
+                "restrictions": ["no indirect costs over 15%"]
+            },
+            "evaluation_criteria": ["Need", "Approach", "Capacity", "Impact"],
+            "competitive_edge": ["Strong partnerships", "Clear metrics", "Innovation"]
         }
     
     def generate_proposal_section(self, section_type: str, opportunity: Dict, user_input: str = "", transcribed_text: str = "") -> str:
