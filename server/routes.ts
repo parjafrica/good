@@ -647,6 +647,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use db directly from import
       const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      
       const [proposal] = await db.insert(proposals)
         .values({
           title: content.title || 'Draft Proposal',
@@ -670,6 +672,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store notification request in database
       const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
       await db.update(proposals)
         .set({
           description: email  // Store email in description field for now
@@ -692,6 +697,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get proposal counts
       const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      
       const proposalCounts = await db.select()
         .from(proposals);
       
@@ -717,6 +724,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/submissions', async (req, res) => {
     try {
       const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      
       const submissions = await db.select()
       .from(proposals)
       .orderBy(proposals.createdAt);
@@ -812,6 +821,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { content, admin_notes, status } = req.body;
       
       const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
       await db.update(proposals)
         .set({
           content: content,
@@ -833,6 +845,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update proposal status
       const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
       const [updatedProposal] = await db.update(proposals)
         .set({
           content: content,
@@ -1195,12 +1210,14 @@ This section demonstrates our commitment to meeting all requirements while deliv
     try {
       const userId = req.query.userId || 'anonymous';
       const { db } = await import('./db');
+      const { creditTransactions } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
       
-      const creditTransactions = await db.select()
+      const transactions = await db.select()
         .from(creditTransactions)
         .where(eq(creditTransactions.userId, userId));
       
-      const totalCredits = creditTransactions.reduce((sum, transaction) => {
+      const totalCredits = transactions.reduce((sum, transaction) => {
         return transaction.type === 'purchase' ? sum + transaction.amount : sum - transaction.amount;
       }, 0);
       
@@ -1215,6 +1232,8 @@ This section demonstrates our commitment to meeting all requirements while deliv
     try {
       const userId = req.query.userId || 'anonymous';
       const { db } = await import('./db');
+      const { creditTransactions } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
       
       const transactions = await db.select()
         .from(creditTransactions)
@@ -1232,6 +1251,7 @@ This section demonstrates our commitment to meeting all requirements while deliv
     try {
       const { packageId, userId } = req.body;
       const { db } = await import('./db');
+      const { creditTransactions } = await import('../shared/schema');
       
       // Credit package mapping
       const packages = {
@@ -1267,6 +1287,8 @@ This section demonstrates our commitment to meeting all requirements while deliv
     try {
       const userId = req.query.userId || 'anonymous';
       const { db } = await import('./db');
+      const { systemSettings } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
       
       const userSettings = await db.select()
         .from(systemSettings)
@@ -1294,6 +1316,7 @@ This section demonstrates our commitment to meeting all requirements while deliv
       const userId = req.body.userId || 'anonymous';
       const settings = req.body;
       const { db } = await import('./db');
+      const { systemSettings } = await import('../shared/schema');
       
       await db.insert(systemSettings).values({
         key: `user_settings_${userId}`,
@@ -1314,6 +1337,8 @@ This section demonstrates our commitment to meeting all requirements while deliv
     try {
       const userId = req.body.userId || 'anonymous';
       const { db } = await import('./db');
+      const { proposals, creditTransactions, userInteractions } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
       
       // Gather all user data
       const userData = {
@@ -1329,6 +1354,59 @@ This section demonstrates our commitment to meeting all requirements while deliv
     } catch (error) {
       console.error('Error exporting user data:', error);
       res.status(500).json({ error: 'Failed to export data' });
+    }
+  });
+
+  // Opportunity save/unsave routes
+  app.post('/api/opportunities/save', async (req, res) => {
+    try {
+      const { opportunityId, userId } = req.body;
+      
+      // For now, just return success
+      // In a real implementation, you'd save to a user_saved_opportunities table
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error saving opportunity:', error);
+      res.status(500).json({ error: 'Failed to save opportunity' });
+    }
+  });
+
+  // Proposal routes for user dashboard
+  app.get('/api/proposals/user', async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const userId = req.query.userId || 'anonymous';
+      
+      const userProposals = await db.select()
+        .from(proposals)
+        .where(eq(proposals.createdBy, userId))
+        .orderBy(proposals.createdAt);
+      
+      res.json(userProposals);
+    } catch (error) {
+      console.error('Error fetching user proposals:', error);
+      res.status(500).json({ error: 'Failed to fetch proposals' });
+    }
+  });
+
+  // Delete proposal route
+  app.delete('/api/proposals/:id', async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { proposals } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { id } = req.params;
+      
+      await db.delete(proposals)
+        .where(eq(proposals.id, id));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting proposal:', error);
+      res.status(500).json({ error: 'Failed to delete proposal' });
     }
   });
 

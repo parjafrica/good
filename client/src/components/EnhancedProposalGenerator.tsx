@@ -74,6 +74,8 @@ const EnhancedProposalGenerator: React.FC = () => {
   const [activeSection, setActiveSection] = useState('executive_summary');
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showExpertFlow, setShowExpertFlow] = useState(false);
+  const [showDownloadFlow, setShowDownloadFlow] = useState(false);
   const [proposalStatus, setProposalStatus] = useState('generating');
   const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
   
