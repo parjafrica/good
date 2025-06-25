@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Granada OS Admin{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            950: '#030712'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen">
+    <!-- Header -->
+    <header class="bg-gray-900 border-b border-gray-800 px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i data-lucide="shield" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">Granada OS</h1>
+                        <p class="text-xs text-gray-400">Admin System</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span class="text-sm text-gray-400">System Healthy</span>
+                </div>
+                <div class="text-sm text-gray-400" id="current-time"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <nav class="w-64 bg-gray-900 min-h-screen border-r border-gray-800">
+            <div class="p-4 space-y-2">
+                <a href="/admin" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="dashboard">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">Dashboard</div>
+                        <div class="text-xs text-gray-400">Overview & Stats</div>
+                    </div>
+                </a>
+                
+                <a href="/admin/users" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="users">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">Users</div>
+                        <div class="text-xs text-gray-400">User Management</div>
+                    </div>
+                </a>
+                
+                <a href="/admin/opportunities" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="opportunities">
+                    <i data-lucide="globe" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">Opportunities</div>
+                        <div class="text-xs text-gray-400">Funding Management</div>
+                    </div>
+                </a>
+                
+                <a href="/admin/bots" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="bots">
+                    <i data-lucide="bot" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">Bots</div>
+                        <div class="text-xs text-gray-400">Automation Control</div>
+                    </div>
+                </a>
+                
+                <a href="/admin/system" class="nav-link flex items-center space-x-3 p-3 rounded-lg transition-colors hover:bg-gray-800" data-page="system">
+                    <i data-lucide="activity" class="w-5 h-5"></i>
+                    <div>
+                        <div class="font-medium">System Logs</div>
+                        <div class="text-xs text-gray-400">Activity Monitor</div>
+                    </div>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Update current time
+        function updateTime() {
+            document.getElementById('current-time').textContent = new Date().toLocaleTimeString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // Highlight active nav link
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard';
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const page = link.dataset.page;
+            if ((currentPage === '' && page === 'dashboard') || currentPage === page) {
+                link.classList.add('bg-blue-600', 'text-white');
+                link.classList.remove('hover:bg-gray-800');
+            }
+        });
+        
+        // API helper functions
+        window.AdminAPI = {
+            async get(endpoint) {
+                const response = await fetch(`http://localhost:9000${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            },
+            
+            async post(endpoint, data = {}) {
+                const response = await fetch(`http://localhost:9000${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            }
+        };
+    </script>
+</body>
+</html>

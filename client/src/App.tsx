@@ -86,7 +86,15 @@ function App() {
                     <Route path="/credits" element={<CreditsPage />} />
                     <Route path="/purchase/:packageId" element={<PurchasePage />} />
                     <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin" element={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+                      <div className="text-center">
+                        <h2 className="text-2xl font-bold mb-4">Admin Panel</h2>
+                        <p className="text-gray-400 mb-4">Redirecting to admin system...</p>
+                        <a href="http://localhost:9000/admin" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                          Go to Admin Dashboard
+                        </a>
+                      </div>
+                    </div>} />
                   </Routes>
                 </main>
               </div>
