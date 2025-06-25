@@ -25,6 +25,15 @@ export interface IStorage {
   getCreditTransactions(userId?: string): Promise<any[]>;
   getSystemSettings(): Promise<any>;
   updateSystemSettings(settings: any): Promise<any>;
+  
+  // Enhanced interaction tracking
+  createUserInteraction(interaction: {
+    userId: string;
+    type: string;
+    metadata: any;
+    creditsUsed: number;
+    timestamp: Date;
+  }): Promise<any>;
 }
 
 export class PostgresStorage implements IStorage {
