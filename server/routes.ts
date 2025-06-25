@@ -1,10 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { registerAdminRoutes } from "./admin_routes";
 import { proposals, donorOpportunities } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register admin routes first
+  registerAdminRoutes(app);
+
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
