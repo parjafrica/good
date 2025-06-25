@@ -88,14 +88,7 @@ function App() {
                     <Route path="/credits" element={<CreditsPage />} />
                     <Route path="/purchase/:packageId" element={<PurchasePage />} />
                     <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                    <Route path="/admin" element={
-                      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-                        <div className="text-center">
-                          <h2 className="text-2xl font-bold mb-4">Admin Route Disabled</h2>
-                          <p className="text-gray-400">Admin functionality temporarily disabled for testing</p>
-                        </div>
-                      </div>
-                    } />
+                    {/* Admin route removed */}
                   </Routes>
                 </main>
               </div>
