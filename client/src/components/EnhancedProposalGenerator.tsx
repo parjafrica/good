@@ -229,6 +229,55 @@ const EnhancedProposalGenerator: React.FC = () => {
     }
   };
   
+  const handleBotSuggestion = (suggestion: string, sectionId: string) => {
+    // Find the section and append the suggestion
+    setSections(prev => prev.map(section => 
+      section.id === sectionId 
+        ? { 
+            ...section, 
+            content: section.content 
+              ? section.content + '\n\n' + suggestion 
+              : suggestion 
+          }
+        : section
+    ));
+  };
+
+  const saveDraftToDatabase = async () => {
+    try {
+      const proposalData = {
+        user_id: user?.id || 'anonymous',
+        opportunity_id: opportunity?.id,
+        content: {
+          title: opportunity?.title,
+          sections: sections.reduce((acc, section) => {
+            acc[section.id] = {
+              title: section.title,
+              content: section.content,
+              requirements: section.requirements
+            };
+            return acc;
+          }, {} as any)
+        }
+      };
+
+      const response = await fetch('/api/proposal/save-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proposalData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Draft saved to database:', data.proposal_id);
+        return data.proposal_id;
+      }
+    } catch (error) {
+      console.error('Error saving draft to database:', error);
+    }
+    return null;
+  };
+
   const generateSection = async (sectionId: string, userInput: string = '') => {
     const section = sections.find(s => s.id === sectionId);
     if (!section) return;
@@ -750,6 +799,7 @@ const EnhancedProposalGenerator: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={saveDraftToDatabase}
                 className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
               >
                 <Send className="w-5 h-5" />

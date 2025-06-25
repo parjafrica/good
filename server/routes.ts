@@ -577,6 +577,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/proposal/save-draft', async (req, res) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/proposal/save-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Proposal AI proxy error:', error);
+      res.status(500).json({ error: 'AI service unavailable' });
+    }
+  });
+
   app.post('/api/proposal/enhance-content', async (req, res) => {
     try {
       const response = await fetch('http://localhost:5001/api/proposal/enhance-content', {
