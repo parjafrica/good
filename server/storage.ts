@@ -29,10 +29,9 @@ export interface IStorage {
   // Enhanced interaction tracking
   createUserInteraction(interaction: {
     userId: string;
-    type: string;
-    metadata: any;
-    creditsUsed: number;
-    timestamp: Date;
+    action: string;
+    page?: string;
+    details?: any;
   }): Promise<any>;
 }
 
@@ -58,7 +57,6 @@ export class PostgresStorage implements IStorage {
       firstName: insertUser.firstName,
       lastName: insertUser.lastName,
       userType: insertUser.userType || 'user',
-      organization: insertUser.organization,
       country: insertUser.country,
       sector: insertUser.sector,
       organizationType: insertUser.organizationType,
@@ -91,22 +89,7 @@ export class PostgresStorage implements IStorage {
   } = {}) {
     try {
       const result = await this.db.select().from(donorOpportunities).limit(filters.limit || 50).offset(filters.offset || 0);
-      return result.map(opp => ({
-        id: opp.id,
-        title: opp.title,
-        description: opp.description,
-        country: opp.country,
-        sector: opp.sector,
-        amountMin: opp.amountMin,
-        amountMax: opp.amountMax,
-        currency: opp.currency,
-        deadline: opp.deadline,
-        sourceUrl: opp.sourceUrl,
-        sourceName: opp.sourceName,
-        isVerified: opp.isVerified,
-        createdAt: opp.createdAt,
-        scrapedAt: opp.scrapedAt
-      }));
+      return result;
     } catch (error) {
       console.error('Error fetching donor opportunities:', error);
       // Return sample data for demonstration
@@ -197,25 +180,40 @@ export class PostgresStorage implements IStorage {
 
   async createDonorOpportunity(opportunity: {
     title: string;
-    description?: string;
-    deadline?: Date;
-    amountMin?: number;
-    amountMax?: number;
-    currency?: string;
+    description: string;
+    deadline?: string;
+    fundingAmount?: string;
     sourceUrl: string;
     sourceName: string;
     country: string;
-    sector?: string;
-    eligibilityCriteria?: string;
+    sector: string;
+    eligibility?: string;
     applicationProcess?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-    keywords?: any;
-    focusAreas?: any;
+    contactInfo?: string;
+    requirements?: string[];
     contentHash: string;
   }) {
     try {
-      const result = await db.insert(donorOpportunities).values(opportunity).returning();
+      const result = await db.insert(donorOpportunities).values({
+        title: opportunity.title,
+        description: opportunity.description,
+        country: opportunity.country,
+        sector: opportunity.sector,
+        fundingAmount: opportunity.fundingAmount,
+        deadline: opportunity.deadline,
+        eligibility: opportunity.eligibility,
+        applicationProcess: opportunity.applicationProcess,
+        contactInfo: opportunity.contactInfo,
+        requirements: opportunity.requirements,
+        sourceUrl: opportunity.sourceUrl,
+        sourceName: opportunity.sourceName,
+        contentHash: opportunity.contentHash,
+        isVerified: false,
+        isActive: true,
+        aiMatchScore: 0,
+        viewCount: 0,
+        applicationCount: 0
+      }).returning();
       return result[0];
     } catch (error) {
       console.error('Error creating donor opportunity:', error);
@@ -228,7 +226,7 @@ export class PostgresStorage implements IStorage {
   }
 
   async getBotRewards() {
-    return db.select().from(botRewards).orderBy(botRewards.awardedAt);
+    return db.select().from(botRewards).orderBy(desc(botRewards.createdAt));
   }
 
   async getSearchStatistics() {
@@ -239,9 +237,8 @@ export class PostgresStorage implements IStorage {
     name: string;
     url: string;
     country: string;
-    type: string;
-    rate_limit: number;
-    priority: number;
+    sector?: string;
+    searchTerms?: string[];
     is_active: boolean;
   }) {
     try {
@@ -249,9 +246,8 @@ export class PostgresStorage implements IStorage {
         name: target.name,
         url: target.url,
         country: target.country,
-        type: target.type,
-        rateLimit: target.rate_limit,
-        priority: target.priority,
+        sector: target.sector,
+        searchTerms: target.searchTerms,
         isActive: target.is_active
       }).returning();
       return result[0];
@@ -263,7 +259,7 @@ export class PostgresStorage implements IStorage {
 
   async getSearchTargets() {
     try {
-      const result = await db.select().from(searchTargets).orderBy(desc(searchTargets.priority));
+      const result = await db.select().from(searchTargets).orderBy(desc(searchTargets.createdAt));
       return result;
     } catch (error) {
       console.error('Error getting search targets:', error);
@@ -289,10 +285,15 @@ export class PostgresStorage implements IStorage {
           credits: 150,
           isBanned: false,
           createdAt: new Date('2024-01-15'),
-          lastLogin: new Date('2024-12-20'),
           fullName: 'John Doe',
           hashedPassword: 'hashed',
-          isActive: true
+          isActive: true,
+          country: 'Kenya',
+          sector: 'Education',
+          organizationType: 'Student',
+          isSuperuser: false,
+          organizationId: null,
+          updatedAt: new Date('2024-12-20')
         },
         {
           id: 'user2', 
@@ -370,10 +371,15 @@ export class PostgresStorage implements IStorage {
         credits: updates.credits || 100,
         isBanned: updates.isBanned || false,
         createdAt: new Date(),
-        lastLogin: new Date(),
         fullName: (updates.firstName || 'Updated') + ' ' + (updates.lastName || 'User'),
         hashedPassword: 'hashed',
-        isActive: true
+        isActive: true,
+        country: 'Kenya',
+        sector: 'Education',
+        organizationType: 'Student',
+        isSuperuser: false,
+        organizationId: null,
+        updatedAt: new Date()
       } as User;
     }
   }
@@ -390,11 +396,10 @@ export class PostgresStorage implements IStorage {
 
   async getUserInteractions(userId?: string): Promise<any[]> {
     try {
-      let query = db.select().from(aiInteractions);
-      if (userId) {
-        query = query.where(eq(aiInteractions.userId, userId));
-      }
-      const result = await query.orderBy(aiInteractions.createdAt).limit(1000);
+      const result = await db.select().from(userInteractions)
+        .where(userId ? eq(userInteractions.userId, userId) : undefined)
+        .orderBy(desc(userInteractions.timestamp))
+        .limit(1000);
       return result;
     } catch (error) {
       console.error('Error fetching user interactions:', error);
@@ -404,22 +409,12 @@ export class PostgresStorage implements IStorage {
 
   async getCreditTransactions(userId?: string): Promise<any[]> {
     try {
-      // Query from actual database tables once implemented
-      let query = db.select().from(aiInteractions);
-      if (userId) {
-        query = query.where(eq(aiInteractions.userId, userId));
-      }
-      const result = await query.orderBy(aiInteractions.createdAt).limit(100);
+      const result = await db.select().from(creditTransactions)
+        .where(userId ? eq(creditTransactions.userId, userId) : undefined)
+        .orderBy(desc(creditTransactions.createdAt))
+        .limit(100);
       
-      // Transform to credit transaction format
-      return result.map(interaction => ({
-        id: interaction.id,
-        userId: interaction.userId,
-        type: interaction.type === 'proposal_generation' ? 'spent' : 'earned',
-        amount: interaction.cost ? Math.round(parseFloat(interaction.cost.toString()) * 100) : 10,
-        reason: `AI ${interaction.type}`,
-        timestamp: interaction.createdAt,
-      }));
+      return result;
     } catch (error) {
       console.error('Error fetching credit transactions:', error);
       return [];
@@ -454,25 +449,35 @@ export class PostgresStorage implements IStorage {
       // Update each setting in the database
       for (const [key, value] of Object.entries(settings)) {
         await db.insert(systemSettings).values({
-          id: `setting_${key}_${Date.now()}`,
           key,
           value: JSON.stringify(value),
-          description: `System setting: ${key}`,
-          updatedBy: 'admin',
-          updatedAt: new Date()
-        }).onConflictDoUpdate({
-          target: systemSettings.key,
-          set: {
-            value: JSON.stringify(value),
-            updatedAt: new Date()
-          }
+          description: `System setting: ${key}`
         });
       }
-      console.log('System settings updated in database:', settings);
       return settings;
     } catch (error) {
       console.error('Error updating system settings:', error);
       return settings;
+    }
+  }
+
+  async createUserInteraction(interaction: {
+    userId: string;
+    action: string;
+    page?: string;
+    details?: any;
+  }): Promise<any> {
+    try {
+      const result = await db.insert(userInteractions).values({
+        userId: interaction.userId,
+        action: interaction.action,
+        page: interaction.page,
+        details: interaction.details
+      }).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating user interaction:', error);
+      throw error;
     }
   }
 }

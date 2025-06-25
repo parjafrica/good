@@ -210,14 +210,16 @@ export const systemSettings = pgTable("system_settings", {
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
-  password: true,
+  hashedPassword: true,
   fullName: true,
   firstName: true,
   lastName: true,
   userType: true,
-  organization: true,
+  organizationType: true,
   country: true,
   sector: true,
+}).extend({
+  password: z.string().min(6),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

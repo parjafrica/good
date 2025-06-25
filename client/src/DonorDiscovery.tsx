@@ -6,7 +6,7 @@ import {
   Search, Filter, MapPin, DollarSign, Calendar, Globe, Target, 
   Zap, TrendingUp, Star, Heart, Bookmark, Share2, RefreshCw,
   ChevronDown, ChevronRight, BarChart3, Users, Award, Sparkles,
-  Eye, Clock, ArrowRight, Plus, Coins, Fire, Lightbulb,
+  Eye, Clock, ArrowRight, Plus, Coins, Flame, Lightbulb,
   MousePointer, ThumbsUp, MessageCircle, Settings, SortAsc
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
