@@ -649,16 +649,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
           opportunityId: opportunity_id,
           title: content.title || 'Draft Proposal',
           content: JSON.stringify(content),
-          status: 'draft',
+          status: 'pending_review', // Send directly to admin review
           createdAt: new Date(),
           updatedAt: new Date()
         })
         .returning();
 
-      res.json({ proposal_id: proposal.id, success: true });
+      res.json({ proposal_id: proposal.id, success: true, status: 'pending_review' });
     } catch (error) {
       console.error('Save draft error:', error);
       res.status(500).json({ error: 'Failed to save draft' });
+    }
+  });
+
+  app.post('/api/proposal/request-notification', async (req, res) => {
+    try {
+      const { proposal_id, email, notification_type } = req.body;
+      
+      // Store notification request in database
+      const db = storage.db;
+      await db.insert(proposals)
+        .values({
+          id: proposal_id,
+          notificationEmail: email
+        })
+        .onConflictDoUpdate({
+          target: proposals.id,
+          set: {
+            notificationEmail: email,
+            updatedAt: new Date()
+          }
+        });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Notification request error:', error);
+      res.status(500).json({ error: 'Failed to save notification request' });
+    }
+  });
+
+  // Admin proposal review routes
+  app.get('/api/admin/proposals/pending', async (req, res) => {
+    try {
+      const db = storage.db;
+      const pendingProposals = await db.select({
+        id: proposals.id,
+        title: proposals.title,
+        user_name: proposals.userId, // This should be joined with users table
+        user_email: proposals.notificationEmail,
+        opportunity_title: proposals.title,
+        funder_name: proposals.title, // This should be joined with opportunities
+        amount: proposals.title, // This should come from opportunity
+        submitted_at: proposals.createdAt,
+        status: proposals.status,
+        content: proposals.content,
+        admin_notes: proposals.adminNotes
+      })
+      .from(proposals)
+      .where(storage.eq(proposals.status, 'pending_review'));
+
+      res.json({ proposals: pendingProposals });
+    } catch (error) {
+      console.error('Fetch pending proposals error:', error);
+      res.status(500).json({ error: 'Failed to fetch proposals' });
+    }
+  });
+
+  app.put('/api/admin/proposals/:id/update', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { content, admin_notes, status } = req.body;
+      
+      const db = storage.db;
+      await db.update(proposals)
+        .set({
+          content: JSON.stringify(content),
+          adminNotes: admin_notes,
+          status: status,
+          updatedAt: new Date()
+        })
+        .where(storage.eq(proposals.id, id));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Update proposal error:', error);
+      res.status(500).json({ error: 'Failed to update proposal' });
+    }
+  });
+
+  app.post('/api/admin/proposals/:id/complete', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { content, admin_notes, send_email } = req.body;
+      
+      const db = storage.db;
+      
+      // Update proposal status
+      const [updatedProposal] = await db.update(proposals)
+        .set({
+          content: JSON.stringify(content),
+          adminNotes: admin_notes,
+          status: 'completed',
+          completedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(storage.eq(proposals.id, id))
+        .returning();
+
+      // Send email notification if requested
+      if (send_email && updatedProposal.notificationEmail) {
+        // Email notification logic would go here
+        console.log(`Sending completion email to: ${updatedProposal.notificationEmail}`);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Complete proposal error:', error);
+      res.status(500).json({ error: 'Failed to complete proposal' });
     }
   });
 

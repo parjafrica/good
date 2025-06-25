@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DocumentUpload from './DocumentUpload';
 import IntelligentBotAssistant from './IntelligentBotAssistant';
+import ProposalReviewWorkflow from './ProposalReviewWorkflow';
 
 interface OpportunityDetails {
   id: string;
@@ -270,6 +271,8 @@ const EnhancedProposalGenerator: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('Draft saved to database:', data.proposal_id);
+        setSavedProposalId(data.proposal_id);
+        setProposalStatus(data.status || 'pending_review');
         return data.proposal_id;
       }
     } catch (error) {
@@ -769,45 +772,60 @@ const EnhancedProposalGenerator: React.FC = () => {
           ))}
         </div>
         
-        {/* Export Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Export Proposal
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Download your completed proposal in various formats
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-              >
-                <Download className="w-5 h-5" />
-                Download PDF
-              </motion.button>
+        {/* Proposal Review Workflow */}
+        {savedProposalId ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <ProposalReviewWorkflow
+              proposalId={savedProposalId}
+              status={proposalStatus}
+              onStatusChange={setProposalStatus}
+            />
+          </motion.div>
+        ) : (
+          /* Export Actions */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Generate Complete Proposal Package
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Create your full proposal and send to our expert review team
+                </p>
+              </div>
               
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={saveDraftToDatabase}
-                className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
-              >
-                <Send className="w-5 h-5" />
-                Save Draft
-              </motion.button>
+              <div className="flex items-center gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+                >
+                  <Download className="w-5 h-5" />
+                  Download Draft
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={saveDraftToDatabase}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
+                >
+                  <Send className="w-5 h-5" />
+                  Send for Expert Review
+                </motion.button>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
