@@ -16,7 +16,7 @@ import Documents from './Documents';
 import Analytics from './Analytics';
 import CreditsPurchase from './CreditsPurchase';
 import NGOPipeline from './NGOPipeline';
-import RealAdminDashboard from './RealAdminDashboard';
+import AdminDashboard from './AdminDashboard';
 import MobileNavigation from './shared/MobileNavigation';
 import LandingPage from './LandingPage';
 import StudentDashboard from './StudentDashboard';
@@ -86,7 +86,7 @@ function App() {
                     <Route path="/credits" element={<CreditsPage />} />
                     <Route path="/purchase/:packageId" element={<PurchasePage />} />
                     <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                    <Route path="/admin" element={<RealAdminDashboard />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
                   </Routes>
                 </main>
               </div>
