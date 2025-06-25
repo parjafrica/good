@@ -168,6 +168,52 @@ const EnhancedProposalGenerator: React.FC = () => {
       setIsAnalyzing(false);
     }
   };
+
+  const saveDraft = async () => {
+    try {
+      const proposalContent = {
+        title: opportunity?.title || 'Draft Proposal',
+        sections: sections.reduce((acc, section) => ({
+          ...acc,
+          [section.id]: section.content
+        }), {}),
+        opportunity_data: opportunity,
+        voice_recordings: voiceRecordings.map(r => ({ duration: r.duration, transcription: r.transcription })),
+        metadata: {
+          created_at: new Date().toISOString(),
+          total_sections: sections.length,
+          completion_percentage: Math.round((sections.filter(s => s.content.length > 0).length / sections.length) * 100)
+        }
+      };
+
+      const response = await fetch('/api/proposal/save-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user?.id || 'anonymous',
+          opportunity_id: opportunity?.id,
+          content: proposalContent
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setSavedProposalId(result.proposal_id);
+        setProposalStatus('saved');
+        return result.proposal_id;
+      }
+    } catch (error) {
+      console.error('Save draft error:', error);
+    }
+    return null;
+  };
+
+  const handleSendToExpert = async () => {
+    const proposalId = await saveDraft();
+    if (proposalId) {
+      setShowExpertFlow(true);
+    }
+  };
   
   const startRecording = async () => {
     try {
