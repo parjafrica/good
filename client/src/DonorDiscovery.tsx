@@ -9,7 +9,7 @@ import {
   Eye, Clock, ArrowRight, Plus, Coins, Flame, Lightbulb,
   MousePointer, ThumbsUp, MessageCircle, Settings, SortAsc,
   Grid, List, Map, FileText, Download, Bell, AlertCircle,
-  CheckCircle, ExternalLink, Layers, Activity, TrendingDown, X
+  CheckCircle, ExternalLink, Layers, Activity, TrendingDown, X, FileEdit
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { apiRequest } from './lib/queryClient';
@@ -778,7 +778,7 @@ const DonorDiscovery: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     window.open(selectedOpportunity.sourceUrl, '_blank');
-                    trackInteraction.mutate({ type: 'self_apply', credits: 5 });
+                    trackInteraction.mutate({ type: 'self_apply', credits: 3 });
                     setShowApplyModal(false);
                   }}
                   className="w-full flex items-center gap-4 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl hover:border-blue-300 dark:hover:border-blue-700 transition-all group"
@@ -788,16 +788,50 @@ const DonorDiscovery: React.FC = () => {
                   </div>
                   <div className="flex-1 text-left">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                      Apply Yourself
+                      Self Apply
                     </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Go directly to the funding source website
                     </p>
                     <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                      Uses 5 credits
+                      Uses 3 credits
                     </div>
                   </div>
                   <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    navigate('/proposal-generator', { 
+                      state: { 
+                        opportunityId: selectedOpportunity.id,
+                        opportunityTitle: selectedOpportunity.title,
+                        mode: 'format'
+                      } 
+                    });
+                    trackInteraction.mutate({ type: 'donor_document_formatting', credits: 6 });
+                    setShowApplyModal(false);
+                    setSelectedOpportunity(null);
+                  }}
+                  className="w-full flex items-center gap-4 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-800 rounded-2xl hover:border-green-300 dark:hover:border-green-700 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Donor Document Formatting
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Get AI-powered document formatting assistance
+                    </p>
+                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      Uses 6 credits
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" />
                 </motion.button>
 
                 <motion.button
@@ -810,7 +844,7 @@ const DonorDiscovery: React.FC = () => {
                         opportunityTitle: selectedOpportunity.title 
                       } 
                     });
-                    trackInteraction.mutate({ type: 'request_expert_help_apply', credits: 8 });
+                    trackInteraction.mutate({ type: 'request_expert_help_apply', credits: 10 });
                     setShowApplyModal(false);
                     setSelectedOpportunity(null);
                   }}
@@ -821,13 +855,13 @@ const DonorDiscovery: React.FC = () => {
                   </div>
                   <div className="flex-1 text-left">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                      Get Expert Help
+                      Expert Help
                     </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Connect with professionals for guidance
+                      Connect with professionals for full guidance
                     </p>
                     <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                      Uses 8 credits
+                      Uses 10 credits
                     </div>
                   </div>
                   <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-600 transition-colors" />

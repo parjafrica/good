@@ -49,7 +49,7 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - "Apply Now" button positioned at bottom-right with text label and advanced animations
 - Multiple animation layers: entrance rotation, hover lift effects, continuous icon wiggle, and pulsing ring borders
 - Secondary choice modal with professional card layouts for application methods
-- Three application options: Apply Yourself (5 credits), Expert Help (8 credits), View Source (1 credit)
+- Three application options: Self Apply (3 credits), Donor Document Formatting (6 credits), Expert Help (10 credits)
 - Color-coded sections with visual hierarchy: Description, Eligibility, Location, Requirements
 - Interactive action buttons with unique animations: rotation (See Caller), scale (Apply), bounce (Expert Help)
 - Credit cost display on each button with professional rounded design and shadow effects
