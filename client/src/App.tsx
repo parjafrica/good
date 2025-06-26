@@ -27,7 +27,8 @@ import StudentDashboard from './StudentDashboard';
 import HumanHelpPage from './HumanHelpPage';
 import CreditsPage from './CreditsPage';
 import PurchasePage from './PurchasePage';
-import OnboardPage from './OnboardPage';
+import OnboardPageFixed from './OnboardPageFixed';
+import IntelligentOnboardingSystem from './IntelligentOnboardingSystem';
 import NotFoundPage from './NotFoundPage';
 import HumanHelpButton from './shared/HumanHelpButton';
 
@@ -108,6 +109,7 @@ function App() {
                   <Route path="/purchase/:packageId" element={<PurchasePage />} />
                   <Route path="/credits-purchase/:packageId" element={<CreditsPurchase />} />
                   <Route path="/ngo-pipeline" element={<NGOPipeline />} />
+                  <Route path="/onboard-intelligent" element={<IntelligentOnboardingSystem />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>

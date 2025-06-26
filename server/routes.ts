@@ -41,6 +41,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive user registration with all profile fields
+  app.post("/api/users/comprehensive-register", async (req, res) => {
+    try {
+      const profileData = req.body;
+      const { email, password, firstName, lastName } = profileData;
+
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "Required fields missing" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      // Hash password
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create comprehensive user profile
+      const userData = {
+        ...profileData,
+        hashedPassword,
+        fullName: `${firstName} ${lastName}`,
+        // Convert comma-separated strings to arrays for array fields
+        academicAchievements: profileData.academicAchievements ? 
+          (typeof profileData.academicAchievements === 'string' ? 
+            profileData.academicAchievements.split(',').filter(Boolean) : 
+            profileData.academicAchievements) : [],
+        researchInterests: profileData.researchInterests ? 
+          (typeof profileData.researchInterests === 'string' ? 
+            profileData.researchInterests.split(',').filter(Boolean) : 
+            profileData.researchInterests) : [],
+        extracurricularActivities: profileData.extracurricularActivities ? 
+          (typeof profileData.extracurricularActivities === 'string' ? 
+            profileData.extracurricularActivities.split(',').filter(Boolean) : 
+            profileData.extracurricularActivities) : [],
+        scholarshipsReceived: profileData.scholarshipsReceived ? 
+          (typeof profileData.scholarshipsReceived === 'string' ? 
+            profileData.scholarshipsReceived.split(',').filter(Boolean) : 
+            profileData.scholarshipsReceived) : [],
+        targetBeneficiaries: profileData.targetBeneficiaries ? 
+          (typeof profileData.targetBeneficiaries === 'string' ? 
+            profileData.targetBeneficiaries.split(',').filter(Boolean) : 
+            profileData.targetBeneficiaries) : [],
+        partnerOrganizations: profileData.partnerOrganizations ? 
+          (typeof profileData.partnerOrganizations === 'string' ? 
+            profileData.partnerOrganizations.split(',').filter(Boolean) : 
+            profileData.partnerOrganizations) : [],
+        mainPrograms: profileData.mainPrograms ? 
+          (typeof profileData.mainPrograms === 'string' ? 
+            profileData.mainPrograms.split(',').filter(Boolean) : 
+            profileData.mainPrograms) : [],
+        responsibilities: profileData.responsibilities ? 
+          (typeof profileData.responsibilities === 'string' ? 
+            profileData.responsibilities.split(',').filter(Boolean) : 
+            profileData.responsibilities) : [],
+        organizationAchievements: profileData.organizationAchievements ? 
+          (typeof profileData.organizationAchievements === 'string' ? 
+            profileData.organizationAchievements.split(',').filter(Boolean) : 
+            profileData.organizationAchievements) : [],
+        mainProducts: profileData.mainProducts ? 
+          (typeof profileData.mainProducts === 'string' ? 
+            profileData.mainProducts.split(',').filter(Boolean) : 
+            profileData.mainProducts) : [],
+        mainServices: profileData.mainServices ? 
+          (typeof profileData.mainServices === 'string' ? 
+            profileData.mainServices.split(',').filter(Boolean) : 
+            profileData.mainServices) : [],
+        keyPartners: profileData.keyPartners ? 
+          (typeof profileData.keyPartners === 'string' ? 
+            profileData.keyPartners.split(',').filter(Boolean) : 
+            profileData.keyPartners) : [],
+        businessAchievements: profileData.businessAchievements ? 
+          (typeof profileData.businessAchievements === 'string' ? 
+            profileData.businessAchievements.split(',').filter(Boolean) : 
+            profileData.businessAchievements) : [],
+        intellectualProperty: profileData.intellectualProperty ? 
+          (typeof profileData.intellectualProperty === 'string' ? 
+            profileData.intellectualProperty.split(',').filter(Boolean) : 
+            profileData.intellectualProperty) : [],
+        fundingGoals: profileData.fundingGoals ? 
+          (typeof profileData.fundingGoals === 'string' ? 
+            profileData.fundingGoals.split(',').filter(Boolean) : 
+            profileData.fundingGoals) : [],
+        interests: profileData.interests ? 
+          (typeof profileData.interests === 'string' ? 
+            profileData.interests.split(',').filter(Boolean) : 
+            profileData.interests) : [],
+        primaryGoals: profileData.primaryGoals ? 
+          (typeof profileData.primaryGoals === 'string' ? 
+            profileData.primaryGoals.split(',').filter(Boolean) : 
+            profileData.primaryGoals) : [],
+        careerGoals: profileData.careerGoals ? 
+          (typeof profileData.careerGoals === 'string' ? 
+            profileData.careerGoals.split(',').filter(Boolean) : 
+            profileData.careerGoals) : [],
+        investorsInterested: profileData.investorsInterested ? 
+          (typeof profileData.investorsInterested === 'string' ? 
+            profileData.investorsInterested.split(',').filter(Boolean) : 
+            profileData.investorsInterested) : [],
+      };
+
+      // Remove password field from userData before saving
+      delete userData.password;
+
+      const user = await storage.createUser(userData);
+
+      // Log user behavior tracking for onboarding completion
+      try {
+        await storage.trackUserBehavior({
+          userId: user.id,
+          actionType: 'onboarding_completed',
+          page: '/onboard',
+          metadata: {
+            userType: profileData.userType,
+            country: profileData.country,
+            completionPercentage: profileData.profileCompleteness || 100,
+            onboardingDuration: Date.now(),
+            deviceType: profileData.deviceType,
+            referralSource: profileData.referralSource
+          }
+        });
+      } catch (trackingError) {
+        console.warn('User behavior tracking failed:', trackingError);
+      }
+
+      const { hashedPassword: _, ...userWithoutPassword } = user;
+      res.status(201).json({ 
+        message: "Comprehensive profile created successfully", 
+        user: userWithoutPassword,
+        redirectTo: profileData.userType === 'student' ? '/student-dashboard' : 
+                   profileData.userType === 'business' ? '/business-dashboard' : '/dashboard'
+      });
+    } catch (error) {
+      console.error("Comprehensive registration error:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  });
+
+  // Error logging endpoint for frontend error handling system
+  app.post("/api/errors/log", async (req, res) => {
+    try {
+      const errorContext = req.body;
+      
+      // Log to console and optionally store in database
+      console.error('Frontend Error Logged:', {
+        timestamp: new Date().toISOString(),
+        errorType: errorContext.errorType,
+        message: errorContext.message,
+        userFriendlyMessage: errorContext.userFriendlyMessage,
+        severity: errorContext.severity,
+        page: errorContext.page,
+        userAgent: errorContext.userAgent,
+        userId: errorContext.userId,
+        stackTrace: errorContext.stackTrace
+      });
+
+      res.status(200).json({ message: "Error logged successfully" });
+    } catch (error) {
+      console.error("Error logging failed:", error);
+      res.status(500).json({ message: "Error logging failed" });
+    }
+  });
+
   // Onboarding user profile creation
   app.post("/api/users", async (req, res) => {
     try {

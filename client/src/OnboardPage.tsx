@@ -484,30 +484,241 @@ export default function OnboardPage() {
     alert(`Social login with ${provider} will be implemented here`);
   };
 
-  // Horizontal Running Text Footer for Success Stories
+  // Enhanced Mobile-Friendly Success Stories Footer with Animations and Visuals
   const SuccessStoriesFooter = () => {
     const stories = aiContent?.successStories || successStories;
-    const allStoriesText = stories.map(story => 
-      `${story.name} from ${(story as any).location || userLocation?.country || 'Global'} secured ${story.amount} • ${story.achievement}`
-    ).join(' • ');
+    const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+    
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setCurrentStoryIndex((prev) => (prev + 1) % stories.length);
+      }, 4000); // Change every 4 seconds
+      return () => clearInterval(interval);
+    }, [stories.length]);
 
+    const currentStory = stories[currentStoryIndex];
+    
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-900/80 via-blue-900/80 to-green-900/80 backdrop-blur-sm z-30 py-3 overflow-hidden">
-        <motion.div
-          className="whitespace-nowrap text-white font-medium text-sm"
-          animate={{ x: [1200, -1200] }}
-          transition={{
-            duration: 60,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        >
-          {isLoadingLocation ? (
-            <span className="text-green-300">🌍 Loading success stories from {userLocation?.country || 'your region'}...</span>
-          ) : (
-            <span>{allStoriesText}</span>
-          )}
-        </motion.div>
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-900/95 via-blue-900/95 to-green-900/95 backdrop-blur-md z-30 py-4 px-4 border-t border-white/20">
+        <div className="max-w-4xl mx-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStoryIndex}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-center justify-between text-white"
+            >
+              {/* Left side - Story with visual elements */}
+              <div className="flex items-center space-x-4 flex-1">
+                {/* Animated emoji/visual */}
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="text-2xl md:text-3xl flex-shrink-0"
+                >
+                  {currentStory.image || '🎉'}
+                </motion.div>
+                
+                {/* Story text */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-sm md:text-base truncate">
+                    💰 {currentStory.amount} - {currentStory.name}
+                  </div>
+                  <div className="text-xs md:text-sm text-white/80 truncate">
+                    📍 {(currentStory as any).location || userLocation?.country} • {currentStory.achievement}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right side - Happy people animations */}
+              <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
+                {['🎊', '👏', '🥳'].map((emoji, index) => (
+                  <motion.div
+                    key={index}
+                    animate={{ 
+                      y: [0, -10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ 
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: index * 0.2,
+                      ease: "easeInOut"
+                    }}
+                    className="text-lg md:text-xl"
+                  >
+                    {emoji}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Progress dots */}
+          <div className="flex justify-center mt-3 space-x-2">
+            {stories.map((_, index) => (
+              <motion.div
+                key={index}
+                className={`w-2 h-2 rounded-full ${
+                  index === currentStoryIndex ? 'bg-white' : 'bg-white/40'
+                }`}
+                animate={{
+                  scale: index === currentStoryIndex ? 1.2 : 1
+                }}
+                transition={{ duration: 0.3 }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Enhanced Input Component that prevents cursor jumping
+  const EnhancedInput = ({ 
+    value, 
+    onChange, 
+    placeholder, 
+    type = "text",
+    className = "",
+    onKeyPress,
+    autoFocus = false
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    type?: string;
+    className?: string;
+    onKeyPress?: (e: React.KeyboardEvent) => void;
+    autoFocus?: boolean;
+  }) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    
+    // Prevent cursor jumping by managing focus properly
+    useEffect(() => {
+      if (autoFocus && inputRef.current) {
+        const timer = setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }, [autoFocus]);
+    
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      onChange(newValue);
+    };
+    
+    return (
+      <input
+        ref={inputRef}
+        type={type}
+        value={value}
+        onChange={handleChange}
+        onKeyPress={onKeyPress}
+        placeholder={placeholder}
+        className={`w-full px-6 py-4 bg-white/10 border-2 border-transparent rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:bg-white/20 transition-all duration-300 text-lg ${className}`}
+        autoComplete="off"
+        spellCheck={false}
+      />
+    );
+  };
+
+  // Improved animated reviews for mobile
+  const AnimatedReviews = () => {
+    const reviews = [
+      { text: "Amazing platform! Got $50K in 2 weeks! 🎉", author: "Sarah K.", rating: 5, emoji: "🌟" },
+      { text: "Found perfect grants for my startup 🚀", author: "Mike C.", rating: 5, emoji: "💼" },  
+      { text: "Expert help saved me months of work! ⭐", author: "Lisa M.", rating: 5, emoji: "⚡" },
+      { text: "Secured $150K for my NGO project! 💰", author: "John D.", rating: 5, emoji: "🎯" },
+      { text: "Life-changing funding opportunities! 🙌", author: "Anna B.", rating: 5, emoji: "✨" },
+      { text: "Best investment for my business! 📈", author: "David R.", rating: 5, emoji: "🚀" }
+    ];
+    
+    const [visibleReviews, setVisibleReviews] = useState([0, 1, 2]);
+    
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setVisibleReviews(prev => prev.map(index => (index + 3) % reviews.length));
+      }, 3000);
+      return () => clearInterval(interval);
+    }, []);
+    
+    return (
+      <div className="space-y-4">
+        <AnimatePresence mode="wait">
+          {visibleReviews.map((reviewIndex, displayIndex) => {
+            const review = reviews[reviewIndex];
+            return (
+              <motion.div
+                key={`${reviewIndex}-${displayIndex}`}
+                initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -50, scale: 0.9 }}
+                transition={{ 
+                  duration: 0.6,
+                  delay: displayIndex * 0.1,
+                  ease: "easeOut"
+                }}
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+              >
+                <div className="flex items-start space-x-3">
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: displayIndex * 0.5
+                    }}
+                    className="text-2xl flex-shrink-0"
+                  >
+                    {review.emoji}
+                  </motion.div>
+                  <div className="flex-1">
+                    <p className="text-white text-sm font-medium leading-relaxed">
+                      {review.text}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-white/70 text-xs font-medium">
+                        {review.author}
+                      </span>
+                      <div className="flex space-x-1">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <motion.span
+                            key={i}
+                            animate={{ 
+                              scale: [1, 1.2, 1]
+                            }}
+                            transition={{ 
+                              duration: 1,
+                              repeat: Infinity,
+                              delay: i * 0.1 + displayIndex * 0.3
+                            }}
+                            className="text-yellow-400 text-sm"
+                          >
+                            ⭐
+                          </motion.span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
     );
   };
