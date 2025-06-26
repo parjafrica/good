@@ -35,6 +35,15 @@ import {
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { couponService, CouponValidationResult } from './services/couponService';
+import { 
+  processRealTimePayment, 
+  validateCardNumber, 
+  getCardType, 
+  formatCardNumber,
+  validateExpiryDate,
+  validateCVV,
+  type CardData 
+} from './services/realTimeValidation';
 import QuickPurchase from './QuickPurchase';
 
 interface CreditPackage {
