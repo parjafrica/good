@@ -174,7 +174,7 @@ export class IntelligentAssistant {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: 'demo_user',
+          userId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
           behaviorData: this.behavior,
           adviceGenerated: advice
         })
@@ -185,129 +185,117 @@ export class IntelligentAssistant {
   }
 
   private analyzeAndAdvise(): AssistantAdvice | null {
-    const { strugglingIndicators, successIndicators, timeOnPage, clicksPerMinute, currentPage, interactionTypes } = this.behavior;
+    const { strugglingIndicators, successIndicators, timeOnPage, clicksPerMinute, currentPage, interactionTypes, sessionDuration } = this.behavior;
 
-    // Advanced pattern recognition
-    const recentClicks = interactionTypes.slice(-10);
+    // Advanced pattern recognition - requiring much more data
+    const recentClicks = interactionTypes.slice(-20); // Look at more interactions
     const filterClicks = recentClicks.filter(type => type === 'filter').length;
     const searchAttempts = recentClicks.filter(type => type === 'search').length;
     const opportunityViews = recentClicks.filter(type => type === 'opportunity_card').length;
+    const totalInteractions = interactionTypes.length;
 
-    // Success celebration - specific achievements
-    if (successIndicators.length >= 3 && opportunityViews > 0) {
+    // Only provide advice after significant user interaction data
+    if (totalInteractions < 15) {
+      return null; // Need more data before giving advice
+    }
+
+    // Success celebration - only after real achievement
+    if (successIndicators.length >= 5 && opportunityViews > 3) {
       return {
         type: 'success_celebration',
-        message: "Excellent! You're actively exploring opportunities. You've found some great matches. Consider reaching out to our human experts for application strategy advice!",
+        message: "Great progress! You're actively exploring and finding relevant opportunities.",
+        priority: 'low',
+        timing: 'delayed'
+      };
+    }
+
+    // Subtle encouragement for exploration
+    if (opportunityViews > 0 && timeOnPage > 180000) {
+      return {
+        type: 'encouragement',
+        message: "You're exploring opportunities well. Take your time to find the best matches for your needs.",
+        priority: 'low',
+        timing: 'delayed'
+      };
+    }
+
+    // Very extensive struggling pattern - only after serious analysis
+    if (strugglingIndicators.length >= 8 && sessionDuration > 900000 && filterClicks > 15 && opportunityViews < 3) {
+      return {
+        type: 'help_suggestion',
+        message: "If you need personalized guidance finding the right opportunities, expert assistance is available.",
         priority: 'medium',
         action: 'open_human_help',
-        timing: 'immediate'
+        timing: 'delayed'
       };
     }
 
-    // Struggling with filters - specific help
-    if (filterClicks > 5 && opportunityViews === 0) {
-      return {
-        type: 'help_suggestion',
-        message: "I see you're adjusting filters but haven't found the right opportunities yet. Our Expert team can help you identify the perfect funding matches for your specific needs.",
-        priority: 'high',
-        action: 'open_human_help',
-        timing: 'immediate'
-      };
-    }
-
-    // Multiple searches without success
-    if (searchAttempts > 3 && opportunityViews < 2) {
-      return {
-        type: 'help_suggestion',
-        message: "Having trouble finding what you're looking for? Our human experts know exactly which funders are actively accepting applications in your sector right now.",
-        priority: 'high',
-        action: 'open_human_help',
-        timing: 'immediate'
-      };
-    }
-
-    // High engagement but no applications
-    if (opportunityViews > 5 && timeOnPage > 300000 && !successIndicators.includes('apply')) {
+    // Extended session with minimal success - very high threshold
+    if (sessionDuration > 1200000 && opportunityViews < 2 && searchAttempts > 10) {
       return {
         type: 'guidance',
-        message: "You've been exploring extensively! Our Expert team can help you shortlist the best opportunities and craft winning applications. They've helped thousands secure funding.",
-        priority: 'high',
-        action: 'open_human_help',
-        timing: 'immediate'
-      };
-    }
-
-    // Quick exit pattern
-    if (timeOnPage < 60000 && clicksPerMinute > 10) {
-      return {
-        type: 'encouragement',
-        message: "New to funding searches? Our Expert assistants can guide you step-by-step to find opportunities that match your organization perfectly.",
-        priority: 'medium',
-        action: 'open_human_help',
+        message: "Still searching? Sometimes a different approach can help identify the perfect funding opportunities.",
+        priority: 'low',
         timing: 'delayed'
       };
     }
 
-    // General struggling - personalized
-    if (strugglingIndicators.length >= 2) {
+    // Minimal general guidance - very subtle
+    if (timeOnPage > 300000 && totalInteractions > 30 && opportunityViews === 0) {
       return {
-        type: 'help_suggestion',
-        message: "Every organization's funding journey is unique. Our Expert team specializes in matching NGOs, students, and businesses with the right opportunities. Let them help accelerate your success!",
-        priority: 'high',
-        action: 'open_human_help',
-        timing: 'immediate'
-      };
-    }
-
-    // Extended session encouragement
-    if (timeOnPage > 600000) {
-      return {
-        type: 'encouragement',
-        message: "You're dedicated to finding the right funding! Our Expert team can save you time by identifying the highest-probability opportunities for your specific situation.",
-        priority: 'medium',
-        action: 'open_human_help',
+        type: 'guidance',
+        message: "Try exploring different sectors or adjusting your search criteria to discover more opportunities.",
+        priority: 'low',
         timing: 'delayed'
       };
     }
 
-    // Page-specific advice
+    // Page-specific advice (much more subtle)
     return this.getPageSpecificAdvice();
   }
 
   private getPageSpecificAdvice(): AssistantAdvice | null {
-    const { currentPage, timeOnPage } = this.behavior;
+    const { currentPage, timeOnPage, interactionTypes } = this.behavior;
+    const totalInteractions = interactionTypes.length;
+
+    // Only provide page-specific advice after significant interaction
+    if (totalInteractions < 20) {
+      return null;
+    }
 
     switch (currentPage) {
       case '/donor-discovery':
-        if (timeOnPage > 120000 && this.behavior.interactionTypes.filter(t => t === 'opportunity_card').length === 0) {
+        if (timeOnPage > 300000 && this.behavior.interactionTypes.filter(t => t === 'opportunity_card').length === 0) {
           return {
             type: 'guidance',
-            message: "Try clicking on any funding opportunity card to see detailed information. Our Expert system has pre-selected the best matches for you!",
-            priority: 'medium',
-            timing: 'immediate'
+            message: "Try exploring the opportunity cards to see detailed funding information.",
+            priority: 'low',
+            timing: 'delayed'
           };
         }
         break;
 
       case '/proposals':
-        if (timeOnPage > 90000) {
+        if (timeOnPage > 600000 && totalInteractions > 25) {
           return {
-            type: 'help_suggestion',
-            message: "Need help crafting the perfect proposal? Our human experts specialize in grant writing and can review your work. Click 'Human Help' to get started!",
-            priority: 'high',
-            action: 'open_human_help',
-            timing: 'immediate'
+            type: 'encouragement',
+            message: "Take your time crafting your proposal. Quality applications increase success rates.",
+            priority: 'low',
+            timing: 'delayed'
           };
         }
         break;
 
       case '/funding':
-        return {
-          type: 'encouragement',
-          message: "You're in the right place to find funding! Our Expert algorithms have identified opportunities matching your profile. Need personal guidance? Connect with our human team!",
-          priority: 'medium',
-          timing: 'delayed'
-        };
+        if (timeOnPage > 240000) {
+          return {
+            type: 'encouragement',
+            message: "Explore different funding categories to discover opportunities that match your goals.",
+            priority: 'low',
+            timing: 'delayed'
+          };
+        }
+        break;
     }
 
     return null;

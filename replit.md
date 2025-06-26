@@ -38,10 +38,12 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - Confirmed API successfully returns authentic funding data from major international donors
 - **INTELLIGENT ASSISTANT SYSTEM**: Built comprehensive background bot that monitors user behavior and provides dynamic guidance
 - Advanced pattern recognition analyzing clicks, scrolling, time spent, and interaction types
-- Context-aware advice system encouraging users toward human help when struggling with specific patterns
+- Context-aware advice system that only suggests human help after extensive learning from serious user interaction patterns
 - Real-time behavior analytics with backend tracking and user interaction database integration
-- Smart floating assistant button and notification system with gradient UI and smooth animations
-- Sophisticated user journey analysis detecting filter struggles, search patterns, and engagement levels
+- Subtle floating assistant button that only appears after 10+ minutes and 50+ interactions
+- Sophisticated user journey analysis requiring 15+ interactions before providing any advice
+- Removed immediate expert help suggestions - system now requires extensive data collection (8+ struggle indicators, 15+ minutes session, 15+ filter clicks) before suggesting human assistance
+- Much more subtle guidance focused on general exploration tips rather than directing users to expert help
 
 ## Previous Changes
 - Successfully migrated from Bolt/Supabase to Replit/PostgreSQL

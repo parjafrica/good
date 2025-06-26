@@ -156,35 +156,53 @@ export const IntelligentAssistantUI: React.FC = () => {
   );
 };
 
-// Floating Assistant Button (always visible)
+// Floating Assistant Button (only shows after extensive interaction)
 export const AssistantFloatingButton: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const [shouldShow, setShouldShow] = useState(false);
 
-  const triggerHelpAdvice = () => {
+  useEffect(() => {
+    // Only show the button after the user has been on the site for a while
+    const timer = setTimeout(() => {
+      // Check if user has had enough interactions to warrant showing the button
+      const userInteractions = JSON.parse(localStorage.getItem('userInteractions') || '0');
+      if (userInteractions > 50) {
+        setShouldShow(true);
+      }
+    }, 600000); // 10 minutes minimum before showing
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const triggerSubtleAdvice = () => {
     const event = new CustomEvent('intelligentAdvice', {
       detail: {
-        type: 'help_suggestion',
-        message: "I'm here to help! Our human experts are available to provide personalized guidance for your funding search. Click below to connect with them instantly.",
-        priority: 'high',
-        action: 'open_human_help',
-        timing: 'immediate'
+        type: 'guidance',
+        message: "Still exploring? Sometimes a fresh perspective can help identify new opportunities.",
+        priority: 'low',
+        timing: 'delayed'
       }
     });
     window.dispatchEvent(event);
   };
 
+  if (!shouldShow) return null;
+
   return (
     <motion.div
       className="fixed bottom-6 left-6 z-40"
-      whileHover={{ scale: 1.1 }}
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 2 }}
+      whileHover={{ scale: 1.05 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
       <button
-        onClick={triggerHelpAdvice}
-        className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all"
+        onClick={triggerSubtleAdvice}
+        className="bg-gradient-to-r from-gray-600 to-gray-700 text-white p-2 rounded-full shadow-lg hover:shadow-xl transition-all opacity-70 hover:opacity-100"
       >
-        <Brain className="w-6 h-6" />
+        <Brain className="w-5 h-5" />
       </button>
       
       <AnimatePresence>
@@ -193,10 +211,10 @@ export const AssistantFloatingButton: React.FC = () => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
-            className="absolute left-16 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap"
+            className="absolute left-14 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap"
           >
-            Expert Assistant
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45" />
+            Insights
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45" />
           </motion.div>
         )}
       </AnimatePresence>

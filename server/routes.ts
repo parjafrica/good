@@ -951,8 +951,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, behaviorData, adviceGenerated } = req.body;
       
+      // Generate a valid UUID for demo user
+      const validUserId = userId || 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+      
       await storage.createUserInteraction({
-        userId: userId || 'demo_user',
+        userId: validUserId,
         action: 'assistant_analysis',
         page: behaviorData?.currentPage || 'unknown',
         details: {
