@@ -44,10 +44,13 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - Sophisticated user journey analysis requiring 15+ interactions before providing any advice
 - Removed immediate expert help suggestions - system now requires extensive data collection (8+ struggle indicators, 15+ minutes session, 15+ filter clicks) before suggesting human assistance
 - Much more subtle guidance focused on general exploration tips rather than directing users to expert help
-- **ENHANCED OPPORTUNITY DETAIL POPUPS**: Added comprehensive action buttons to opportunity detail modals
-- Each opportunity card "View Details" now shows three action buttons: "See Caller Link", "Apply Yourself", "Expert Help"
-- Color-coded buttons with proper tracking: Green for viewing source, Blue for self-application, Orange for expert assistance
-- Responsive layout with proper credit tracking and user interaction analytics
+- **ENHANCED OPPORTUNITY DETAIL POPUPS**: Completely redesigned with modern graphics and superior UX
+- Beautiful gradient header with animated background elements and spring transitions
+- Color-coded sections with visual hierarchy: Description, Eligibility, Location, Requirements
+- Interactive action buttons with unique animations: rotation (See Caller), scale (Apply), bounce (Expert Help)
+- Credit cost display on each button with professional rounded design and shadow effects
+- Responsive layout optimized for desktop and mobile with smooth hover animations
+- Each opportunity card "View Details" shows three action buttons: "See Caller Link", "Apply Yourself", "Expert Help"
 - Expert Help button routes to human assistance page with opportunity context
 
 ## Previous Changes

@@ -9,7 +9,7 @@ import {
   Eye, Clock, ArrowRight, Plus, Coins, Flame, Lightbulb,
   MousePointer, ThumbsUp, MessageCircle, Settings, SortAsc,
   Grid, List, Map, FileText, Download, Bell, AlertCircle,
-  CheckCircle, ExternalLink, Layers, Activity, TrendingDown
+  CheckCircle, ExternalLink, Layers, Activity, TrendingDown, X
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { apiRequest } from './lib/queryClient';
@@ -511,91 +511,154 @@ const DonorDiscovery: React.FC = () => {
         )}
       </div>
 
-      {/* Opportunity detail modal */}
+      {/* Enhanced Opportunity Detail Modal */}
       <AnimatePresence>
         {selectedOpportunity && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
             onClick={() => setSelectedOpportunity(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-4xl max-h-[80vh] overflow-y-auto"
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white dark:bg-gray-900 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {selectedOpportunity.title}
-                </h2>
-                <button
-                  onClick={() => setSelectedOpportunity(null)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                >
-                  ×
-                </button>
+              {/* Header with Gradient Background */}
+              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-6 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full -ml-10 -mb-10"></div>
+                <div className="relative">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-white/20 rounded-xl">
+                          <Target className="w-6 h-6" />
+                        </div>
+                        <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
+                          {selectedOpportunity.sourceName}
+                        </span>
+                      </div>
+                      <h2 className="text-2xl font-bold leading-tight mb-2">
+                        {selectedOpportunity.title}
+                      </h2>
+                      <div className="flex items-center gap-4 text-sm opacity-90">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-4 h-4" />
+                          {selectedOpportunity.fundingAmount}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {selectedOpportunity.deadline}
+                        </div>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setSelectedOpportunity(null)}
+                      className="p-3 hover:bg-white/20 rounded-full transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </motion.button>
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-6">
-                <p className="text-gray-600 dark:text-gray-400">
-                  {selectedOpportunity.description}
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Funding Amount</h4>
-                    <p className="text-gray-600 dark:text-gray-400">{selectedOpportunity.fundingAmount}</p>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                <div className="space-y-6">
+                  {/* Description */}
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      Description
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {selectedOpportunity.description}
+                    </p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Deadline</h4>
-                    <p className="text-gray-600 dark:text-gray-400">{selectedOpportunity.deadline}</p>
+
+                  {/* Key Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Globe className="w-5 h-5 text-green-600" />
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Eligibility</h4>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-300">{selectedOpportunity.eligibility}</p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="w-5 h-5 text-purple-600" />
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Location</h4>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-300">{selectedOpportunity.country}</p>
+                    </div>
                   </div>
+
+                  {/* Requirements */}
+                  {selectedOpportunity.requirements && selectedOpportunity.requirements.length > 0 && (
+                    <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-orange-600" />
+                        Requirements
+                      </h4>
+                      <ul className="space-y-2">
+                        {selectedOpportunity.requirements.map((req: string, index: number) => (
+                          <li key={index} className="flex items-start gap-3 text-gray-600 dark:text-gray-300">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <span>{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Requirements</h4>
-                  <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                    {selectedOpportunity.requirements?.map((req: string, index: number) => (
-                      <li key={index}>{req}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="space-y-3">
+              </div>
+
+              {/* Action Buttons Footer */}
+              <div className="p-6 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         window.open(selectedOpportunity.sourceUrl, '_blank');
                         trackInteraction.mutate({ type: 'view_caller_link', credits: 2 });
                       }}
-                      className="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+                      className="group flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300"
                     >
-                      <ExternalLink className="w-4 h-4" />
-                      See Caller Link
+                      <ExternalLink className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                      <span>See Caller Link</span>
+                      <div className="text-xs bg-white/20 px-2 py-1 rounded-full">2 credits</div>
                     </motion.button>
                     
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         window.open(selectedOpportunity.sourceUrl, '_blank');
                         trackInteraction.mutate({ type: 'apply_yourself', credits: 5 });
                       }}
-                      className="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+                      className="group flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
                     >
-                      <FileText className="w-4 h-4" />
-                      Apply Yourself
+                      <FileText className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      <span>Apply Yourself</span>
+                      <div className="text-xs bg-white/20 px-2 py-1 rounded-full">5 credits</div>
                     </motion.button>
                     
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => {
-                        // Navigate to expert help or trigger AI assistance
                         navigate('/human-help', { 
                           state: { 
                             opportunityId: selectedOpportunity.id,
@@ -604,19 +667,22 @@ const DonorDiscovery: React.FC = () => {
                         });
                         trackInteraction.mutate({ type: 'request_expert_help', credits: 3 });
                       }}
-                      className="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+                      className="group flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-orange-500/25 transition-all duration-300"
                     >
-                      <Users className="w-4 h-4" />
-                      Expert Help
+                      <Users className="w-5 h-5 group-hover:bounce transition-transform" />
+                      <span>Expert Help</span>
+                      <div className="text-xs bg-white/20 px-2 py-1 rounded-full">3 credits</div>
                     </motion.button>
                   </div>
                   
                   {/* Close Button */}
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={() => setSelectedOpportunity(null)}
-                    className="w-full py-3 px-6 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
+                    className="w-full py-3 px-6 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium flex items-center justify-center gap-2"
                   >
+                    <X className="w-4 h-4" />
                     Close
                   </motion.button>
                 </div>
