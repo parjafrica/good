@@ -689,28 +689,27 @@ const DonorDiscovery: React.FC = () => {
                 </div>
               </div>
 
-              {/* Circular Apply Now Button - Bottom Right */}
+              {/* Apply Now Button - Bottom Right */}
               <motion.button
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 whileHover={{ 
-                  scale: 1.1, 
-                  rotate: 360,
+                  scale: 1.05, 
+                  y: -4,
                   boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)"
                 }}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowApplyModal(true)}
                 transition={{ 
                   type: "spring", 
-                  duration: 0.6,
-                  rotate: { duration: 0.8, ease: "easeInOut" }
+                  duration: 0.6
                 }}
-                className="absolute bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-2xl hover:shadow-blue-500/40 transition-all duration-300"
+                className="absolute bottom-6 right-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl px-6 py-3 flex items-center gap-3 text-white shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 font-bold"
               >
                 <motion.div
                   animate={{ 
                     scale: [1, 1.2, 1],
-                    opacity: [1, 0.7, 1]
+                    rotate: [0, 15, -15, 0]
                   }}
                   transition={{ 
                     duration: 2,
@@ -718,15 +717,16 @@ const DonorDiscovery: React.FC = () => {
                     repeatType: "loop"
                   }}
                 >
-                  <Zap className="w-8 h-8" />
+                  <Zap className="w-5 h-5" />
                 </motion.div>
+                <span className="text-sm">Apply Now</span>
                 
                 {/* Pulsing Ring Animation */}
                 <motion.div
-                  className="absolute inset-0 rounded-full border-4 border-blue-400"
+                  className="absolute inset-0 rounded-2xl border-2 border-blue-400"
                   animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.8, 0, 0.8]
+                    scale: [1, 1.1, 1],
+                    opacity: [0.6, 0, 0.6]
                   }}
                   transition={{
                     duration: 2,
