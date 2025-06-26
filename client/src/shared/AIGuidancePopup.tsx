@@ -76,6 +76,9 @@ const AIGuidancePopup: React.FC<AIGuidancePopupProps> = ({
   useEffect(() => {
     if (insight) {
       console.log('AI Insight received for popup:', insight);
+      setIsVisible(true);
+    } else {
+      console.log('No insight provided to popup');
     }
   }, [insight]);
 

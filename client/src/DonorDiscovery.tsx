@@ -102,6 +102,7 @@ const DonorDiscovery: React.FC = () => {
 
       // Set up insight callback
       aiEngineInstance.onInsight((insight: AIInsight) => {
+        console.log('Setting insight for popup:', insight);
         setCurrentInsight(insight);
       });
 
@@ -183,6 +184,37 @@ const DonorDiscovery: React.FC = () => {
       type: 'ai_insight_dismissed', 
       credits: 0 
     });
+  };
+
+  // Test function to trigger AI insight manually
+  const triggerTestInsight = () => {
+    const testInsight: AIInsight = {
+      type: 'guidance',
+      priority: 'medium',
+      title: 'Expert System Active',
+      message: 'The AI guidance system is working! This test confirms that expert insights can appear when analyzing your behavior patterns.',
+      actions: [
+        {
+          id: 'continue_exploring',
+          label: 'Continue Exploring',
+          type: 'dismiss'
+        },
+        {
+          id: 'get_help',
+          label: 'Get Expert Help',
+          type: 'tutorial',
+          target: '#opportunity-grid'
+        }
+      ],
+      metadata: {
+        confidence: 1.0,
+        reasoning: 'Manual test trigger',
+        triggerConditions: ['test'],
+        estimatedImpact: 1.0
+      }
+    };
+    console.log('Triggering test insight:', testInsight);
+    setCurrentInsight(testInsight);
   };
 
   // Track user interactions
@@ -555,6 +587,15 @@ const DonorDiscovery: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Test AI Guidance Button */}
+      <button
+        onClick={triggerTestInsight}
+        className="fixed bottom-4 right-20 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-40"
+        title="Test AI Guidance System"
+      >
+        <Sparkles className="w-5 h-5" />
+      </button>
 
       {/* AI Guidance Popup */}
       <AIGuidancePopup
