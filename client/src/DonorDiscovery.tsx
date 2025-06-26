@@ -67,6 +67,7 @@ const DonorDiscovery: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [sortBy, setSortBy] = useState('relevance');
   const [selectedOpportunity, setSelectedOpportunity] = useState<SmartOpportunity | null>(null);
+  const [showApplyModal, setShowApplyModal] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
@@ -547,7 +548,7 @@ const DonorDiscovery: React.FC = () => {
                       <h2 className="text-2xl font-bold leading-tight mb-2">
                         {selectedOpportunity.title}
                       </h2>
-                      <div className="flex items-center gap-4 text-sm opacity-90">
+                      <div className="flex items-center gap-4 text-sm opacity-90 mb-4">
                         <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
                           {selectedOpportunity.fundingAmount}
@@ -557,6 +558,18 @@ const DonorDiscovery: React.FC = () => {
                           {selectedOpportunity.deadline}
                         </div>
                       </div>
+                      
+                      {/* Prominent Apply Now Button */}
+                      <motion.button
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowApplyModal(true)}
+                        className="flex items-center gap-3 px-6 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-lg"
+                      >
+                        <Zap className="w-5 h-5" />
+                        Apply Now
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -687,6 +700,128 @@ const DonorDiscovery: React.FC = () => {
                   </motion.button>
                 </div>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Apply Now Choice Modal */}
+      <AnimatePresence>
+        {showApplyModal && selectedOpportunity && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-60 flex items-center justify-center p-4"
+            onClick={() => setShowApplyModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="bg-white dark:bg-gray-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  How would you like to apply?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Choose your preferred application method for this opportunity
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    window.open(selectedOpportunity.sourceUrl, '_blank');
+                    trackInteraction.mutate({ type: 'self_apply', credits: 5 });
+                    setShowApplyModal(false);
+                  }}
+                  className="w-full flex items-center gap-4 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl hover:border-blue-300 dark:hover:border-blue-700 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Apply Yourself
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Go directly to the funding source website
+                    </p>
+                    <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      Uses 5 credits
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    navigate('/human-help', { 
+                      state: { 
+                        opportunityId: selectedOpportunity.id,
+                        opportunityTitle: selectedOpportunity.title 
+                      } 
+                    });
+                    trackInteraction.mutate({ type: 'request_expert_help_apply', credits: 8 });
+                    setShowApplyModal(false);
+                    setSelectedOpportunity(null);
+                  }}
+                  className="w-full flex items-center gap-4 p-6 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Get Expert Help
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Connect with professionals for guidance
+                    </p>
+                    <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                      Uses 8 credits
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-600 transition-colors" />
+                </motion.button>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => {
+                    window.open(selectedOpportunity.sourceUrl, '_blank');
+                    trackInteraction.mutate({ type: 'view_source_only', credits: 1 });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Just view the source (1 credit)
+                </button>
+              </div>
+
+              {/* Close Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowApplyModal(false)}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
