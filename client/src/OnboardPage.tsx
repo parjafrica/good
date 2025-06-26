@@ -6,6 +6,9 @@ import { ArrowRight, Sparkles, User, Building, DollarSign, CheckCircle, Star, Tr
 import { motion, AnimatePresence } from 'framer-motion';
 import { aiLocationService } from './services/aiLocationService';
 import type { LocationData, AIGeneratedContent } from './services/aiLocationService';
+import { CookieManager } from './utils/cookieManager';
+import type { OnboardingProgress } from './utils/cookieManager';
+import { ConditionalAIEngine } from './services/conditionalAIEngine';
 
 interface UserProfile {
   firstName: string;
@@ -200,28 +203,67 @@ export default function OnboardPage() {
   const [userLocation, setUserLocation] = useState<LocationData | null>(null);
   const [aiContent, setAiContent] = useState<AIGeneratedContent | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [hasRestoredProgress, setHasRestoredProgress] = useState(false);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
 
-  // Initialize location detection and AI content generation
+  // Initialize onboarding with database-driven progress restoration and AI personalization
   useEffect(() => {
-    const initializeAIContent = async () => {
+    const initializeOnboarding = async () => {
       try {
         setIsLoadingLocation(true);
-        const location = await aiLocationService.detectLocation();
+        
+        // Check for existing progress first - this is the heart of the experience
+        const savedProgress = CookieManager.loadProgress();
+        if (savedProgress && !hasRestoredProgress) {
+          setHasRestoredProgress(true);
+          setShowResumePrompt(true);
+          
+          // Restore complete user state from database/cookies
+          if (savedProgress.userProfile) {
+            setUserProfile(prev => ({ ...prev, ...savedProgress.userProfile }));
+            setCurrentInput(savedProgress.userProfile.firstName || '');
+          }
+          if (savedProgress.userLocation) {
+            setUserLocation(savedProgress.userLocation);
+          }
+          if (savedProgress.currentStep) {
+            setCurrentStep(savedProgress.currentStep as any);
+          }
+        }
+
+        // AI-powered location detection for personalization
+        const location = savedProgress?.userLocation || await aiLocationService.detectLocation();
         setUserLocation(location);
         
-        // Generate initial content for student type (will update when user selects type)
-        const content = await aiLocationService.generateLocalizedContent(location, 'student');
+        // Generate fully personalized AI content based on complete user profile
+        const userType = savedProgress?.userProfile?.userType || 'student';
+        const content = await aiLocationService.generateLocalizedContent(location, userType);
         setAiContent(content);
+
+        // Save progress to database for cross-device synchronization
+        if (savedProgress) {
+          CookieManager.saveProgress({
+            currentStep: currentStep,
+            userProfile: userProfile,
+            userLocation: location,
+            timestamp: Date.now()
+          });
+        }
       } catch (error) {
-        console.warn('Failed to initialize AI content:', error);
-        // Fallback to hardcoded content if AI fails
+        console.warn('Failed to initialize personalized onboarding:', error);
+        // Use intelligent fallback with basic personalization
+        const fallbackLocation = { country: 'Global', countryCode: 'GL', continent: 'Global', timezone: 'UTC' };
+        setUserLocation(fallbackLocation);
+        
+        const fallbackContent = await aiLocationService.generateLocalizedContent(fallbackLocation, 'student');
+        setAiContent(fallbackContent);
       } finally {
         setIsLoadingLocation(false);
       }
     };
 
-    initializeAIContent();
-  }, []);
+    initializeOnboarding();
+  }, [hasRestoredProgress]);
 
   // Auto-rotate success stories continuously using AI-generated content
   useEffect(() => {
@@ -252,6 +294,33 @@ export default function OnboardPage() {
   const handleNext = async () => {
     setError('');
     
+    // Build updated profile for conditional AI analysis
+    const updatedProfile = { ...userProfile };
+    if (currentStep === STEPS.FIRST_NAME) updatedProfile.firstName = currentInput;
+    if (currentStep === STEPS.LAST_NAME) updatedProfile.lastName = currentInput;
+    if (currentStep === STEPS.EMAIL) updatedProfile.email = currentInput;
+    if (currentStep === STEPS.PASSWORD) updatedProfile.password = currentInput;
+    if (currentStep === STEPS.COUNTRY) updatedProfile.country = currentInput;
+
+    // AI-powered conditional step analysis BEFORE proceeding
+    const userContext = {
+      profile: updatedProfile,
+      location: userLocation,
+      currentStep: currentStep,
+      previousAnswers: {},
+      timestamp: Date.now()
+    };
+
+    // Use conditional AI engine to analyze and modify next step
+    const conditionalStep = ConditionalAIEngine.analyzeUserContext(userContext);
+    
+    // Validate current input based on AI-generated validation
+    if (conditionalStep.validation && !conditionalStep.validation(currentInput)) {
+      setError(`Please provide valid input - ${conditionalStep.subtitle}`);
+      return;
+    }
+
+    // Standard validation with AI-enhanced error messages
     if (currentStep === STEPS.FIRST_NAME) {
       if (!validateName(currentInput)) {
         setError('Please enter at least 2 characters for your first name');
@@ -293,6 +362,41 @@ export default function OnboardPage() {
       setCurrentStep(STEPS.USER_TYPE);
       setCurrentInput('');
     }
+
+    // CRITICAL: Save comprehensive data for AI bot training after each step
+    const behaviorData = {
+      user_id: updatedProfile.email || 'anonymous',
+      action: `completed_step_${currentStep}`,
+      page: 'onboarding',
+      metadata: {
+        stepData: currentInput,
+        profileSoFar: updatedProfile,
+        locationData: userLocation,
+        aiAnalysis: conditionalStep,
+        timestamp: Date.now(),
+        userAgent: navigator.userAgent,
+        timeSpent: Date.now() - (userContext.timestamp || Date.now())
+      }
+    };
+
+    // Track behavior for AI bot training
+    try {
+      await fetch('/api/personalization/track-behavior', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(behaviorData)
+      });
+    } catch (error) {
+      console.warn('Behavior tracking failed:', error);
+    }
+
+    // Save progress with enhanced data collection
+    CookieManager.saveProgress({
+      currentStep: currentStep,
+      userProfile: updatedProfile,
+      userLocation: userLocation,
+      timestamp: Date.now()
+    });
   };
 
   const handleCountrySelect = (country: string) => {
@@ -380,72 +484,30 @@ export default function OnboardPage() {
     alert(`Social login with ${provider} will be implemented here`);
   };
 
-  // AI-Powered Success Stories Sidebar Component - repositioned to bottom-right
-  const SuccessStoriesSidebar = () => {
+  // Horizontal Running Text Footer for Success Stories
+  const SuccessStoriesFooter = () => {
     const stories = aiContent?.successStories || successStories;
-    const currentStory = stories[currentStoryIndex];
-    
+    const allStoriesText = stories.map(story => 
+      `${story.name} from ${(story as any).location || userLocation?.country || 'Global'} secured ${story.amount} • ${story.achievement}`
+    ).join(' • ');
+
     return (
-      <div className="fixed bottom-6 right-6 w-72 z-40 pointer-events-none">
-        {isLoadingLocation ? (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="bg-gray-800/90 p-4 rounded-xl shadow-2xl backdrop-blur-sm border border-gray-600 pointer-events-auto"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
-              <span className="text-white text-sm">Loading local success stories...</span>
-            </div>
-            {userLocation && (
-              <div className="mt-2 text-xs text-gray-300">
-                Detected: {userLocation.country}
-              </div>
-            )}
-          </motion.div>
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStoryIndex}
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -50, scale: 0.9 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className={`bg-gradient-to-br ${currentStory.color} p-4 rounded-xl shadow-2xl backdrop-blur-sm border border-white/20 pointer-events-auto`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-2xl">{currentStory.image}</div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-white">{currentStory.amount}</div>
-                  <div className="text-white/80 text-xs">Secured</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-lg font-bold text-white">{currentStory.name}</h3>
-                {userLocation && (
-                  <span className="text-xs bg-black/20 text-white px-2 py-1 rounded-full">
-                    {(currentStory as any).location || userLocation.country}
-                  </span>
-                )}
-              </div>
-              <p className="text-white/90 text-xs mb-2">{currentStory.type}</p>
-              <p className="text-white font-medium mb-2 text-xs leading-tight">{currentStory.achievement}</p>
-              <p className="text-white/90 italic text-xs">"{currentStory.quote}"</p>
-              
-              <div className="flex justify-center mt-3 space-x-1">
-                {stories.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-1 rounded-full transition-all duration-300 ${
-                      index === currentStoryIndex ? 'bg-white w-4' : 'bg-white/50 w-1'
-                    }`}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        )}
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-900/80 via-blue-900/80 to-green-900/80 backdrop-blur-sm z-30 py-3 overflow-hidden">
+        <motion.div
+          className="whitespace-nowrap text-white font-medium text-sm"
+          animate={{ x: [1200, -1200] }}
+          transition={{
+            duration: 60,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        >
+          {isLoadingLocation ? (
+            <span className="text-green-300">🌍 Loading success stories from {userLocation?.country || 'your region'}...</span>
+          ) : (
+            <span>{allStoriesText}</span>
+          )}
+        </motion.div>
       </div>
     );
   };
@@ -517,8 +579,7 @@ export default function OnboardPage() {
                 onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && handleNext()}
                 placeholder={placeholder}
                 type={showToggle && !showPassword ? 'password' : 'text'}
-                className="mb-4 bg-gray-800/50 border-gray-600 text-white text-lg p-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 pr-12"
-                autoFocus
+                className="mb-4 bg-gray-800/50 border-gray-600 text-white text-lg p-4 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 pr-12 transition-colors duration-300"
               />
               
               {showToggle && (
@@ -1261,8 +1322,8 @@ export default function OnboardPage() {
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-green-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
       </div>
       
-      {/* Success Stories Sidebar - only show after welcome screen */}
-      {currentStep !== STEPS.WELCOME && <SuccessStoriesSidebar />}
+      {/* Success Stories Footer - only show after welcome screen */}
+      {currentStep !== STEPS.WELCOME && <SuccessStoriesFooter />}
       
       <div className="w-full relative z-10">
         <AnimatePresence mode="wait">

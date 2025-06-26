@@ -272,9 +272,69 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: z.string().min(6),
 });
 
+// User Behavior Tracking for AI bot training
+export const userBehaviorTracking = pgTable("user_behavior_tracking", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  action: varchar("action").notNull(),
+  page: varchar("page").notNull(),
+  metadata: jsonb("metadata"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Comprehensive User Personalization for AI bot training
+export const userPersonalization = pgTable("user_personalization", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).unique(),
+  // Visual personalization
+  themeColors: jsonb("theme_colors"),
+  preferredLayout: text("preferred_layout"),
+  // Content personalization
+  contentPreferences: jsonb("content_preferences"),
+  fundingInterests: text("funding_interests").array(),
+  communicationStyle: text("communication_style"),
+  // AI bot training data
+  botTrainingData: jsonb("bot_training_data"),
+  learningInsights: jsonb("learning_insights"),
+  systemAdaptations: jsonb("system_adaptations"),
+  // Behavioral patterns
+  activityPatterns: jsonb("activity_patterns"),
+  successPatterns: jsonb("success_patterns"),
+  preferredFundingTypes: text("preferred_funding_types").array(),
+  targetSectors: text("target_sectors").array(),
+  // Location and demographic insights
+  locationInsights: jsonb("location_insights"),
+  demographicProfile: jsonb("demographic_profile"),
+  // Engagement metrics
+  engagementScore: decimal("engagement_score").default("0"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Personal AI Bot instances - one per user
+export const personalAIBots = pgTable("personal_ai_bots", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).unique(),
+  botName: text("bot_name").notNull(),
+  personality: jsonb("personality"),
+  learningModel: jsonb("learning_model"),
+  trainingData: jsonb("training_data"),
+  performanceMetrics: jsonb("performance_metrics"),
+  specializations: text("specializations").array(),
+  isActive: boolean("is_active").default(true),
+  lastTraining: timestamp("last_training").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type SavedPaymentMethod = typeof savedPaymentMethods.$inferSelect;
 export type InsertSavedPaymentMethod = typeof savedPaymentMethods.$inferInsert;
 export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
 export type InsertPaymentTransaction = typeof paymentTransactions.$inferInsert;
+export type UserBehaviorTracking = typeof userBehaviorTracking.$inferSelect;
+export type InsertUserBehaviorTracking = typeof userBehaviorTracking.$inferInsert;
+export type UserPersonalization = typeof userPersonalization.$inferSelect;
+export type InsertUserPersonalization = typeof userPersonalization.$inferInsert;
+export type PersonalAIBot = typeof personalAIBots.$inferSelect;
+export type InsertPersonalAIBot = typeof personalAIBots.$inferInsert;

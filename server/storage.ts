@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { eq, desc } from "drizzle-orm";
-import { users, organizations, donors, donorCalls, proposals, projects, aiInteractions, donorOpportunities, searchBots, botRewards, searchTargets, opportunityVerifications, searchStatistics, userInteractions, creditTransactions, systemSettings, type User, type InsertUser } from "@shared/schema";
+import { users, organizations, donors, donorCalls, proposals, projects, aiInteractions, donorOpportunities, searchBots, botRewards, searchTargets, opportunityVerifications, searchStatistics, userInteractions, creditTransactions, systemSettings, userBehaviorTracking, userPersonalization, personalAIBots, type User, type InsertUser } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
 
 if (!process.env.DATABASE_URL) {
@@ -33,6 +33,14 @@ export interface IStorage {
     page?: string;
     details?: any;
   }): Promise<any>;
+
+  // Comprehensive data collection for AI bot training
+  trackUserBehavior(behaviorData: any): Promise<void>;
+  saveUserPersonalization(personalizationData: any): Promise<void>;
+  getUserPersonalization(userId: string): Promise<any>;
+  createPersonalAIBot(botData: any): Promise<void>;
+  getUserPersonalBot(userId: string): Promise<any>;
+  updateBotTrainingData(userId: string, newData: any): Promise<void>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -478,6 +486,122 @@ export class PostgresStorage implements IStorage {
     } catch (error) {
       console.error('Error creating user interaction:', error);
       throw error;
+    }
+  }
+
+  // Comprehensive data collection for AI bot training
+  async trackUserBehavior(behaviorData: any): Promise<void> {
+    try {
+      await db.insert(userBehaviorTracking).values({
+        userId: behaviorData.userId,
+        action: behaviorData.action,
+        page: behaviorData.page,
+        metadata: behaviorData.metadata,
+        timestamp: behaviorData.timestamp || new Date()
+      });
+    } catch (error) {
+      console.error('Error tracking user behavior:', error);
+      // Store in memory for training if DB fails
+      this.storeBehaviorInMemory(behaviorData);
+    }
+  }
+
+  async saveUserPersonalization(personalizationData: any): Promise<void> {
+    try {
+      await db.insert(userPersonalization).values({
+        userId: personalizationData.userId,
+        themeColors: personalizationData.themeColors,
+        contentPreferences: personalizationData.contentPreferences,
+        botTrainingData: personalizationData.botTrainingData,
+        learningInsights: personalizationData.learningInsights,
+        systemAdaptations: personalizationData.systemAdaptations
+      });
+    } catch (error) {
+      console.error('Error saving user personalization:', error);
+    }
+  }
+
+  async getUserPersonalization(userId: string): Promise<any> {
+    try {
+      const [result] = await db.select().from(userPersonalization)
+        .where(eq(userPersonalization.userId, userId));
+      return result;
+    } catch (error) {
+      console.error('Error getting user personalization:', error);
+      return null;
+    }
+  }
+
+  async createPersonalAIBot(botData: any): Promise<void> {
+    try {
+      await db.insert(personalAIBots).values({
+        userId: botData.userId,
+        botName: botData.botName,
+        personality: botData.personality,
+        trainingData: botData.trainingData,
+        specializations: botData.specializations,
+        learningModel: JSON.stringify({
+          version: '1.0',
+          created: new Date().toISOString(),
+          dataPoints: 0,
+          accuracy: 0
+        }),
+        performanceMetrics: JSON.stringify({
+          recommendationsGiven: 0,
+          userSatisfaction: 0,
+          successfulMatches: 0
+        })
+      });
+    } catch (error) {
+      console.error('Error creating personal AI bot:', error);
+    }
+  }
+
+  async getUserPersonalBot(userId: string): Promise<any> {
+    try {
+      const [result] = await db.select().from(personalAIBots)
+        .where(eq(personalAIBots.userId, userId));
+      return result;
+    } catch (error) {
+      console.error('Error getting user personal bot:', error);
+      return null;
+    }
+  }
+
+  async updateBotTrainingData(userId: string, newData: any): Promise<void> {
+    try {
+      const existingBot = await this.getUserPersonalBot(userId);
+      if (existingBot) {
+        const updatedTrainingData = {
+          ...JSON.parse(existingBot.trainingData || '{}'),
+          ...newData,
+          lastUpdate: new Date().toISOString()
+        };
+
+        await db.update(personalAIBots)
+          .set({
+            trainingData: JSON.stringify(updatedTrainingData),
+            lastTraining: new Date()
+          })
+          .where(eq(personalAIBots.userId, userId));
+      }
+    } catch (error) {
+      console.error('Error updating bot training data:', error);
+    }
+  }
+
+  // Helper method for memory storage when DB fails
+  private behaviorMemory: any[] = [];
+  
+  private storeBehaviorInMemory(behaviorData: any): void {
+    this.behaviorMemory.push({
+      ...behaviorData,
+      storedAt: new Date()
+    });
+    
+    // Keep only last 1000 entries in memory
+    if (this.behaviorMemory.length > 1000) {
+      this.behaviorMemory = this.behaviorMemory.slice(-1000);
     }
   }
 }
