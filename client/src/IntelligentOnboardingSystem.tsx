@@ -24,6 +24,7 @@ export default function IntelligentOnboardingSystem() {
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [userLocation, setUserLocation] = useState<any>(null);
+  const [stepIndex, setStepIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize error handling system
@@ -108,6 +109,7 @@ export default function IntelligentOnboardingSystem() {
       const hasNext = intelligentOnboarding.advanceStep();
       if (hasNext) {
         setCurrentStep(intelligentOnboarding.getNextStep());
+        setStepIndex(prev => prev + 1);
         setCurrentInput('');
         setShowDropdown(false);
       } else {
