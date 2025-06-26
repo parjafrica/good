@@ -38,25 +38,25 @@ const conversationFlow: Array<{
 }> = [
   {
     id: 'welcome',
-    message: "👋 Welcome to Granada OS! I'm your funding expert assistant. I'll help you set up your profile so we can find the perfect funding opportunities for you. What's your first name?",
+    message: "Hello! I'm here to help you connect with the right funding opportunities. Let's start by getting to know you and your organization. What's your first name?",
     field: 'firstName',
     inputType: 'text'
   },
   {
     id: 'lastName',
-    message: "Nice to meet you, {firstName}! What's your last name?",
+    message: "Thank you, {firstName}. And your last name?",
     field: 'lastName',
     inputType: 'text'
   },
   {
     id: 'email',
-    message: "Perfect! What's your email address so we can keep you updated on opportunities?",
+    message: "Thanks. I'll need your email to send you matching funding opportunities. What's your email address?",
     field: 'email',
     inputType: 'text'
   },
   {
     id: 'organizationType',
-    message: "Great! Now, what type of organization do you represent?",
+    message: "Now let's discuss your organization. What type of organization do you work with?",
     field: 'organizationType',
     inputType: 'select',
     options: [
@@ -74,19 +74,19 @@ const conversationFlow: Array<{
   },
   {
     id: 'organizationName',
-    message: "Excellent! What's the name of your organization?",
+    message: "What's the name of your organization?",
     field: 'organizationName',
     inputType: 'text'
   },
   {
     id: 'position',
-    message: "And what's your position or role at {organizationName}?",
+    message: "What's your role at {organizationName}?",
     field: 'position',
     inputType: 'text'
   },
   {
     id: 'country',
-    message: "Where is your organization based? Which country?",
+    message: "Which country is your organization based in?",
     field: 'country',
     inputType: 'select',
     options: [
@@ -171,7 +171,7 @@ const conversationFlow: Array<{
   },
   {
     id: 'complete',
-    message: "🎉 Perfect! I have everything I need. Based on your profile, I can already see some great funding opportunities that match your work in {focusSectors} and your experience level. Ready to explore your personalized dashboard?",
+    message: "Thank you, {firstName}. I now have a complete picture of your organization and funding needs. Based on your work in {focusSectors} and {fundingExperience} experience level, I've identified several matching opportunities in our database. Let's get you started with your personalized dashboard.",
     field: null,
     inputType: 'complete'
   }
@@ -199,6 +199,7 @@ export default function OnboardPage() {
   });
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -210,9 +211,12 @@ export default function OnboardPage() {
   }, [messages]);
 
   useEffect(() => {
-    // Start conversation
-    addBotMessage(conversationFlow[0].message);
-  }, []);
+    // Start conversation only once
+    if (!isInitialized) {
+      setIsInitialized(true);
+      addBotMessage(conversationFlow[0].message);
+    }
+  }, [isInitialized]);
 
   const addBotMessage = (content: string) => {
     setIsTyping(true);
