@@ -89,7 +89,7 @@ const Header: React.FC = () => {
       const country = realDonorSearchEngine.getUserCountry();
       if (country) {
         setUserCountry(country);
-        const countryCode = realDonorSearchEngine.getCountryCode(country);
+        const countryCode = realDonorSearchEngine.getCountryCode();
         setCountryFlag(realDonorSearchEngine.getFlagEmoji(countryCode));
         return;
       }

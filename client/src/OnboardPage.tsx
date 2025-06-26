@@ -1,652 +1,457 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { CheckCircle, ArrowRight, ArrowLeft, User, Building, Target, MapPin } from 'lucide-react';
-import { useAuth } from './contexts/AuthContext';
+import { Send, Bot, User, Sparkles, ArrowRight } from 'lucide-react';
 
-interface OnboardingFormData {
+interface Message {
+  id: string;
+  type: 'bot' | 'user';
+  content: string;
+  timestamp: Date;
+  options?: string[];
+  inputType?: 'text' | 'select' | 'multiselect';
+}
+
+interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
   organizationType: string;
   organizationName: string;
   position: string;
-  organizationSize: string;
   country: string;
-  region: string;
   focusSectors: string[];
   fundingExperience: string;
   annualBudget: string;
-  primaryFundingGoals: string[];
+  primaryGoals: string[];
   currentProjects: string;
-  challengesFaced: string;
-  successMetrics: string;
+  challenges: string;
 }
 
-const steps = [
-  { id: 1, title: 'Personal Info', icon: User, description: 'Tell us about yourself' },
-  { id: 2, title: 'Organization', icon: Building, description: 'Your organization details' },
-  { id: 3, title: 'Focus Areas', icon: Target, description: 'What sectors do you work in?' },
-  { id: 4, title: 'Funding Goals', icon: MapPin, description: 'Your funding objectives' },
-];
-
-const organizationTypes = [
-  'Non-Profit Organization',
-  'Social Enterprise',
-  'Community Group',
-  'Research Institution',
-  'Educational Institution',
-  'Healthcare Organization',
-  'Environmental Organization',
-  'Human Rights Organization',
-  'Development Agency',
-  'Government Agency',
-  'International NGO',
-  'Faith-Based Organization',
-  'Other'
-];
-
-const organizationSizes = [
-  '1-5 employees',
-  '6-20 employees',
-  '21-50 employees',
-  '51-200 employees',
-  '201-500 employees',
-  '500+ employees'
-];
-
-const countries = [
-  'Uganda', 'Kenya', 'South Sudan', 'Tanzania', 'Rwanda', 'Ethiopia', 'Somalia', 'Burundi',
-  'Democratic Republic of Congo', 'Sudan', 'South Africa', 'Nigeria', 'Ghana', 'Senegal',
-  'Mali', 'Burkina Faso', 'Niger', 'Chad', 'Central African Republic', 'Cameroon',
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
-  'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Switzerland', 'Other'
-];
-
-const sectors = [
-  'Education', 'Healthcare', 'Water & Sanitation', 'Agriculture', 'Environment',
-  'Human Rights', 'Gender Equality', 'Youth Development', 'Economic Development',
-  'Technology', 'Research', 'Arts & Culture', 'Emergency Response', 'Peacebuilding',
-  'Governance', 'Infrastructure', 'Energy', 'Food Security', 'Climate Change'
-];
-
-const fundingExperienceLevels = [
-  'New to grant writing (0-1 years)',
-  'Some experience (1-3 years)',
-  'Experienced (3-7 years)',
-  'Very experienced (7+ years)',
-  'Expert level (10+ years)'
-];
-
-const budgetRanges = [
-  'Under $10,000',
-  '$10,000 - $50,000',
-  '$50,000 - $100,000',
-  '$100,000 - $500,000',
-  '$500,000 - $1M',
-  'Over $1M'
-];
-
-const fundingGoals = [
-  'Program Expansion', 'Capacity Building', 'Research & Development', 'Infrastructure',
-  'Emergency Response', 'Community Development', 'Advocacy & Policy', 'Technology Innovation',
-  'Partnership Development', 'Sustainability Projects', 'Training & Education'
+const conversationFlow: Array<{
+  id: string;
+  message: string;
+  field: string | null;
+  inputType: 'text' | 'select' | 'multiselect' | 'complete';
+  options?: string[];
+}> = [
+  {
+    id: 'welcome',
+    message: "👋 Welcome to Granada OS! I'm your funding expert assistant. I'll help you set up your profile so we can find the perfect funding opportunities for you. What's your first name?",
+    field: 'firstName',
+    inputType: 'text'
+  },
+  {
+    id: 'lastName',
+    message: "Nice to meet you, {firstName}! What's your last name?",
+    field: 'lastName',
+    inputType: 'text'
+  },
+  {
+    id: 'email',
+    message: "Perfect! What's your email address so we can keep you updated on opportunities?",
+    field: 'email',
+    inputType: 'text'
+  },
+  {
+    id: 'organizationType',
+    message: "Great! Now, what type of organization do you represent?",
+    field: 'organizationType',
+    inputType: 'select',
+    options: [
+      'Non-Profit Organization',
+      'NGO',
+      'Community Based Organization',
+      'Faith-Based Organization',
+      'Social Enterprise',
+      'Educational Institution',
+      'Healthcare Organization',
+      'Research Institution',
+      'Government Agency',
+      'Other'
+    ]
+  },
+  {
+    id: 'organizationName',
+    message: "Excellent! What's the name of your organization?",
+    field: 'organizationName',
+    inputType: 'text'
+  },
+  {
+    id: 'position',
+    message: "And what's your position or role at {organizationName}?",
+    field: 'position',
+    inputType: 'text'
+  },
+  {
+    id: 'country',
+    message: "Where is your organization based? Which country?",
+    field: 'country',
+    inputType: 'select',
+    options: [
+      'Kenya', 'Uganda', 'South Sudan', 'Tanzania', 'Rwanda', 'Burundi', 'Ethiopia', 'Somalia',
+      'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Netherlands',
+      'Sweden', 'Norway', 'Denmark', 'Switzerland', 'Other'
+    ]
+  },
+  {
+    id: 'focusSectors',
+    message: "Which sectors does your organization focus on? You can select multiple areas:",
+    field: 'focusSectors',
+    inputType: 'multiselect',
+    options: [
+      'Health & Medical',
+      'Education',
+      'Environment',
+      'Agriculture',
+      'Water & Sanitation',
+      'Human Rights',
+      'Women & Gender',
+      'Youth Development',
+      'Community Development',
+      'Emergency Relief',
+      'Poverty Alleviation',
+      'Technology & Innovation'
+    ]
+  },
+  {
+    id: 'fundingExperience',
+    message: "How would you describe your experience with securing funding?",
+    field: 'fundingExperience',
+    inputType: 'select',
+    options: [
+      'Beginner (0-2 years)',
+      'Intermediate (3-5 years)',
+      'Advanced (6-10 years)',
+      'Expert (10+ years)'
+    ]
+  },
+  {
+    id: 'annualBudget',
+    message: "What's your organization's approximate annual budget range?",
+    field: 'annualBudget',
+    inputType: 'select',
+    options: [
+      'Under $10,000',
+      '$10,000 - $50,000',
+      '$50,000 - $100,000',
+      '$100,000 - $500,000',
+      '$500,000 - $1M',
+      'Over $1M'
+    ]
+  },
+  {
+    id: 'primaryGoals',
+    message: "What are your primary funding goals? Select all that apply:",
+    field: 'primaryGoals',
+    inputType: 'multiselect',
+    options: [
+      'Start new programs',
+      'Expand existing programs',
+      'Infrastructure development',
+      'Capacity building',
+      'Research projects',
+      'Emergency response',
+      'Sustainability initiatives',
+      'Technology adoption'
+    ]
+  },
+  {
+    id: 'currentProjects',
+    message: "Tell me about your current projects and initiatives. What are you working on?",
+    field: 'currentProjects',
+    inputType: 'text'
+  },
+  {
+    id: 'challenges',
+    message: "What are the main challenges you face when seeking funding? This helps me understand how to better assist you.",
+    field: 'challenges',
+    inputType: 'text'
+  },
+  {
+    id: 'complete',
+    message: "🎉 Perfect! I have everything I need. Based on your profile, I can already see some great funding opportunities that match your work in {focusSectors} and your experience level. Ready to explore your personalized dashboard?",
+    field: null,
+    inputType: 'complete'
+  }
 ];
 
 export default function OnboardPage() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
-  const [, setLocation] = useLocation();
-  const { user } = useAuth();
-
-  const form = useForm<OnboardingFormData>({
-    resolver: zodResolver(onboardingSchema),
-    defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || '',
-      phone: '',
-      organizationType: '',
-      organizationName: '',
-      position: '',
-      organizationSize: '',
-      country: '',
-      region: '',
-      focusSectors: [],
-      fundingExperience: '',
-      annualBudget: '',
-      primaryFundingGoals: [],
-      currentProjects: '',
-      challengesFaced: '',
-      successMetrics: ''
-    }
+  const navigate = useNavigate();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentInput, setCurrentInput] = useState('');
+  const [currentStep, setCurrentStep] = useState(0);
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    organizationType: '',
+    organizationName: '',
+    position: '',
+    country: '',
+    focusSectors: [],
+    fundingExperience: '',
+    annualBudget: '',
+    primaryGoals: [],
+    currentProjects: '',
+    challenges: ''
   });
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const nextStep = async () => {
-    const fieldsToValidate = getFieldsForStep(currentStep);
-    const isValid = await form.trigger(fieldsToValidate);
-    
-    if (isValid && currentStep < 4) {
-      setCurrentStep(currentStep + 1);
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    // Start conversation
+    addBotMessage(conversationFlow[0].message);
+  }, []);
+
+  const addBotMessage = (content: string) => {
+    setIsTyping(true);
+    setTimeout(() => {
+      const processedContent = processMessageTemplate(content);
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: processedContent,
+        timestamp: new Date(),
+        options: conversationFlow[currentStep]?.options,
+        inputType: conversationFlow[currentStep]?.inputType as 'text' | 'select' | 'multiselect'
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setIsTyping(false);
+    }, 1000 + Math.random() * 1000); // Random typing delay
   };
 
-  const getFieldsForStep = (step: number): (keyof OnboardingFormData)[] => {
-    switch (step) {
-      case 1:
-        return ['firstName', 'lastName', 'email'];
-      case 2:
-        return ['organizationType', 'organizationName', 'position', 'organizationSize'];
-      case 3:
-        return ['country', 'focusSectors'];
-      case 4:
-        return ['fundingExperience', 'annualBudget', 'primaryFundingGoals', 'currentProjects', 'challengesFaced'];
-      default:
-        return [];
-    }
+  const addUserMessage = (content: string) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, newMessage]);
   };
 
-  const onSubmit = async (data: OnboardingFormData) => {
-    try {
-      // Update form data with selected arrays
-      data.focusSectors = selectedSectors;
-      data.primaryFundingGoals = selectedGoals;
-
-      // Save onboarding data to backend
-      const response = await fetch('/api/user/onboard', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        console.log('Onboarding completed successfully');
-        setLocation('/dashboard');
+  const processMessageTemplate = (message: string) => {
+    let processed = message;
+    Object.entries(userProfile).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        processed = processed.replace(`{${key}}`, value.join(', '));
       } else {
-        console.error('Error saving onboarding data');
+        processed = processed.replace(`{${key}}`, value || '');
       }
-    } catch (error) {
-      console.error('Error submitting onboarding data:', error);
+    });
+    return processed;
+  };
+
+  const handleSubmit = () => {
+    if (!currentInput.trim() && selectedOptions.length === 0) return;
+
+    const currentFlow = conversationFlow[currentStep];
+    let responseText = '';
+    let newProfileData = { ...userProfile };
+
+    if (currentFlow.inputType === 'multiselect') {
+      responseText = selectedOptions.join(', ');
+      newProfileData[currentFlow.field as keyof UserProfile] = selectedOptions as any;
+    } else if (currentFlow.inputType === 'select') {
+      responseText = currentInput;
+      newProfileData[currentFlow.field as keyof UserProfile] = currentInput as any;
+    } else if (currentFlow.inputType === 'text') {
+      responseText = currentInput;
+      newProfileData[currentFlow.field as keyof UserProfile] = currentInput as any;
+    }
+
+    if (responseText) {
+      addUserMessage(responseText);
+      setUserProfile(newProfileData);
+    }
+
+    // Move to next step
+    const nextStep = currentStep + 1;
+    if (nextStep < conversationFlow.length) {
+      setCurrentStep(nextStep);
+      setTimeout(() => {
+        addBotMessage(conversationFlow[nextStep].message);
+      }, 1500);
+    }
+
+    // Reset inputs
+    setCurrentInput('');
+    setSelectedOptions([]);
+  };
+
+  const handleOptionSelect = (option: string) => {
+    const currentFlow = conversationFlow[currentStep];
+    if (currentFlow.inputType === 'multiselect') {
+      setSelectedOptions(prev => 
+        prev.includes(option) 
+          ? prev.filter(o => o !== option)
+          : [...prev, option]
+      );
+    } else {
+      setCurrentInput(option);
     }
   };
 
-  const toggleSector = (sector: string) => {
-    const updated = selectedSectors.includes(sector)
-      ? selectedSectors.filter(s => s !== sector)
-      : [...selectedSectors, sector];
-    setSelectedSectors(updated);
-    form.setValue('focusSectors', updated);
+  const handleComplete = () => {
+    console.log('Onboarding completed:', userProfile);
+    navigate('/dashboard');
   };
 
-  const toggleGoal = (goal: string) => {
-    const updated = selectedGoals.includes(goal)
-      ? selectedGoals.filter(g => g !== goal)
-      : [...selectedGoals, goal];
-    setSelectedGoals(updated);
-    form.setValue('primaryFundingGoals', updated);
-  };
-
-  const progress = (currentStep / 4) * 100;
+  const currentFlow = conversationFlow[currentStep];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Welcome to Granada OS
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* Header */}
+      <div className="bg-gray-900 border-b border-gray-800 p-4">
+        <div className="flex items-center justify-center">
+          <Sparkles className="w-6 h-6 text-purple-400 mr-2" />
+          <h1 className="text-xl font-semibold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            Granada OS Setup
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300">
-            Let's get to know you and your organization better
-          </p>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="flex items-center justify-between mb-4">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all ${
-                  currentStep >= step.id
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500'
-                }`}>
-                  {currentStep > step.id ? (
-                    <CheckCircle className="w-6 h-6" />
-                  ) : (
-                    <step.icon className="w-6 h-6" />
-                  )}
-                </div>
-                {index < steps.length - 1 && (
-                  <div className={`h-1 w-24 mx-4 transition-all ${
-                    currentStep > step.id ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-
-        {/* Form Content */}
-        <div className="max-w-4xl mx-auto">
-          <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-gray-900 dark:text-white">
-                {steps[currentStep - 1]?.title}
-              </CardTitle>
-              <CardDescription className="text-lg">
-                {steps[currentStep - 1]?.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  
-                  {/* Step 1: Personal Information */}
-                  {currentStep === 1 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="firstName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>First Name *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your first name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Name *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your last name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email Address *</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="Enter your email address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone Number (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your phone number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* Step 2: Organization Information */}
-                  {currentStep === 2 && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="organizationType"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Organization Type *</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select organization type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {organizationTypes.map((type) => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="organizationSize"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Organization Size *</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select organization size" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {organizationSizes.map((size) => (
-                                    <SelectItem key={size} value={size}>{size}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="organizationName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Organization Name *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your organization name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="position"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Your Position *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your position/title" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* Step 3: Focus Areas & Location */}
-                  {currentStep === 3 && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="country"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Country *</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select your country" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {countries.map((country) => (
-                                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="region"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Region/State (Optional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter your region or state" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <FormField
-                        control={form.control}
-                        name="focusSectors"
-                        render={() => (
-                          <FormItem>
-                            <FormLabel>Focus Sectors * (Select all that apply)</FormLabel>
-                            <FormDescription>
-                              Choose the sectors your organization works in
-                            </FormDescription>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-                              {sectors.map((sector) => (
-                                <button
-                                  key={sector}
-                                  type="button"
-                                  onClick={() => toggleSector(sector)}
-                                  className={`p-3 text-sm rounded-lg border-2 transition-all ${
-                                    selectedSectors.includes(sector)
-                                      ? 'bg-blue-600 border-blue-600 text-white'
-                                      : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-400'
-                                  }`}
-                                >
-                                  {sector}
-                                </button>
-                              ))}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* Step 4: Funding Goals & Project Details */}
-                  {currentStep === 4 && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="fundingExperience"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Funding Experience *</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select experience level" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {fundingExperienceLevels.map((level) => (
-                                    <SelectItem key={level} value={level}>{level}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="annualBudget"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Annual Budget Range *</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select budget range" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {budgetRanges.map((range) => (
-                                    <SelectItem key={range} value={range}>{range}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="primaryFundingGoals"
-                        render={() => (
-                          <FormItem>
-                            <FormLabel>Primary Funding Goals * (Select all that apply)</FormLabel>
-                            <FormDescription>
-                              What do you primarily seek funding for?
-                            </FormDescription>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-                              {fundingGoals.map((goal) => (
-                                <button
-                                  key={goal}
-                                  type="button"
-                                  onClick={() => toggleGoal(goal)}
-                                  className={`p-3 text-sm rounded-lg border-2 transition-all ${
-                                    selectedGoals.includes(goal)
-                                      ? 'bg-blue-600 border-blue-600 text-white'
-                                      : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-400'
-                                  }`}
-                                >
-                                  {goal}
-                                </button>
-                              ))}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="currentProjects"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Current Projects *</FormLabel>
-                            <FormDescription>
-                              Describe your current projects and initiatives
-                            </FormDescription>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Tell us about your current projects, their scope, and impact..."
-                                className="min-h-[100px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="challengesFaced"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Challenges & Needs *</FormLabel>
-                            <FormDescription>
-                              What challenges do you face in securing funding?
-                            </FormDescription>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Describe the main challenges you face in fundraising and what support you need..."
-                                className="min-h-[100px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="successMetrics"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Success Metrics (Optional)</FormLabel>
-                            <FormDescription>
-                              How do you measure the success of your projects?
-                            </FormDescription>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Describe how you measure impact and success..."
-                                className="min-h-[80px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={prevStep}
-                      disabled={currentStep === 1}
-                      className="flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Previous
-                    </Button>
-                    
-                    {currentStep < 4 ? (
-                      <Button
-                        type="button"
-                        onClick={nextStep}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                      >
-                        Next
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    ) : (
-                      <Button
-                        type="submit"
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                      >
-                        Complete Setup
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
         </div>
       </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div className={`flex items-start space-x-3 max-w-2xl ${
+              message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+            }`}>
+              {/* Avatar */}
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                message.type === 'user' 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500' 
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500'
+              }`}>
+                {message.type === 'user' ? (
+                  <User className="w-4 h-4 text-white" />
+                ) : (
+                  <Bot className="w-4 h-4 text-white" />
+                )}
+              </div>
+
+              {/* Message */}
+              <div className={`rounded-2xl px-4 py-3 ${
+                message.type === 'user'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                  : 'bg-gray-800 text-gray-100'
+              }`}>
+                <p className="text-sm leading-relaxed">{message.content}</p>
+                
+                {/* Options for bot messages */}
+                {message.type === 'bot' && message.options && (
+                  <div className="mt-3 space-y-2">
+                    {message.options.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => handleOptionSelect(option)}
+                        className={`block w-full text-left px-3 py-2 rounded-lg border transition-all ${
+                          (currentFlow.inputType === 'multiselect' && selectedOptions.includes(option)) ||
+                          (currentFlow.inputType === 'select' && currentInput === option)
+                            ? 'border-purple-500 bg-purple-500/20 text-purple-300'
+                            : 'border-gray-600 hover:border-gray-500 hover:bg-gray-700'
+                        }`}
+                      >
+                        <span className="text-sm">{option}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Typing indicator */}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="flex items-start space-x-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+              <div className="bg-gray-800 rounded-2xl px-4 py-3">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      {currentFlow && currentStep < conversationFlow.length - 1 && (
+        <div className="border-t border-gray-800 p-4">
+          {currentFlow.inputType === 'text' && (
+            <div className="flex space-x-3">
+              <Input
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                placeholder="Type your response..."
+                className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-purple-500"
+              />
+              <Button
+                onClick={handleSubmit}
+                disabled={!currentInput.trim()}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
+          {(currentFlow.inputType === 'select' || currentFlow.inputType === 'multiselect') && (
+            <div className="flex justify-center">
+              <Button
+                onClick={handleSubmit}
+                disabled={
+                  (currentFlow.inputType === 'select' && !currentInput) ||
+                  (currentFlow.inputType === 'multiselect' && selectedOptions.length === 0)
+                }
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              >
+                Continue
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Completion */}
+      {currentStep === conversationFlow.length - 1 && (
+        <div className="border-t border-gray-800 p-4">
+          <div className="flex justify-center">
+            <Button
+              onClick={handleComplete}
+              className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 px-8 py-3"
+            >
+              Enter Dashboard
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

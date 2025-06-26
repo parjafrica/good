@@ -28,6 +28,7 @@ import HumanHelpPage from './HumanHelpPage';
 import CreditsPage from './CreditsPage';
 import PurchasePage from './PurchasePage';
 import OnboardPage from './OnboardPage';
+import NotFoundPage from './NotFoundPage';
 import HumanHelpButton from './shared/HumanHelpButton';
 
 import AddictionProvider from './contexts/AddictionContext';
@@ -107,7 +108,7 @@ function App() {
                   <Route path="/purchase/:packageId" element={<PurchasePage />} />
                   <Route path="/credits-purchase/:packageId" element={<CreditsPurchase />} />
                   <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                  {/* Admin route removed */}
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>
             </div>
