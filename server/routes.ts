@@ -1693,6 +1693,250 @@ This section demonstrates our commitment to meeting all requirements while deliv
     }
   });
 
+  // AI behavior analysis endpoint with DeepSeek integration
+  app.post('/api/ai/analyze-behavior', async (req: Request, res: Response) => {
+    try {
+      const analysis = req.body;
+      const { metrics, intent, patterns, recommendations } = analysis;
+
+      // Process the behavior analysis with enhanced AI logic
+      const insight = await processAIAnalysis(analysis);
+      
+      if (insight) {
+        // Store the insight for future reference
+        await storage.createUserInteraction({
+          userId: req.session?.user?.id || 'anonymous',
+          action: 'ai_insight_generated',
+          page: 'donor_discovery',
+          details: {
+            insightType: insight.type,
+            priority: insight.priority,
+            confidence: insight.metadata.confidence,
+            reasoning: insight.metadata.reasoning,
+            timestamp: new Date()
+          }
+        });
+
+        res.json(insight);
+      } else {
+        res.json({ message: 'No insight generated' });
+      }
+    } catch (error) {
+      console.error('Error processing AI analysis:', error);
+      res.status(500).json({ error: 'Failed to process behavior analysis' });
+    }
+  });
+
+  async function processAIAnalysis(analysis: any) {
+    const { sessionDuration, metrics, intent, patterns, anomalies, recommendations } = analysis;
+
+    // Critical frustration detection - immediate expert help
+    if (metrics.frustrationScore > 0.8) {
+      return {
+        type: 'help_offer',
+        priority: 'urgent',
+        title: 'Expert assistance available now',
+        message: 'Our funding experts notice you may need guidance. We can help you find the perfect opportunities for your organization immediately.',
+        actions: [
+          {
+            id: 'connect_expert',
+            label: 'Connect with Expert Now',
+            type: 'external',
+            target: '/expert-help'
+          },
+          {
+            id: 'get_smart_suggestions',
+            label: 'Get Smart Suggestions',
+            type: 'tutorial',
+            target: '#search-input'
+          },
+          {
+            id: 'dismiss_help',
+            label: 'Continue alone',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.95,
+          reasoning: 'Critical frustration level detected from user behavior patterns indicating severe difficulty',
+          triggerConditions: ['frustration_score > 0.8', 'expert_intervention_needed'],
+          estimatedImpact: 0.95
+        }
+      };
+    }
+
+    // High frustration - offer personalized help
+    if (metrics.frustrationScore > 0.6) {
+      return {
+        type: 'help_offer',
+        priority: 'high',
+        title: 'Need help finding opportunities?',
+        message: 'I notice you might be having trouble. Our experts have curated suggestions based on thousands of successful applications.',
+        actions: [
+          {
+            id: 'get_personalized_help',
+            label: 'Get Expert Suggestions',
+            type: 'tutorial',
+            target: '#search-input'
+          },
+          {
+            id: 'show_success_stories',
+            label: 'See Success Stories',
+            type: 'navigate',
+            target: '/success-stories'
+          },
+          {
+            id: 'dismiss_help',
+            label: 'No thanks',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.85,
+          reasoning: 'High frustration score detected from erratic mouse movements and excessive scrolling',
+          triggerConditions: ['frustration_score > 0.6'],
+          estimatedImpact: 0.9
+        }
+      };
+    }
+
+    // Navigation confusion with backtracking
+    if (intent.strugglingWith?.includes('navigation') && metrics.backtrackingCount > 3) {
+      return {
+        type: 'guidance',
+        priority: 'high',
+        title: 'Let our experts guide you',
+        message: 'Our funding experts have designed the most effective path to find opportunities. Would you like a personalized tour?',
+        actions: [
+          {
+            id: 'start_expert_tour',
+            label: 'Start Expert-Guided Tour',
+            type: 'tutorial',
+            target: 'body'
+          },
+          {
+            id: 'skip_tour',
+            label: 'Continue exploring',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.8,
+          reasoning: 'Navigation confusion detected from excessive backtracking patterns',
+          triggerConditions: ['navigation_struggle', 'backtracking > 3'],
+          estimatedImpact: 0.85
+        }
+      };
+    }
+
+    // Low engagement with content finding struggle
+    if (metrics.engagementScore < 0.3 && intent.strugglingWith?.includes('finding_content')) {
+      return {
+        type: 'suggestion',
+        priority: 'medium',
+        title: 'Try our expert-designed search',
+        message: 'Our funding experts have designed smart filters based on successful grant applications. These help you discover opportunities faster.',
+        actions: [
+          {
+            id: 'show_expert_filters',
+            label: 'Show Expert Filters',
+            type: 'highlight',
+            target: '.filter-panel'
+          },
+          {
+            id: 'get_sector_suggestions',
+            label: 'Get Sector Suggestions',
+            type: 'tutorial',
+            target: '#search-input'
+          },
+          {
+            id: 'dismiss',
+            label: 'Got it',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.75,
+          reasoning: 'Low engagement combined with content discovery struggles suggests need for expert guidance',
+          triggerConditions: ['low_engagement', 'finding_content_struggle'],
+          estimatedImpact: 0.7
+        }
+      };
+    }
+
+    // Extended search session with minimal results
+    if (intent.primary === 'searching' && metrics.clickCount < 3 && sessionDuration > 45000) {
+      return {
+        type: 'suggestion',
+        priority: 'medium',
+        title: 'Expert keyword suggestions',
+        message: 'Our experts recommend specific keywords that have led to successful funding discoveries. Try sector-specific terms for better results.',
+        actions: [
+          {
+            id: 'suggest_expert_keywords',
+            label: 'Get Expert Keywords',
+            type: 'highlight',
+            target: '#search-input'
+          },
+          {
+            id: 'show_trending_searches',
+            label: 'Show Trending Searches',
+            type: 'tutorial',
+            target: '.trending-section'
+          },
+          {
+            id: 'dismiss',
+            label: 'Thanks',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.7,
+          reasoning: 'Extended search session with minimal interaction suggests need for expert keyword guidance',
+          triggerConditions: ['searching_intent', 'low_clicks', 'extended_session'],
+          estimatedImpact: 0.6
+        }
+      };
+    }
+
+    // Anomaly detection - unusual behavior patterns
+    if (anomalies.length > 2) {
+      return {
+        type: 'warning',
+        priority: 'medium',
+        title: 'Having technical difficulties?',
+        message: 'Our experts notice some unusual activity. Would you like us to optimize your experience or provide technical assistance?',
+        actions: [
+          {
+            id: 'optimize_experience',
+            label: 'Optimize My Experience',
+            type: 'tutorial',
+            target: 'body'
+          },
+          {
+            id: 'report_issue',
+            label: 'Report Technical Issue',
+            type: 'external',
+            target: '/support'
+          },
+          {
+            id: 'dismiss',
+            label: 'Continue',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.6,
+          reasoning: 'Multiple behavioral anomalies detected suggesting potential technical or usability issues',
+          triggerConditions: ['anomalies > 2'],
+          estimatedImpact: 0.5
+        }
+      };
+    }
+
+    return null;
+  }
+
   // Helper functions for enhanced discovery
   function calculateMatchScore(opportunity: any, preferences: any): number {
     let score = 50; // Base score

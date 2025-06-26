@@ -13,6 +13,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { apiRequest } from './lib/queryClient';
+import RealTimeAnalytics from './services/realTimeAnalytics';
+import AIEngine, { AIInsight, AIAction } from './services/aiEngine';
+import AIGuidancePopup from './shared/AIGuidancePopup';
 
 interface SmartOpportunity {
   id: string;
@@ -69,6 +72,11 @@ const DonorDiscovery: React.FC = () => {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   
+  // AI Intelligence System
+  const [currentInsight, setCurrentInsight] = useState<AIInsight | null>(null);
+  const [analyticsEngine, setAnalyticsEngine] = useState<RealTimeAnalytics | null>(null);
+  const [aiEngine, setAiEngine] = useState<AIEngine | null>(null);
+  
   // Advanced features
   const [searchMetrics, setSearchMetrics] = useState<SearchMetrics>({
     totalSearches: 0,
@@ -80,6 +88,102 @@ const DonorDiscovery: React.FC = () => {
   });
   
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Initialize AI Intelligence System
+  useEffect(() => {
+    const initializeAISystem = async () => {
+      // Initialize real-time analytics
+      const analytics = new RealTimeAnalytics();
+      setAnalyticsEngine(analytics);
+
+      // Initialize AI engine with provided API key
+      const aiEngineInstance = new AIEngine('sk-66bff222cc87452fa4f7222c9fa4ddfd');
+      setAiEngine(aiEngineInstance);
+
+      // Set up insight callback
+      aiEngineInstance.onInsight((insight: AIInsight) => {
+        setCurrentInsight(insight);
+      });
+
+      // Connect analytics to AI engine
+      analytics.onInsight((behaviorData: any) => {
+        aiEngineInstance.analyzeBehavior(behaviorData);
+      });
+
+      console.log('AI Intelligence System initialized with real-time tracking');
+    };
+
+    initializeAISystem();
+
+    // Cleanup on unmount
+    return () => {
+      if (analyticsEngine) {
+        analyticsEngine.destroy();
+      }
+    };
+  }, []);
+
+  // Handle AI action responses
+  const handleAIAction = (action: AIAction) => {
+    switch (action.type) {
+      case 'tutorial':
+        // Highlight or focus the target element
+        if (action.target) {
+          const element = document.querySelector(action.target);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Add highlight effect
+            element.classList.add('ai-highlight');
+            setTimeout(() => element.classList.remove('ai-highlight'), 3000);
+          }
+        }
+        break;
+      
+      case 'navigate':
+        if (action.target) {
+          navigate(action.target);
+        }
+        break;
+      
+      case 'external':
+        if (action.target) {
+          window.open(action.target, '_blank');
+        }
+        break;
+      
+      case 'highlight':
+        if (action.target) {
+          const element = document.querySelector(action.target);
+          if (element) {
+            element.classList.add('ai-highlight-permanent');
+            setTimeout(() => element.classList.remove('ai-highlight-permanent'), 5000);
+          }
+        }
+        break;
+    }
+
+    // Track the action taken
+    trackInteraction.mutate({ 
+      type: 'ai_action_taken', 
+      credits: 1, 
+      data: { 
+        actionId: action.id, 
+        actionType: action.type 
+      } 
+    });
+
+    // Dismiss the insight after action
+    setCurrentInsight(null);
+  };
+
+  // Dismiss AI insight
+  const dismissAIInsight = () => {
+    setCurrentInsight(null);
+    trackInteraction.mutate({ 
+      type: 'ai_insight_dismissed', 
+      credits: 0 
+    });
+  };
 
   // Track user interactions
   const trackInteraction = useMutation({
@@ -451,6 +555,13 @@ const DonorDiscovery: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* AI Guidance Popup */}
+      <AIGuidancePopup
+        insight={currentInsight}
+        onAction={handleAIAction}
+        onDismiss={dismissAIInsight}
+      />
     </div>
   );
 };
