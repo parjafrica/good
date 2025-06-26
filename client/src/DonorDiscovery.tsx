@@ -765,30 +765,30 @@ const DonorDiscovery: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: "spring", duration: 0.4 }}
-              className="bg-white dark:bg-gray-900 rounded-3xl p-6 max-w-sm w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-900 rounded-3xl p-5 max-w-sm w-full shadow-2xl border border-gray-200 dark:border-gray-700"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="relative text-center mb-4">
+              <div className="relative text-center mb-3">
                 <button
                   onClick={() => setShowApplyModal(false)}
                   className="absolute -top-1 -right-1 w-7 h-7 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   <X className="w-3 h-3 text-gray-600 dark:text-gray-400" />
                 </button>
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Zap className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <Zap className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                   How would you like to apply?
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Choose your preferred application method
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Choose your preferred method
                 </p>
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <motion.button
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
