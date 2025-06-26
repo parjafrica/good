@@ -188,6 +188,7 @@ const DonorDiscovery: React.FC = () => {
 
   // Test function to trigger AI insight manually
   const triggerTestInsight = () => {
+    console.log('Test button clicked - creating insight...');
     const testInsight: AIInsight = {
       type: 'guidance',
       priority: 'medium',
@@ -213,8 +214,9 @@ const DonorDiscovery: React.FC = () => {
         estimatedImpact: 1.0
       }
     };
-    console.log('Triggering test insight:', testInsight);
+    console.log('Setting current insight:', testInsight);
     setCurrentInsight(testInsight);
+    console.log('Current insight state after setting:', testInsight);
   };
 
   // Track user interactions
