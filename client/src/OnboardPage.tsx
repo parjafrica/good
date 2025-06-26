@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { ArrowRight, Sparkles, User, Building, DollarSign, CheckCircle, Coffee } from 'lucide-react';
+import { ArrowRight, Sparkles, User, Building, DollarSign, CheckCircle, Star, TrendingUp, Globe, Award, Zap, Heart, Coffee, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface UserProfile {
@@ -10,22 +10,18 @@ interface UserProfile {
   lastName: string;
   email: string;
   userType: 'student' | 'organization' | 'business';
-  // Student fields
   educationLevel?: string;
   fieldOfStudy?: string;
   studyCountry?: string;
-  // Organization fields
   organizationType?: string;
   organizationName?: string;
   position?: string;
   organizationCountry?: string;
-  // Business fields
   businessType?: string;
   businessName?: string;
   businessStage?: string;
   industry?: string;
   businessCountry?: string;
-  // Common
   fundingExperience?: string;
 }
 
@@ -38,10 +34,83 @@ const STEPS = {
   STUDENT_DETAILS: 'studentDetails',
   ORGANIZATION_DETAILS: 'organizationDetails',
   BUSINESS_DETAILS: 'businessDetails',
+  AI_INSIGHTS: 'aiInsights',
+  SUCCESS_STORIES: 'successStories',
   COMPLETION: 'completion'
 };
 
-// Validation functions
+const successStories = [
+  {
+    name: "Sarah Chen",
+    type: "Student",
+    achievement: "Secured $50,000 scholarship for MIT Computer Science",
+    image: "👩‍🎓",
+    quote: "Granada OS helped me find scholarships I never knew existed!"
+  },
+  {
+    name: "Green Valley NGO",
+    type: "Organization",
+    achievement: "Received $250,000 grant for climate education",
+    image: "🌱",
+    quote: "The AI-powered matching was incredible - we found perfect funders."
+  },
+  {
+    name: "TechStart Solutions",
+    type: "Business",
+    achievement: "Raised $2M seed funding through platform connections",
+    image: "🚀",
+    quote: "From idea to funding in 6 months - Granada OS made it possible."
+  }
+];
+
+const aiInsights = {
+  student: {
+    title: "AI-Powered Student Success",
+    insights: [
+      "Smart scholarship matching based on your academic profile",
+      "Deadline tracking with personalized reminders",
+      "Essay optimization with AI writing assistance",
+      "Interview preparation with expert guidance"
+    ],
+    useCases: [
+      "Find scholarships for specific fields of study",
+      "Get matched with international exchange programs",
+      "Access research funding opportunities",
+      "Connect with mentorship programs"
+    ]
+  },
+  organization: {
+    title: "Intelligent Organization Funding",
+    insights: [
+      "AI analysis of grant requirements vs. your mission",
+      "Automated proposal generation and optimization",
+      "Funder relationship mapping and insights",
+      "Impact measurement and reporting tools"
+    ],
+    useCases: [
+      "Secure funding for community development projects",
+      "Find donors for humanitarian initiatives",
+      "Access capacity building grants",
+      "Connect with corporate social responsibility programs"
+    ]
+  },
+  business: {
+    title: "Smart Business Growth Funding",
+    insights: [
+      "Investor matching based on industry and stage",
+      "AI-powered pitch deck optimization",
+      "Market analysis and competitive intelligence",
+      "Financial projections and modeling assistance"
+    ],
+    useCases: [
+      "Raise seed funding for tech startups",
+      "Secure grants for sustainable businesses",
+      "Connect with angel investors and VCs",
+      "Access government innovation programs"
+    ]
+  }
+};
+
 const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -63,6 +132,17 @@ export default function OnboardPage() {
   const [currentInput, setCurrentInput] = useState('');
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+
+  // Auto-rotate success stories
+  useEffect(() => {
+    if (currentStep === STEPS.SUCCESS_STORIES) {
+      const timer = setInterval(() => {
+        setCurrentStoryIndex((prev) => (prev + 1) % successStories.length);
+      }, 4000);
+      return () => clearInterval(timer);
+    }
+  }, [currentStep]);
 
   const updateProfile = (field: keyof UserProfile, value: any) => {
     setUserProfile(prev => ({ ...prev, [field]: value }));
@@ -100,9 +180,13 @@ export default function OnboardPage() {
 
   const handleUserTypeSelect = (type: 'student' | 'organization' | 'business') => {
     updateProfile('userType', type);
-    if (type === 'student') {
+    setCurrentStep(STEPS.AI_INSIGHTS);
+  };
+
+  const proceedToDetails = () => {
+    if (userProfile.userType === 'student') {
       setCurrentStep(STEPS.STUDENT_DETAILS);
-    } else if (type === 'organization') {
+    } else if (userProfile.userType === 'organization') {
       setCurrentStep(STEPS.ORGANIZATION_DETAILS);
     } else {
       setCurrentStep(STEPS.BUSINESS_DETAILS);
@@ -128,7 +212,6 @@ export default function OnboardPage() {
         throw new Error('Failed to save user profile');
       }
 
-      // Navigate to appropriate dashboard based on user type
       setTimeout(() => {
         if (userProfile.userType === 'student') {
           navigate('/student-dashboard');
@@ -137,7 +220,7 @@ export default function OnboardPage() {
         } else {
           navigate('/dashboard');
         }
-      }, 2000);
+      }, 3000);
     } catch (error) {
       console.error('Error saving profile:', error);
       setError('Failed to save profile. Please try again.');
@@ -147,8 +230,11 @@ export default function OnboardPage() {
   };
 
   const finishOnboarding = () => {
-    setCurrentStep(STEPS.COMPLETION);
-    saveToDatabase();
+    setCurrentStep(STEPS.SUCCESS_STORIES);
+    setTimeout(() => {
+      setCurrentStep(STEPS.COMPLETION);
+      saveToDatabase();
+    }, 8000);
   };
 
   const containerVariants = {
@@ -171,50 +257,98 @@ export default function OnboardPage() {
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="text-center max-w-2xl mx-auto"
+      className="text-center max-w-4xl mx-auto"
     >
-      <div className="mb-8">
-        <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-4">
+      <div className="mb-12">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+        >
+          <Sparkles className="w-20 h-20 text-purple-400 mx-auto mb-6" />
+        </motion.div>
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 bg-clip-text text-transparent mb-6">
           Welcome to Granada OS
         </h1>
-        <p className="text-xl text-gray-300 mb-8">
-          Your gateway to funding opportunities worldwide
+        <p className="text-2xl text-gray-300 mb-8">
+          The world's most intelligent funding discovery platform
+        </p>
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          Join thousands of students, organizations, and businesses who have successfully secured over $500M in funding through our AI-powered platform.
         </p>
       </div>
       
-      <div className="bg-gray-800/50 rounded-xl p-8 mb-8">
-        <p className="text-gray-300 text-lg mb-6">
-          Let's get you set up in just a few steps. We'll personalize your experience based on your needs.
-        </p>
-        <div className="flex items-center justify-center space-x-8 text-sm text-gray-400">
-          <div className="flex items-center">
-            <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-            Quick setup
-          </div>
-          <div className="flex items-center">
-            <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-            Personalized experience
-          </div>
-          <div className="flex items-center">
-            <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-            Secure & private
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 p-6 rounded-xl border border-purple-500/30"
+        >
+          <Zap className="w-8 h-8 text-purple-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">AI-Powered Matching</h3>
+          <p className="text-gray-400 text-sm">Our AI analyzes 50,000+ funding opportunities daily to find your perfect matches</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-gradient-to-br from-green-600/20 to-green-800/20 p-6 rounded-xl border border-green-500/30"
+        >
+          <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">97% Success Rate</h3>
+          <p className="text-gray-400 text-sm">Our users are 10x more likely to secure funding compared to traditional methods</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 p-6 rounded-xl border border-blue-500/30"
+        >
+          <Globe className="w-8 h-8 text-blue-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">Global Network</h3>
+          <p className="text-gray-400 text-sm">Access to 15,000+ funders across 180+ countries worldwide</p>
+        </motion.div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="flex items-center justify-center space-x-8 text-sm text-gray-400 mb-8"
+      >
+        <div className="flex items-center">
+          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+          2-minute setup
+        </div>
+        <div className="flex items-center">
+          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+          Personalized AI insights
+        </div>
+        <div className="flex items-center">
+          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+          Secure & private
+        </div>
+        <div className="flex items-center">
+          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+          Free to start
+        </div>
+      </motion.div>
 
       <Button 
         onClick={() => setCurrentStep(STEPS.FIRST_NAME)}
         size="lg"
-        className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 px-8 py-4 text-lg"
+        className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 px-12 py-4 text-lg font-semibold"
       >
-        Let's Get Started
+        Begin Your Journey
         <ArrowRight className="w-5 h-5 ml-2" />
       </Button>
     </motion.div>
   );
 
-  const renderTextInput = (title: string, placeholder: string, value: string) => (
+  const renderTextInput = (title: string, subtitle: string, placeholder: string, value: string) => (
     <motion.div
       variants={containerVariants}
       initial="hidden"
@@ -223,15 +357,15 @@ export default function OnboardPage() {
       className="text-center max-w-md mx-auto"
     >
       <h2 className="text-3xl font-bold text-white mb-2">{title}</h2>
-      <p className="text-gray-400 mb-8">This helps us personalize your experience</p>
+      <p className="text-gray-400 mb-8">{subtitle}</p>
       
-      <div className="bg-gray-800/50 rounded-xl p-8">
+      <div className="bg-gray-800/50 rounded-xl p-8 backdrop-blur-sm">
         <Input
           value={value}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentInput(e.target.value)}
           onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && handleNext()}
           placeholder={placeholder}
-          className="mb-4 bg-gray-700 border-gray-600 text-white text-lg p-4 focus:border-purple-500"
+          className="mb-4 bg-gray-700 border-gray-600 text-white text-lg p-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
           autoFocus
         />
         
@@ -263,60 +397,236 @@ export default function OnboardPage() {
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="text-center max-w-4xl mx-auto"
+      className="text-center max-w-5xl mx-auto"
     >
-      <h2 className="text-3xl font-bold text-white mb-2">
-        Hi {userProfile.firstName}! What brings you here?
+      <h2 className="text-4xl font-bold text-white mb-3">
+        Hi {userProfile.firstName}! What's your funding goal?
       </h2>
-      <p className="text-gray-400 mb-8">Choose the option that best describes you</p>
+      <p className="text-gray-400 mb-12 text-lg">Choose your path to unlock personalized AI insights and opportunities</p>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <motion.button
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ scale: 1.05, y: -10 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handleUserTypeSelect('student')}
-          className="p-8 rounded-xl bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/30 hover:border-purple-400 transition-all text-left group"
+          className="p-8 rounded-2xl bg-gradient-to-br from-purple-600/20 to-purple-800/20 border-2 border-purple-500/30 hover:border-purple-400 transition-all text-left group relative overflow-hidden"
         >
-          <User className="w-12 h-12 text-purple-400 mb-4 group-hover:scale-110 transition-transform" />
-          <h3 className="text-xl font-semibold text-white mb-3">Individual Student</h3>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Seeking scholarships, educational grants, and academic funding opportunities
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-purple-800/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <User className="w-16 h-16 text-purple-400 mb-6 group-hover:scale-110 transition-transform" />
+          <h3 className="text-2xl font-bold text-white mb-4">Individual Student</h3>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            Unlock scholarships, educational grants, and academic funding opportunities worldwide
           </p>
+          <div className="text-left space-y-2">
+            <div className="flex items-center text-purple-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              $2.3B+ in scholarships available
+            </div>
+            <div className="flex items-center text-purple-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              AI essay optimization
+            </div>
+            <div className="flex items-center text-purple-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Interview preparation
+            </div>
+          </div>
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ scale: 1.05, y: -10 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handleUserTypeSelect('organization')}
-          className="p-8 rounded-xl bg-gradient-to-br from-green-600/20 to-green-800/20 border border-green-500/30 hover:border-green-400 transition-all text-left group"
+          className="p-8 rounded-2xl bg-gradient-to-br from-green-600/20 to-green-800/20 border-2 border-green-500/30 hover:border-green-400 transition-all text-left group relative overflow-hidden"
         >
-          <Building className="w-12 h-12 text-green-400 mb-4 group-hover:scale-110 transition-transform" />
-          <h3 className="text-xl font-semibold text-white mb-3">Organization</h3>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            NGO, Non-profit, Community organization seeking institutional funding
+          <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-green-800/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <Building className="w-16 h-16 text-green-400 mb-6 group-hover:scale-110 transition-transform" />
+          <h3 className="text-2xl font-bold text-white mb-4">Organization</h3>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            Access institutional funding for NGOs, non-profits, and community organizations
           </p>
+          <div className="text-left space-y-2">
+            <div className="flex items-center text-green-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              $50B+ in grants available
+            </div>
+            <div className="flex items-center text-green-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              AI proposal generation
+            </div>
+            <div className="flex items-center text-green-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Impact measurement tools
+            </div>
+          </div>
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ scale: 1.05, y: -10 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handleUserTypeSelect('business')}
-          className="p-8 rounded-xl bg-gradient-to-br from-blue-600/20 to-blue-800/20 border border-blue-500/30 hover:border-blue-400 transition-all text-left group"
+          className="p-8 rounded-2xl bg-gradient-to-br from-blue-600/20 to-blue-800/20 border-2 border-blue-500/30 hover:border-blue-400 transition-all text-left group relative overflow-hidden"
         >
-          <DollarSign className="w-12 h-12 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
-          <h3 className="text-xl font-semibold text-white mb-3">Business Entity</h3>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Startup, SME, Enterprise seeking business funding, grants, and investment
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-blue-800/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <DollarSign className="w-16 h-16 text-blue-400 mb-6 group-hover:scale-110 transition-transform" />
+          <h3 className="text-2xl font-bold text-white mb-4">Business Entity</h3>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            Secure funding for startups, SMEs, and enterprises seeking growth capital
           </p>
+          <div className="text-left space-y-2">
+            <div className="flex items-center text-blue-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              $100B+ in investment available
+            </div>
+            <div className="flex items-center text-blue-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Investor matching
+            </div>
+            <div className="flex items-center text-blue-300 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Pitch deck optimization
+            </div>
+          </div>
         </motion.button>
       </div>
     </motion.div>
   );
 
+  const renderAIInsights = () => {
+    const insights = aiInsights[userProfile.userType];
+    const themeColor = userProfile.userType === 'student' ? 'purple' : 
+                      userProfile.userType === 'organization' ? 'green' : 'blue';
+
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="text-center max-w-4xl mx-auto"
+      >
+        <h2 className="text-4xl font-bold text-white mb-3">{insights.title}</h2>
+        <p className="text-gray-400 mb-12 text-lg">Here's how our AI will supercharge your funding journey</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div className={`bg-gradient-to-br from-${themeColor}-600/20 to-${themeColor}-800/20 p-8 rounded-xl border border-${themeColor}-500/30`}>
+            <Zap className={`w-12 h-12 text-${themeColor}-400 mx-auto mb-6`} />
+            <h3 className="text-xl font-bold text-white mb-4">AI-Powered Features</h3>
+            <div className="space-y-3 text-left">
+              {insights.insights.map((insight, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-start"
+                >
+                  <Star className={`w-4 h-4 text-${themeColor}-400 mr-3 mt-0.5 flex-shrink-0`} />
+                  <span className="text-gray-300 text-sm">{insight}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`bg-gradient-to-br from-${themeColor}-600/20 to-${themeColor}-800/20 p-8 rounded-xl border border-${themeColor}-500/30`}>
+            <Award className={`w-12 h-12 text-${themeColor}-400 mx-auto mb-6`} />
+            <h3 className="text-xl font-bold text-white mb-4">Success Use Cases</h3>
+            <div className="space-y-3 text-left">
+              {insights.useCases.map((useCase, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-start"
+                >
+                  <CheckCircle className={`w-4 h-4 text-${themeColor}-400 mr-3 mt-0.5 flex-shrink-0`} />
+                  <span className="text-gray-300 text-sm">{useCase}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <Button 
+          onClick={proceedToDetails}
+          size="lg"
+          className={`bg-gradient-to-r from-${themeColor}-500 to-blue-500 hover:from-${themeColor}-600 hover:to-blue-600 px-8 py-4 text-lg`}
+        >
+          Get My Personalized Setup
+          <ArrowRight className="w-5 h-5 ml-2" />
+        </Button>
+      </motion.div>
+    );
+  };
+
+  const renderSuccessStories = () => {
+    const currentStory = successStories[currentStoryIndex];
+    
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="text-center max-w-3xl mx-auto"
+      >
+        <h2 className="text-4xl font-bold text-white mb-3">Join Our Success Stories</h2>
+        <p className="text-gray-400 mb-12 text-lg">While we prepare your personalized experience...</p>
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStoryIndex}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.5 }}
+            className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 rounded-2xl border border-gray-700 backdrop-blur-sm"
+          >
+            <div className="text-6xl mb-4">{currentStory.image}</div>
+            <h3 className="text-2xl font-bold text-white mb-2">{currentStory.name}</h3>
+            <p className="text-purple-400 mb-4 font-semibold">{currentStory.type}</p>
+            <p className="text-lg text-green-400 mb-4 font-semibold">{currentStory.achievement}</p>
+            <p className="text-gray-300 italic">"{currentStory.quote}"</p>
+            
+            <div className="flex justify-center mt-6 space-x-2">
+              {successStories.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentStoryIndex ? 'bg-purple-400 w-8' : 'bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+          <div className="bg-gray-800/30 p-4 rounded-lg">
+            <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">$500M+</p>
+            <p className="text-gray-400 text-sm">Total Funding Secured</p>
+          </div>
+          <div className="bg-gray-800/30 p-4 rounded-lg">
+            <Users className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">25,000+</p>
+            <p className="text-gray-400 text-sm">Successful Users</p>
+          </div>
+          <div className="bg-gray-800/30 p-4 rounded-lg">
+            <Star className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">4.9/5</p>
+            <p className="text-gray-400 text-sm">User Rating</p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   const renderDetailForm = () => {
     const isStudent = userProfile.userType === 'student';
     const isOrganization = userProfile.userType === 'organization';
     const isBusiness = userProfile.userType === 'business';
+    const themeColor = isStudent ? 'purple' : isOrganization ? 'green' : 'blue';
 
     return (
       <motion.div
@@ -329,9 +639,9 @@ export default function OnboardPage() {
         <h2 className="text-3xl font-bold text-white mb-2">
           Tell us more about {isStudent ? 'your studies' : isOrganization ? 'your organization' : 'your business'}
         </h2>
-        <p className="text-gray-400 mb-8">This helps us find the perfect opportunities for you</p>
+        <p className="text-gray-400 mb-8">This helps our AI find the perfect opportunities for you</p>
         
-        <div className="bg-gray-800/50 rounded-xl p-8 space-y-6">
+        <div className={`bg-gradient-to-br from-${themeColor}-600/10 to-${themeColor}-800/10 rounded-xl p-8 space-y-6 border border-${themeColor}-500/20`}>
           {isStudent && (
             <>
               <div>
@@ -339,7 +649,7 @@ export default function OnboardPage() {
                 <select
                   value={userProfile.educationLevel || ''}
                   onChange={(e) => handleSelectChange('educationLevel', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-purple-500"
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 >
                   <option value="">Select your education level</option>
                   <option value="high-school">High School Graduate</option>
@@ -356,7 +666,7 @@ export default function OnboardPage() {
                 <select
                   value={userProfile.fieldOfStudy || ''}
                   onChange={(e) => handleSelectChange('fieldOfStudy', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-purple-500"
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 >
                   <option value="">Select your field of study</option>
                   <option value="stem">STEM (Science, Technology, Engineering, Mathematics)</option>
@@ -378,7 +688,7 @@ export default function OnboardPage() {
                   value={userProfile.studyCountry || ''}
                   onChange={(e) => updateProfile('studyCountry', e.target.value)}
                   placeholder="Where are you studying or plan to study?"
-                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-purple-500"
+                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 />
               </div>
             </>
@@ -391,7 +701,7 @@ export default function OnboardPage() {
                 <select
                   value={userProfile.organizationType || ''}
                   onChange={(e) => handleSelectChange('organizationType', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-green-500"
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 >
                   <option value="">Select organization type</option>
                   <option value="ngo">NGO</option>
@@ -413,7 +723,7 @@ export default function OnboardPage() {
                   value={userProfile.organizationName || ''}
                   onChange={(e) => updateProfile('organizationName', e.target.value)}
                   placeholder="Enter your organization name"
-                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500"
+                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
 
@@ -423,7 +733,7 @@ export default function OnboardPage() {
                   value={userProfile.position || ''}
                   onChange={(e) => updateProfile('position', e.target.value)}
                   placeholder="e.g., Executive Director, Program Manager"
-                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500"
+                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
 
@@ -433,7 +743,7 @@ export default function OnboardPage() {
                   value={userProfile.organizationCountry || ''}
                   onChange={(e) => updateProfile('organizationCountry', e.target.value)}
                   placeholder="Organization's country"
-                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500"
+                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
             </>
@@ -446,7 +756,7 @@ export default function OnboardPage() {
                 <select
                   value={userProfile.businessType || ''}
                   onChange={(e) => handleSelectChange('businessType', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-blue-500"
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">Select business type</option>
                   <option value="startup">Startup</option>
@@ -465,7 +775,7 @@ export default function OnboardPage() {
                   value={userProfile.businessName || ''}
                   onChange={(e) => updateProfile('businessName', e.target.value)}
                   placeholder="Enter your business name"
-                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-blue-500"
+                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
 
@@ -474,7 +784,7 @@ export default function OnboardPage() {
                 <select
                   value={userProfile.businessStage || ''}
                   onChange={(e) => handleSelectChange('businessStage', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-blue-500"
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">Select business stage</option>
                   <option value="idea">Idea Stage</option>
@@ -491,7 +801,7 @@ export default function OnboardPage() {
                 <select
                   value={userProfile.industry || ''}
                   onChange={(e) => handleSelectChange('industry', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-blue-500"
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">Select industry</option>
                   <option value="technology">Technology</option>
@@ -509,16 +819,31 @@ export default function OnboardPage() {
             </>
           )}
 
+          <div>
+            <label className="block text-left text-sm font-medium text-gray-300 mb-2">Funding Experience</label>
+            <select
+              value={userProfile.fundingExperience || ''}
+              onChange={(e) => handleSelectChange('fundingExperience', e.target.value)}
+              className={`w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-3 focus:border-${themeColor}-500 focus:ring-2 focus:ring-${themeColor}-500/20`}
+            >
+              <option value="">Select your experience level</option>
+              <option value="beginner">Complete beginner - never applied before</option>
+              <option value="some">Some experience - applied to a few grants</option>
+              <option value="experienced">Experienced - regularly apply for funding</option>
+              <option value="expert">Expert - very successful track record</option>
+            </select>
+          </div>
+
           <Button 
             onClick={finishOnboarding}
-            className={`w-full py-3 ${
+            className={`w-full py-4 text-lg font-semibold ${
               isStudent ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600' :
               isOrganization ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600' :
               'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'
             }`}
           >
-            Complete Setup
-            <ArrowRight className="w-4 h-4 ml-2" />
+            Launch My AI-Powered Experience
+            <Zap className="w-5 h-5 ml-2" />
           </Button>
         </div>
       </motion.div>
@@ -530,7 +855,7 @@ export default function OnboardPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="text-center max-w-md mx-auto"
+      className="text-center max-w-lg mx-auto"
     >
       <div className="mb-8">
         <motion.div
@@ -538,24 +863,72 @@ export default function OnboardPage() {
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          <CheckCircle className="w-20 h-20 text-green-400 mx-auto mb-4" />
+          <div className="relative">
+            <CheckCircle className="w-24 h-24 text-green-400 mx-auto mb-6" />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0"
+            >
+              <Sparkles className="w-6 h-6 text-purple-400 absolute top-0 right-6" />
+            </motion.div>
+          </div>
         </motion.div>
-        <h2 className="text-3xl font-bold text-white mb-2">Welcome aboard, {userProfile.firstName}!</h2>
-        <p className="text-gray-400 mb-8">
-          Your profile has been created successfully. We're setting up your personalized dashboard...
+        <h2 className="text-4xl font-bold text-white mb-4">
+          Welcome aboard, {userProfile.firstName}!
+        </h2>
+        <p className="text-gray-400 mb-8 text-lg">
+          Your AI-powered funding journey begins now. We're preparing your personalized dashboard with opportunities tailored just for you.
         </p>
       </div>
       
-      <div className="bg-gray-800/50 rounded-xl p-8">
+      <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl p-8 backdrop-blur-sm border border-gray-700">
         {isProcessing ? (
-          <div className="flex items-center justify-center space-x-3">
-            <Coffee className="w-5 h-5 text-purple-400 animate-pulse" />
-            <span className="text-gray-300">Setting up your experience...</span>
+          <div className="space-y-4">
+            <div className="flex items-center justify-center space-x-3 mb-6">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <Zap className="w-6 h-6 text-purple-400" />
+              </motion.div>
+              <span className="text-gray-300 text-lg">AI is analyzing your profile...</span>
+            </div>
+            
+            <div className="space-y-3 text-left">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="flex items-center text-green-400"
+              >
+                <CheckCircle className="w-4 h-4 mr-3" />
+                <span className="text-sm">Scanning 50,000+ funding opportunities</span>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="flex items-center text-green-400"
+              >
+                <CheckCircle className="w-4 h-4 mr-3" />
+                <span className="text-sm">Personalizing AI recommendations</span>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+                className="flex items-center text-green-400"
+              >
+                <CheckCircle className="w-4 h-4 mr-3" />
+                <span className="text-sm">Preparing your dashboard</span>
+              </motion.div>
+            </div>
           </div>
         ) : (
           <div className="text-green-400">
-            <CheckCircle className="w-6 h-6 inline mr-2" />
-            Setup complete! Redirecting...
+            <CheckCircle className="w-8 h-8 inline mr-3" />
+            <span className="text-lg">Setup complete! Redirecting to your dashboard...</span>
           </div>
         )}
         
@@ -567,29 +940,41 @@ export default function OnboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-green-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+      </div>
+      
+      <div className="w-full relative z-10">
         <AnimatePresence mode="wait">
           {currentStep === STEPS.WELCOME && renderWelcome()}
           {currentStep === STEPS.FIRST_NAME && renderTextInput(
             "What's your first name?", 
+            "Let's start by getting to know you personally",
             "Enter your first name", 
             currentInput
           )}
           {currentStep === STEPS.LAST_NAME && renderTextInput(
-            "And your last name?", 
+            `Nice to meet you, ${userProfile.firstName}!`, 
+            "What's your last name?",
             "Enter your last name", 
             currentInput
           )}
           {currentStep === STEPS.EMAIL && renderTextInput(
             "What's your email address?", 
+            "We'll send you personalized funding opportunities and updates",
             "Enter your email address", 
             currentInput
           )}
           {currentStep === STEPS.USER_TYPE && renderUserTypeSelection()}
+          {currentStep === STEPS.AI_INSIGHTS && renderAIInsights()}
           {(currentStep === STEPS.STUDENT_DETAILS || 
             currentStep === STEPS.ORGANIZATION_DETAILS || 
             currentStep === STEPS.BUSINESS_DETAILS) && renderDetailForm()}
+          {currentStep === STEPS.SUCCESS_STORIES && renderSuccessStories()}
           {currentStep === STEPS.COMPLETION && renderCompletion()}
         </AnimatePresence>
       </div>
