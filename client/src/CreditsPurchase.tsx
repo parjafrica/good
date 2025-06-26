@@ -16,6 +16,7 @@ import {
   Target,
   Gift,
   CheckCircle,
+  CheckCircle2,
   ExternalLink,
   Loader,
   Eye,
@@ -28,9 +29,12 @@ import {
   Building,
   Globe,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  Percent
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
+import { couponService, CouponValidationResult } from './services/couponService';
 
 interface CreditPackage {
   id: string;
@@ -72,6 +76,9 @@ const CreditsPurchase: React.FC = () => {
   const [showCvv, setShowCvv] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isValidating, setIsValidating] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponValidation, setCouponValidation] = useState<CouponValidationResult | null>(null);
+  const [showCouponField, setShowCouponField] = useState(false);
 
   const [formData, setFormData] = useState<CardFormData>({
     cardNumber: '',
@@ -275,25 +282,78 @@ const CreditsPurchase: React.FC = () => {
     }
   };
 
+  const handleCouponCodeChange = (value: string) => {
+    setCouponCode(value);
+    if (value.length >= 3 && selectedPackage) {
+      const validation = couponService.validateCoupon(value, selectedPackage.price, selectedPackage.id);
+      setCouponValidation(validation);
+    } else {
+      setCouponValidation(null);
+    }
+  };
+
+  const applyCoupon = () => {
+    if (couponValidation?.isValid && selectedPackage) {
+      couponService.applyCoupon(couponCode);
+    }
+  };
+
+  const getDiscountedPrice = () => {
+    if (!selectedPackage) return 0;
+    return couponValidation?.isValid ? couponValidation.finalPrice : selectedPackage.price;
+  };
+
+  const getDiscountAmount = () => {
+    if (!selectedPackage || !couponValidation?.isValid) return 0;
+    return couponValidation.discount;
+  };
+
   const processPayment = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || !selectedPackage) return;
 
     setIsValidating(true);
     setCurrentStep('processing');
 
     try {
-      // Simulate payment processing
-      setTimeout(() => {
-        const totalCredits = selectedPackage!.credits + (selectedPackage!.bonus || 0);
-        deductCredits(-totalCredits); // Add credits (negative deduction)
-        setCurrentStep('success');
-        setIsValidating(false);
-      }, 3000);
-    } catch (error) {
+      // Create payment with DodoPay
+      const response = await fetch('/api/payments/dodo/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          packageId: selectedPackage.id,
+          customerData: {
+            email: formData.email,
+            cardholderName: formData.cardholderName,
+            userId: user?.id || 'user_' + Date.now()
+          },
+          billingAddress: {
+            street: formData.billingAddress.street,
+            city: formData.billingAddress.city,
+            state: formData.billingAddress.state,
+            zipCode: formData.billingAddress.zipCode,
+            country: formData.billingAddress.country
+          },
+          couponCode: couponCode || undefined
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Payment creation failed');
+      }
+
+      const paymentData = await response.json();
+      
+      // Redirect to DodoPay checkout
+      window.location.href = paymentData.payment_url;
+      
+    } catch (error: any) {
       console.error('Payment error:', error);
       setIsValidating(false);
       setCurrentStep('payment');
-      alert('Payment failed. Please try again.');
+      alert(`Payment failed: ${error.message}`);
     }
   };
 
@@ -881,6 +941,127 @@ const CreditsPurchase: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Coupon Code Section */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Coupon Code</h4>
+                        <motion.button
+                          type="button"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setShowCouponField(!showCouponField)}
+                          className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+                        >
+                          <Tag className="w-4 h-4" />
+                          <span className="text-sm font-medium">
+                            {showCouponField ? 'Hide coupon' : 'Have a coupon?'}
+                          </span>
+                        </motion.button>
+                      </div>
+
+                      <AnimatePresence>
+                        {showCouponField && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-4"
+                          >
+                            <div className="flex space-x-3">
+                              <div className="flex-1">
+                                <input
+                                  type="text"
+                                  value={couponCode}
+                                  onChange={(e) => handleCouponCodeChange(e.target.value)}
+                                  placeholder="Enter coupon code (try SAVE99)"
+                                  className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                />
+                              </div>
+                              <motion.button
+                                type="button"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={applyCoupon}
+                                disabled={!couponValidation?.isValid}
+                                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                              >
+                                Apply
+                              </motion.button>
+                            </div>
+
+                            {/* Coupon Validation Feedback */}
+                            {couponValidation && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`p-4 rounded-xl border ${
+                                  couponValidation.isValid
+                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
+                                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
+                                }`}
+                              >
+                                <div className="flex items-center space-x-2">
+                                  {couponValidation.isValid ? (
+                                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                  ) : (
+                                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                  )}
+                                  <span
+                                    className={`font-medium ${
+                                      couponValidation.isValid
+                                        ? 'text-green-800 dark:text-green-200'
+                                        : 'text-red-800 dark:text-red-200'
+                                    }`}
+                                  >
+                                    {couponValidation.isValid
+                                      ? `Coupon applied! Save $${couponValidation.discount.toFixed(2)}`
+                                      : couponValidation.error}
+                                  </span>
+                                </div>
+                                {couponValidation.isValid && (
+                                  <div className="mt-2 flex items-center justify-between">
+                                    <span className="text-gray-600 dark:text-gray-400">Original Price:</span>
+                                    <span className="line-through text-gray-500">${selectedPackage.price}</span>
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+
+                            {/* Price Summary with Discount */}
+                            {couponValidation?.isValid && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-900/20 dark:to-cyan-900/20 p-4 rounded-xl border border-emerald-200 dark:border-emerald-700"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-gray-700 dark:text-gray-300">Subtotal:</span>
+                                  <span className="text-gray-700 dark:text-gray-300">${selectedPackage.price}</span>
+                                </div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
+                                    <Percent className="w-4 h-4" />
+                                    <span>Discount ({couponCode}):</span>
+                                  </span>
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                    -${getDiscountAmount().toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="border-t border-emerald-200 dark:border-emerald-700 pt-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-lg font-semibold text-gray-900 dark:text-white">Total:</span>
+                                    <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                                      ${getDiscountedPrice().toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
                     {/* Payment Buttons */}
                     <div className="flex space-x-4 pt-6">
                       <motion.button
@@ -900,7 +1081,7 @@ const CreditsPurchase: React.FC = () => {
                         disabled={isValidating}
                         className="flex-2 py-3 px-8 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl hover:from-emerald-600 hover:to-cyan-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg"
                       >
-                        {isValidating ? 'Validating...' : `Pay $${selectedPackage.price}`}
+                        {isValidating ? 'Validating...' : `Pay $${getDiscountedPrice().toFixed(2)}`}
                       </motion.button>
                     </div>
                   </form>

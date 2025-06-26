@@ -2021,6 +2021,197 @@ This section demonstrates our commitment to meeting all requirements while deliv
     return requirements.sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 4) + 3);
   }
 
+  // DodoPay webhook endpoint
+  app.post('/api/payments/webhook/dodo', async (req: Request, res: Response) => {
+    try {
+      const webhookHeaders = {
+        "webhook-id": req.headers["webhook-id"] as string,
+        "webhook-signature": req.headers["webhook-signature"] as string,
+        "webhook-timestamp": req.headers["webhook-timestamp"] as string
+      };
+
+      if (!webhookHeaders["webhook-id"] || !webhookHeaders["webhook-signature"] || !webhookHeaders["webhook-timestamp"]) {
+        return res.status(400).json({ error: 'Missing webhook headers' });
+      }
+
+      const rawBody = JSON.stringify(req.body);
+      
+      // Verify webhook signature
+      const isValid = verifyDodoWebhook(rawBody, webhookHeaders);
+      
+      if (!isValid) {
+        return res.status(401).json({ error: 'Invalid webhook signature' });
+      }
+
+      const payload = req.body;
+      console.log('DodoPay webhook received:', payload);
+
+      // Handle payment completion
+      if (payload.status === 'completed') {
+        const userId = payload.metadata?.user_id;
+        const creditsToAdd = payload.metadata?.credits || 0;
+        
+        if (userId && creditsToAdd) {
+          // Add credits to user account
+          await storage.createUserInteraction({
+            userId: userId,
+            action: 'credit_purchase_completed',
+            page: 'payment',
+            details: {
+              payment_id: payload.id,
+              credits_added: creditsToAdd,
+              amount: payload.amount,
+              currency: payload.currency
+            }
+          });
+          console.log(`Added ${creditsToAdd} credits to user ${userId}`);
+        }
+      }
+
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error('DodoPay webhook error:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
+
+  // Validate coupon endpoint
+  app.post('/api/coupons/validate', async (req: Request, res: Response) => {
+    try {
+      const { couponCode, packagePrice, packageId } = req.body;
+      
+      // Import coupon service on server side
+      const couponService = require('../client/src/services/couponService').couponService;
+      const validation = couponService.validateCoupon(couponCode, packagePrice, packageId);
+      
+      res.json(validation);
+    } catch (error) {
+      console.error('Coupon validation error:', error);
+      res.status(500).json({ error: 'Coupon validation failed' });
+    }
+  });
+
+  // Create DodoPay payment endpoint
+  app.post('/api/payments/dodo/create', async (req: Request, res: Response) => {
+    try {
+      const { packageId, customerData, billingAddress, couponCode } = req.body;
+      
+      const packages = {
+        'starter': { name: 'Starter', credits: 100, price: 10, description: 'Perfect for getting started' },
+        'standard': { name: 'Professional', credits: 500, price: 40, bonus: 50, description: 'Most popular choice for professionals' },
+        'professional': { name: 'Premium', credits: 1000, price: 70, bonus: 200, description: 'Power user solution' },
+        'enterprise': { name: 'Enterprise', credits: 2500, price: 150, bonus: 750, description: 'Complete enterprise solution' }
+      };
+
+      const selectedPackage = packages[packageId as keyof typeof packages];
+      if (!selectedPackage) {
+        return res.status(400).json({ error: 'Invalid package ID' });
+      }
+
+      const totalCredits = selectedPackage.credits + (selectedPackage.bonus || 0);
+
+      // Apply coupon if provided
+      let finalPrice = selectedPackage.price;
+      let discountAmount = 0;
+      
+      if (couponCode) {
+        const couponService = require('../client/src/services/couponService').couponService;
+        const validation = couponService.validateCoupon(couponCode, selectedPackage.price, packageId);
+        
+        if (validation.isValid) {
+          finalPrice = validation.finalPrice;
+          discountAmount = validation.discount;
+          couponService.applyCoupon(couponCode);
+        }
+      }
+
+      // Create payment with DodoPay
+      const DodoPayments = require('dodopayments');
+      const client = new DodoPayments({
+        bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+        environment: process.env.NODE_ENV === 'production' ? 'live_mode' : 'test_mode'
+      });
+
+      const payment = await client.payments.create({
+        payment_link: true,
+        billing: {
+          city: billingAddress.city,
+          country: getCountryCode(billingAddress.country),
+          state: billingAddress.state,
+          street: billingAddress.street,
+          zipcode: parseInt(billingAddress.zipCode)
+        },
+        customer: {
+          email: customerData.email,
+          name: customerData.cardholderName
+        },
+        product_cart: [{
+          product_id: `credit_package_${packageId}`,
+          quantity: 1,
+          price: Math.round(finalPrice * 100), // Convert to cents
+          currency: 'USD',
+          name: `Granada OS ${selectedPackage.name} Credits`,
+          description: `${selectedPackage.description} - ${totalCredits} credits${couponCode ? ` (${couponCode} applied)` : ''}`
+        }],
+        metadata: {
+          user_id: customerData.userId,
+          credits: totalCredits,
+          package_id: packageId,
+          coupon_code: couponCode,
+          original_price: selectedPackage.price,
+          final_price: finalPrice,
+          discount_amount: discountAmount
+        }
+      });
+
+      res.json({
+        payment_id: payment.id,
+        payment_url: payment.payment_url,
+        status: payment.status,
+        amount: selectedPackage.price,
+        currency: 'USD'
+      });
+    } catch (error) {
+      console.error('DodoPay payment creation error:', error);
+      res.status(500).json({ error: 'Payment creation failed', details: error.message });
+    }
+  });
+
+  function verifyDodoWebhook(payload: string, headers: any): boolean {
+    try {
+      const crypto = require('crypto');
+      const secret = process.env.DODO_WEBHOOK_SECRET || 'test_webhook_secret';
+      
+      const signaturePayload = `${headers["webhook-id"]}.${headers["webhook-timestamp"]}.${payload}`;
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(signaturePayload)
+        .digest('hex');
+        
+      return crypto.timingSafeEqual(
+        Buffer.from(headers["webhook-signature"]),
+        Buffer.from(expectedSignature)
+      );
+    } catch (error) {
+      console.error('Webhook verification error:', error);
+      return false;
+    }
+  }
+
+  function getCountryCode(countryName: string): string {
+    const countryMap: Record<string, string> = {
+      'United States': 'US', 'United Kingdom': 'GB', 'Canada': 'CA', 'Australia': 'AU',
+      'Germany': 'DE', 'France': 'FR', 'Italy': 'IT', 'Spain': 'ES', 'Netherlands': 'NL',
+      'Belgium': 'BE', 'Switzerland': 'CH', 'Austria': 'AT', 'Denmark': 'DK', 'Sweden': 'SE',
+      'Norway': 'NO', 'Finland': 'FI', 'Poland': 'PL', 'Brazil': 'BR', 'Mexico': 'MX',
+      'Japan': 'JP', 'South Korea': 'KR', 'Singapore': 'SG', 'Malaysia': 'MY', 'Thailand': 'TH',
+      'Indonesia': 'ID', 'Philippines': 'PH', 'Vietnam': 'VN', 'India': 'IN', 'China': 'CN',
+      'South Africa': 'ZA', 'Nigeria': 'NG', 'Kenya': 'KE', 'Ghana': 'GH', 'Uganda': 'UG',
+      'Tanzania': 'TZ', 'Rwanda': 'RW', 'Zambia': 'ZM', 'Zimbabwe': 'ZW', 'Egypt': 'EG'
+    };
+    return countryMap[countryName] || 'US';
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }

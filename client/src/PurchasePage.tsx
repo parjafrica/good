@@ -173,18 +173,44 @@ const PurchasePage: React.FC = () => {
     setPaymentStep('processing');
 
     try {
-      // Simulate payment processing
-      setTimeout(() => {
-        const totalCredits = selectedPackage.credits + (selectedPackage.bonus || 0);
-        deductCredits(-totalCredits); // Add credits (negative deduction)
-        setPaymentStep('success');
-        setIsProcessing(false);
-      }, 3000);
-    } catch (error) {
+      // Create payment with DodoPay
+      const response = await fetch('/api/payments/dodo/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          packageId: selectedPackage.id,
+          customerData: {
+            email: user?.email || 'user@example.com',
+            cardholderName: user?.firstName || 'Card Holder',
+            userId: user?.id || 'user_' + Date.now()
+          },
+          billingAddress: {
+            street: '123 Main Street',
+            city: 'Kampala',
+            state: 'Central',
+            zipCode: '00000',
+            country: userCountry
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Payment creation failed');
+      }
+
+      const paymentData = await response.json();
+      
+      // Redirect to DodoPay checkout
+      window.location.href = paymentData.payment_url;
+      
+    } catch (error: any) {
       console.error('Payment error:', error);
       setIsProcessing(false);
       setPaymentStep('method');
-      alert('Payment failed. Please try again.');
+      alert(`Payment failed: ${error.message}`);
     }
   };
 
