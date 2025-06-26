@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { IntelligentAssistantUI, AssistantFloatingButton } from './shared/IntelligentAssistantUI';
+import { intelligentAssistant } from './services/intelligentAssistant';
 import Header from './shared/Header';
 import Sidebar from './shared/Sidebar';
 import Dashboard from './Dashboard';
@@ -43,6 +45,15 @@ const queryClient = new QueryClient({
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  
+  // Initialize intelligent assistant
+  useEffect(() => {
+    // Activate the intelligent assistant after component mounts
+    intelligentAssistant.setActive(true);
+    return () => {
+      intelligentAssistant.setActive(false);
+    };
+  }, []);
   
   // For development, bypass auth and provide default user
   const mockUser = { 
@@ -104,6 +115,10 @@ function App() {
             
             {/* Human Help Button */}
             <HumanHelpButton />
+            
+            {/* Intelligent Assistant System */}
+            <IntelligentAssistantUI />
+            <AssistantFloatingButton />
           </div>
         </AddictionProvider>
       </AuthProvider>
