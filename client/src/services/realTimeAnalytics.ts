@@ -1,4 +1,4 @@
-interface MouseEvent {
+interface TrackedMouseEvent {
   x: number;
   y: number;
   timestamp: number;
@@ -65,7 +65,7 @@ interface UserIntent {
 }
 
 class RealTimeAnalytics {
-  private mouseEvents: MouseEvent[] = [];
+  private mouseEvents: TrackedMouseEvent[] = [];
   private scrollEvents: ScrollEvent[] = [];
   private keyboardEvents: KeyboardEvent[] = [];
   private focusEvents: FocusEvent[] = [];
@@ -112,7 +112,7 @@ class RealTimeAnalytics {
   }
 
   private handleMouseMove(event: Event) {
-    const e = event as MouseEvent;
+    const e = event as globalThis.MouseEvent;
     const now = performance.now();
     const velocity = this.calculateVelocity(
       { x: e.clientX, y: e.clientY },
@@ -120,13 +120,13 @@ class RealTimeAnalytics {
       now
     );
 
-    const mouseEvent: MouseEvent = {
+    const mouseEvent: TrackedMouseEvent = {
       x: e.clientX,
       y: e.clientY,
       timestamp: now,
       velocity: velocity,
       acceleration: this.calculateAcceleration(velocity),
-      target: this.getElementPath(e.target as Element),
+      target: this.getElementPath(e.target),
       type: 'move'
     };
 
@@ -348,26 +348,35 @@ class RealTimeAnalytics {
     return 'down'; // default
   }
 
-  private getElementPath(element: Element): string {
+  private getElementPath(element: Element | EventTarget | null): string {
     if (!element) return 'unknown';
     
-    const path = [];
-    let current = element;
-    
-    while (current && current !== document.body) {
-      let selector = current.tagName.toLowerCase();
+    // Handle different types of elements safely
+    if (element instanceof Element) {
+      const path = [];
+      let current: Element | null = element;
       
-      if (current.id) {
-        selector += `#${current.id}`;
-      } else if (current.className) {
-        selector += `.${current.className.toString().replace(/\s+/g, '.')}`;
+      while (current && current !== document.body && current.tagName) {
+        let selector = current.tagName.toLowerCase();
+        
+        if (current.id) {
+          selector += `#${current.id}`;
+        } else if (current.className && typeof current.className === 'string') {
+          selector += `.${current.className.replace(/\s+/g, '.')}`;
+        }
+        
+        path.unshift(selector);
+        current = current.parentElement;
+        
+        // Safety check to prevent infinite loops
+        if (path.length > 10) break;
       }
       
-      path.unshift(selector);
-      current = current.parentElement as Element;
+      return path.length > 0 ? path.join(' > ') : 'element';
     }
     
-    return path.join(' > ');
+    // For EventTarget that isn't an Element
+    return 'event-target';
   }
 
   private queueAnalysis(type: string, data: any) {
