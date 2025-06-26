@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ProposalIntelligencePanel from './shared/ProposalIntelligencePanel';
 
 interface Proposal {
   id: string;
@@ -56,6 +57,8 @@ const ProposalManager: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [showProposalDetail, setShowProposalDetail] = useState(false);
+  const [showIntelligence, setShowIntelligence] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null);
 
   // Fetch proposals from database
   const { data: proposals = [], isLoading, refetch } = useQuery({
@@ -418,7 +421,41 @@ ${JSON.stringify(proposal.content, null, 2)}
                   </div>
                 </div>
                 
+                {/* AI Intelligence Panel */}
+                {showIntelligence && (
+                  <div className="mt-6">
+                    <ProposalIntelligencePanel
+                      proposal={selectedProposal}
+                      opportunity={selectedOpportunity}
+                      onUpdate={() => {
+                        // Refresh proposal data after applying suggestions
+                        refetch();
+                      }}
+                    />
+                  </div>
+                )}
+                
                 <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowIntelligence(!showIntelligence);
+                      // Mock opportunity data for analysis - in real app this would come from proposal context
+                      if (!selectedOpportunity) {
+                        setSelectedOpportunity({
+                          title: selectedProposal.opportunityTitle || "Funding Opportunity",
+                          deadline: "2024-12-31",
+                          fundingAmount: selectedProposal.fundingAmount || "$50,000",
+                          sector: "Development",
+                          description: "Sample opportunity for analysis"
+                        });
+                      }
+                    }}
+                    className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Brain className="w-4 h-4" />
+                    {showIntelligence ? 'Hide Expert Analysis' : 'Show Expert Analysis'}
+                  </button>
+                  
                   <button
                     onClick={() => downloadProposal(selectedProposal)}
                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
