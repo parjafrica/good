@@ -678,6 +678,61 @@ const DonorDiscovery: React.FC = () => {
               </div>
             ))}
           </div>
+        ) : opportunities.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <div className="max-w-md mx-auto">
+              <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No opportunities found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {searchQuery 
+                  ? "Try adjusting your search terms or removing some filters" 
+                  : "Try searching for funding opportunities in your sector"
+                }
+              </p>
+              
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Suggested searches:</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {['health', 'education', 'community development', 'capacity building', 'research grants'].map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => {
+                        setSearchQuery(suggestion);
+                        trackInteraction.mutate({ type: 'search_suggestion', credits: 1, data: { suggestion } });
+                      }}
+                      className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+                
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => {
+                    setFilters({
+                      country: '',
+                      sector: '',
+                      fundingRange: { under_10k: false, '10k_50k': false, '50k_100k': false, '100k_500k': false, '500k_plus': false },
+                      deadline: '',
+                      difficulty: ''
+                    });
+                    setSearchQuery('');
+                    trackInteraction.mutate({ type: 'clear_all_filters', credits: 1 });
+                  }}
+                  className="mt-4 px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+                >
+                  Clear All Filters & Browse All
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
         ) : (
           <motion.div
             layout

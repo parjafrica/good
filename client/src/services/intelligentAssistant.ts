@@ -104,6 +104,9 @@ export class IntelligentAssistant {
   }
 
   private isStruggleIndicator(elementType: string, target: HTMLElement): boolean {
+    const searchAttempts = this.behavior.interactionTypes.filter(t => t === 'search').length;
+    const opportunityViews = this.behavior.interactionTypes.filter(t => t === 'opportunity_card').length;
+    
     const strugglingPatterns = [
       // Rapid clicking on same element
       this.behavior.interactionTypes.slice(-3).every(type => type === elementType),
@@ -113,8 +116,10 @@ export class IntelligentAssistant {
       elementType === 'filter' && this.behavior.interactionTypes.filter(t => t === 'filter').length > 5,
       // Long time on page without meaningful interaction
       this.behavior.timeOnPage > 300000 && this.behavior.interactionTypes.length < 10,
-      // Multiple search attempts
-      this.behavior.interactionTypes.filter(t => t === 'search').length > 3
+      // Multiple search attempts with no results (boredom indicator)
+      searchAttempts >= 3 && opportunityViews === 0,
+      // Quick exit pattern after searching
+      elementType === 'navigation' && searchAttempts > 0 && opportunityViews === 0 && this.behavior.timeOnPage < 120000
     ];
 
     return strugglingPatterns.some(pattern => pattern);
@@ -195,8 +200,38 @@ export class IntelligentAssistant {
     const totalInteractions = interactionTypes.length;
 
     // Only provide advice after significant user interaction data
-    if (totalInteractions < 15) {
+    if (totalInteractions < 10) {
       return null; // Need more data before giving advice
+    }
+
+    // Detect search-with-no-results pattern (boredom prevention)
+    if (searchAttempts >= 3 && opportunityViews === 0 && timeOnPage > 120000) {
+      return {
+        type: 'guidance',
+        message: "Not finding what you're looking for? Try broadening your search terms or exploring different funding categories.",
+        priority: 'medium',
+        timing: 'immediate'
+      };
+    }
+
+    // Quick exit after searches (boredom detected)
+    if (searchAttempts >= 2 && timeOnPage < 180000 && clicksPerMinute > 8) {
+      return {
+        type: 'encouragement',
+        message: "Many great opportunities are hidden in unexpected categories. Try exploring 'Education' or 'Health' sectors for broader funding options.",
+        priority: 'medium',
+        timing: 'immediate'
+      };
+    }
+
+    // Multiple searches with filter adjustments but no results
+    if (searchAttempts >= 4 && filterClicks >= 3 && opportunityViews === 0) {
+      return {
+        type: 'guidance',
+        message: "Having trouble finding matches? Try removing some filters or searching for keywords like 'community development' or 'capacity building'.",
+        priority: 'medium',
+        timing: 'immediate'
+      };
     }
 
     // Success celebration - only after real achievement
@@ -235,16 +270,6 @@ export class IntelligentAssistant {
       return {
         type: 'guidance',
         message: "Still searching? Sometimes a different approach can help identify the perfect funding opportunities.",
-        priority: 'low',
-        timing: 'delayed'
-      };
-    }
-
-    // Minimal general guidance - very subtle
-    if (timeOnPage > 300000 && totalInteractions > 30 && opportunityViews === 0) {
-      return {
-        type: 'guidance',
-        message: "Try exploring different sectors or adjusting your search criteria to discover more opportunities.",
         priority: 'low',
         timing: 'delayed'
       };
