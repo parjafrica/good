@@ -45,6 +45,7 @@ import {
   type CardData 
 } from './services/realTimeValidation';
 import QuickPurchase from './QuickPurchase';
+import SecurePaymentFlow from './SecurePaymentFlow';
 
 interface CreditPackage {
   id: string;
@@ -81,8 +82,9 @@ const CreditsPurchase: React.FC = () => {
   const { packageId } = useParams<{ packageId: string }>();
   const { user, deductCredits } = useAuth();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<'package' | 'payment' | 'processing' | 'success'>('package');
+  const [currentStep, setCurrentStep] = useState<'package' | 'payment' | 'secure-payment' | 'processing' | 'success'>('package');
   const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
+  const [useSecureFlow, setUseSecureFlow] = useState(true); // Default to secure flow
   const [showCvv, setShowCvv] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isValidating, setIsValidating] = useState(false);
@@ -594,12 +596,29 @@ const CreditsPurchase: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setCurrentStep('payment')}
+                    onClick={() => setCurrentStep(useSecureFlow ? 'secure-payment' : 'payment')}
                     className="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-2xl hover:from-emerald-600 hover:to-cyan-600 transition-all font-semibold text-lg shadow-lg"
                   >
-                    Proceed to Payment
+                    <div className="flex items-center justify-center space-x-2">
+                      <Shield className="w-5 h-5" />
+                      <span>Secure Checkout</span>
+                    </div>
                   </motion.button>
                 </motion.div>
+              )}
+
+              {currentStep === 'secure-payment' && selectedPackage && (
+                <SecurePaymentFlow
+                  selectedPackage={selectedPackage}
+                  onSuccess={(transaction) => {
+                    setCurrentStep('success');
+                    console.log('Secure payment successful:', transaction);
+                  }}
+                  onBack={() => {
+                    setCurrentStep('package');
+                    setSelectedPackage(null);
+                  }}
+                />
               )}
 
               {currentStep === 'payment' && (
