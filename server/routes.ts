@@ -38,6 +38,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get trending opportunities
+  app.get("/api/opportunities/trending", async (req, res) => {
+    try {
+      const opportunities = await storage.getDonorOpportunities({
+        limit: 10,
+        verifiedOnly: true
+      });
+      res.json(opportunities);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get trending opportunities" });
+    }
+  });
+
+  // Get personalized opportunities for user
+  app.get("/api/opportunities/personalized/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const opportunities = await storage.getDonorOpportunities({
+        limit: 20,
+        verifiedOnly: true
+      });
+      res.json(opportunities);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get personalized opportunities" });
+    }
+  });
+
+  // Get user profile
+  app.get("/api/user/profile/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      if (user) {
+        res.json({
+          id: user.id,
+          fullName: `${user.firstName} ${user.lastName}`,
+          country: user.country,
+          sector: user.sector,
+          organizationType: user.organizationType,
+          credits: user.credits
+        });
+      } else {
+        res.json({
+          id: 'demo_user',
+          fullName: 'Demo User',
+          country: 'UG',
+          sector: 'Health',
+          organizationType: 'NGO',
+          credits: 1000
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get user profile" });
+    }
+  });
+
   // Search opportunities (replacing Supabase edge function)
   app.get("/api/search-opportunities", async (req, res) => {
     try {

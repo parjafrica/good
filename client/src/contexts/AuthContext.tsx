@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, CreditTransaction } from './types';
+import { User, CreditTransaction } from '../types/index';
 
 interface AuthContextType {
   user: User | null;
@@ -36,18 +36,32 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-    // Load user from localStorage or return null
+    // Load user from localStorage or return default demo user
     const savedUser = localStorage.getItem('granada_user');
     if (savedUser) {
       return JSON.parse(savedUser);
     }
     
-    // Return null instead of mock user to show landing page
-    return null;
+    // Return demo user for immediate functionality
+    return {
+      id: 'demo_user',
+      email: 'demo@example.com',
+      firstName: 'Demo',
+      lastName: 'User',
+      userType: 'ngo',
+      country: 'UG',
+      sector: 'Health',
+      organizationType: 'NGO',
+      credits: 1000,
+      isActive: true,
+      isBanned: false,
+      createdAt: new Date(),
+      lastLogin: new Date()
+    };
   });
 
   const [creditHistory, setCreditHistory] = useState<CreditTransaction[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!user);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
   // Save user to localStorage whenever it changes
   useEffect(() => {

@@ -1,12 +1,22 @@
 export interface User {
   id: string;
   email: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  fullName?: string;
   credits: number;
-  isTrialUser: boolean;
-  trialDaysRemaining: number;
-  is_superuser?: boolean; // Added for admin access
-  userType?: 'student' | 'ngo' | 'business' | 'general'; // Added for user type
+  isTrialUser?: boolean;
+  trialDaysRemaining?: number;
+  is_superuser?: boolean;
+  userType: 'student' | 'ngo' | 'business' | 'general' | 'admin';
+  country: string;
+  sector: string;
+  organizationType: string;
+  isActive: boolean;
+  isBanned: boolean;
+  createdAt: Date;
+  lastLogin: Date;
+  preferences?: any;
   organization?: Organization;
 }
 

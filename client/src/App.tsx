@@ -44,8 +44,17 @@ const queryClient = new QueryClient({
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   
-  // For development, bypass auth for admin panel
-  const mockUser = { userType: 'admin' };
+  // For development, bypass auth and provide default user
+  const mockUser = { 
+    id: 'demo_user',
+    userType: 'ngo', 
+    email: 'demo@example.com',
+    firstName: 'Demo',
+    lastName: 'User',
+    country: 'UG',
+    sector: 'Health',
+    organizationType: 'NGO'
+  };
   const isAuthenticated = true;
 
   // Check if user is a student
