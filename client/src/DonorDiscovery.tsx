@@ -565,21 +565,57 @@ const DonorDiscovery: React.FC = () => {
                   </ul>
                 </div>
                 
-                <div className="flex gap-4">
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      onClick={() => {
+                        window.open(selectedOpportunity.sourceUrl, '_blank');
+                        trackInteraction.mutate({ type: 'view_caller_link', credits: 2 });
+                      }}
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      See Caller Link
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      onClick={() => {
+                        window.open(selectedOpportunity.sourceUrl, '_blank');
+                        trackInteraction.mutate({ type: 'apply_yourself', credits: 5 });
+                      }}
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Apply Yourself
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      onClick={() => {
+                        // Navigate to expert help or trigger AI assistance
+                        navigate('/human-help', { 
+                          state: { 
+                            opportunityId: selectedOpportunity.id,
+                            opportunityTitle: selectedOpportunity.title 
+                          } 
+                        });
+                        trackInteraction.mutate({ type: 'request_expert_help', credits: 3 });
+                      }}
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+                    >
+                      <Users className="w-4 h-4" />
+                      Expert Help
+                    </motion.button>
+                  </div>
+                  
+                  {/* Close Button */}
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    onClick={() => {
-                      window.open(selectedOpportunity.sourceUrl, '_blank');
-                      trackInteraction.mutate({ type: 'apply_from_modal', credits: 5 });
-                    }}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg py-3 px-6 font-medium hover:shadow-lg transition-all"
-                  >
-                    Apply Now
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.02 }}
                     onClick={() => setSelectedOpportunity(null)}
-                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="w-full py-3 px-6 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
                   >
                     Close
                   </motion.button>
