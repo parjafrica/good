@@ -17,9 +17,26 @@ export const users = pgTable("users", {
   lastName: text("last_name"),
   userType: text("user_type").notNull().default("user"),
 
+  // Common fields
   country: text("country"),
   sector: text("sector"),
   organizationType: text("organization_type"),
+  fundingExperience: text("funding_experience"),
+  
+  // Student fields
+  educationLevel: text("education_level"),
+  fieldOfStudy: text("field_of_study"),
+  
+  // Organization fields
+  organizationName: text("organization_name"),
+  position: text("position"),
+  
+  // Business fields
+  businessType: text("business_type"),
+  businessName: text("business_name"),
+  businessStage: text("business_stage"),
+  industry: text("industry"),
+  
   credits: integer("credits").default(100),
   isActive: boolean("is_active").default(true),
   isBanned: boolean("is_banned").default(false),

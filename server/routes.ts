@@ -41,6 +41,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Onboarding user profile creation
+  app.post("/api/users", async (req, res) => {
+    try {
+      const {
+        firstName,
+        lastName,
+        email,
+        userType,
+        educationLevel,
+        fieldOfStudy,
+        studyCountry,
+        organizationType,
+        organizationName,
+        position,
+        organizationCountry,
+        businessType,
+        businessName,
+        businessStage,
+        industry,
+        businessCountry,
+        fundingExperience
+      } = req.body;
+
+      // Create full name and determine final country
+      const fullName = `${firstName} ${lastName}`;
+      const country = studyCountry || organizationCountry || businessCountry || '';
+
+      // Create user profile
+      const user = await storage.createUser({
+        email,
+        hashedPassword: 'temp_password', // TODO: Implement proper password generation
+        fullName,
+        firstName,
+        lastName,
+        userType,
+        educationLevel,
+        fieldOfStudy,
+        organizationType,
+        organizationName,
+        position,
+        businessType,
+        businessName,
+        businessStage,
+        industry,
+        country,
+        fundingExperience
+      });
+
+      res.json({ 
+        success: true, 
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          fullName: user.fullName,
+          userType: user.userType
+        } 
+      });
+    } catch (error) {
+      console.error('Error creating user profile:', error);
+      res.status(500).json({ error: "Failed to create user profile" });
+    }
+  });
+
   // Get trending opportunities
   app.get("/api/opportunities/trending", async (req, res) => {
     try {
