@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ChevronDown, Search, Phone, MessageCircle, Globe, Users, Building, GraduationCap } from 'lucide-react';
 import { useLocation } from 'wouter';
@@ -31,12 +31,15 @@ export default function IntelligentOnboardingSystem() {
     errorHandler.setupGlobalErrorHandlers();
   }, []);
 
-  // Auto-focus input - more stable approach
+  // Auto-focus input - more stable approach  
   useEffect(() => {
     if (inputRef.current && currentStep && !isProcessing) {
       const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 300);
+        // Only auto-focus if no element is currently focused
+        if (document.activeElement === document.body) {
+          inputRef.current?.focus();
+        }
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [currentStep?.id]); // Only depend on step id, not the entire step object
@@ -80,14 +83,14 @@ export default function IntelligentOnboardingSystem() {
     }
   };
 
-  const handleInputChange = (value: string) => {
+  const handleInputChange = useCallback((value: string) => {
     setCurrentInput(value);
     setError('');
     
     if (currentStep?.type === 'select' && currentStep.options) {
       setShowDropdown(value.length > 0);
     }
-  };
+  }, [currentStep?.type, currentStep?.options]);;
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -292,6 +295,9 @@ export default function IntelligentOnboardingSystem() {
     const isEmailStep = currentStep?.type === 'email';
     const isPasswordStep = currentStep?.type === 'password';
     
+    // Dynamic padding based on input type
+    const inputPadding = isPhoneStep ? 'pl-20 pr-6 py-4' : isPasswordStep ? 'px-6 py-4 pr-12' : 'px-6 py-4';
+    
     return (
       <div className="relative">
         <input
@@ -300,8 +306,9 @@ export default function IntelligentOnboardingSystem() {
           value={currentInput}
           onChange={(e) => handleInputChange(e.target.value)}
           onKeyPress={handleKeyPress}
+
           placeholder={currentStep?.placeholder}
-          className="w-full px-6 py-4 bg-white/10 border-2 border-transparent rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:bg-white/20 transition-all duration-300 text-lg"
+          className={`w-full ${inputPadding} bg-white/10 border-2 border-transparent rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:bg-white/20 transition-all duration-300 text-lg`}
           autoComplete="off"
           spellCheck={false}
         />
@@ -317,9 +324,9 @@ export default function IntelligentOnboardingSystem() {
         )}
         
         {isPhoneStep && (
-          <div className="absolute left-6 top-1/2 transform -translate-y-1/2 text-white/60 flex items-center">
-            <Phone size={16} className="mr-2" />
-            <span className="text-sm">+{userLocation?.countryCode === 'UG' ? '256' : '1'}</span>
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/80 flex items-center bg-white/10 rounded-lg px-2 py-1">
+            <Phone size={14} className="mr-1" />
+            <span className="text-sm font-medium">+{userLocation?.countryCode === 'UG' ? '256' : '1'}</span>
           </div>
         )}
       </div>
