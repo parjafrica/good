@@ -1704,18 +1704,26 @@ This section demonstrates our commitment to meeting all requirements while deliv
       
       if (insight) {
         // Store the insight for future reference
-        await storage.createUserInteraction({
-          userId: req.session?.user?.id || 'anonymous',
-          action: 'ai_insight_generated',
-          page: 'donor_discovery',
-          details: {
-            insightType: insight.type,
-            priority: insight.priority,
-            confidence: insight.metadata.confidence,
-            reasoning: insight.metadata.reasoning,
-            timestamp: new Date()
+        // Only log for authenticated users with valid UUIDs
+        const userId = req.session?.user?.id;
+        if (userId && userId !== 'anonymous' && userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+          try {
+            await storage.createUserInteraction({
+              userId: userId,
+              action: 'ai_insight_generated',
+              page: 'donor_discovery',
+              details: {
+                insightType: insight.type,
+                priority: insight.priority,
+                confidence: insight.metadata.confidence,
+                reasoning: insight.metadata.reasoning,
+                timestamp: new Date()
+              }
+            });
+          } catch (dbError) {
+            console.warn('Failed to log user interaction:', dbError);
           }
-        });
+        }
 
         res.json(insight);
       } else {

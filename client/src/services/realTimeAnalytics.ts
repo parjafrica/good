@@ -415,7 +415,8 @@ class RealTimeAnalytics {
       intent,
       patterns: this.detectPatterns(),
       anomalies: this.detectAnomalies(),
-      recommendations: this.generateRecommendations(metrics, intent)
+      recommendations: this.generateRecommendations(metrics, intent),
+      contentContext: this.analyzeContentContext()
     };
 
     // Send to AI engine for processing
@@ -747,6 +748,194 @@ class RealTimeAnalytics {
 
   public getUserIntent(): UserIntent {
     return this.predictUserIntent();
+  }
+
+  private analyzeContentContext(): any {
+    try {
+      // Get current viewport position
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const viewportTop = scrollY;
+      const viewportBottom = scrollY + viewportHeight;
+
+      // Analyze visible content
+      const visibleElements = this.getVisibleElements(viewportTop, viewportBottom);
+      const readingContext = this.detectReadingBehavior(visibleElements);
+      const contentType = this.identifyContentType(visibleElements);
+      const userFocus = this.calculateUserFocus(visibleElements);
+
+      return {
+        viewport: {
+          scrollY,
+          viewportHeight,
+          visibleTop: viewportTop,
+          visibleBottom: viewportBottom
+        },
+        content: {
+          type: contentType,
+          visibleElements: visibleElements.length,
+          readingIndicators: readingContext,
+          userFocusArea: userFocus,
+          dominantContent: this.getDominantContent(visibleElements),
+          interactionContext: this.getInteractionContext()
+        },
+        engagement: {
+          timeOnContent: this.calculateTimeOnContent(),
+          scrollPattern: this.analyzeScrollPattern(),
+          clickDepth: this.calculateClickDepth(),
+          contentCompletion: this.estimateContentCompletion(visibleElements)
+        }
+      };
+    } catch (error) {
+      console.warn('Content context analysis failed:', error);
+      return {
+        viewport: { scrollY: window.scrollY, viewportHeight: window.innerHeight },
+        content: { type: 'unknown', visibleElements: 0 },
+        engagement: { timeOnContent: 0, scrollPattern: 'unknown' }
+      };
+    }
+  }
+
+  private getVisibleElements(viewportTop: number, viewportBottom: number): Element[] {
+    const elements = document.querySelectorAll('[data-opportunity-id], .opportunity-card, .funding-card, h1, h2, h3, p, .description, .sector, .amount');
+    return Array.from(elements).filter(el => {
+      const rect = el.getBoundingClientRect();
+      const elementTop = rect.top + window.scrollY;
+      const elementBottom = elementTop + rect.height;
+      return elementTop < viewportBottom && elementBottom > viewportTop;
+    });
+  }
+
+  private detectReadingBehavior(visibleElements: Element[]): any {
+    const recentScrollEvents = this.scrollEvents.slice(-10);
+    const avgScrollSpeed = recentScrollEvents.length > 1 ? 
+      recentScrollEvents.reduce((sum, e) => sum + Math.abs(e.velocity), 0) / recentScrollEvents.length : 0;
+
+    const recentMouseEvents = this.mouseEvents.slice(-20);
+    const avgMouseVelocity = recentMouseEvents.length > 0 ?
+      recentMouseEvents.reduce((sum, e) => sum + e.velocity, 0) / recentMouseEvents.length : 0;
+
+    return {
+      isSlowScrolling: avgScrollSpeed < 100,
+      isPausing: avgMouseVelocity < 50,
+      hasTextFocus: visibleElements.some(el => el.tagName.match(/^(P|H[1-6]|SPAN|DIV)$/)),
+      readingTime: performance.now() - this.sessionStart,
+      scrollBehavior: avgScrollSpeed < 50 ? 'reading' : avgScrollSpeed < 200 ? 'browsing' : 'scanning'
+    };
+  }
+
+  private identifyContentType(visibleElements: Element[]): string {
+    const elementTypes = visibleElements.map(el => {
+      if (el.hasAttribute('data-opportunity-id')) return 'opportunity';
+      if (el.classList.contains('opportunity-card')) return 'opportunity';
+      if (el.classList.contains('funding-card')) return 'funding';
+      if (el.tagName.match(/^H[1-6]$/)) return 'heading';
+      if (el.tagName === 'P') return 'paragraph';
+      if (el.classList.contains('description')) return 'description';
+      if (el.classList.contains('sector')) return 'sector';
+      if (el.classList.contains('amount')) return 'amount';
+      return 'general';
+    });
+
+    const counts = elementTypes.reduce((acc, type) => {
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, 'general');
+  }
+
+  private calculateUserFocus(visibleElements: Element[]): any {
+    const recentMouse = this.mouseEvents.slice(-10);
+    
+    let focusArea = null;
+    if (recentMouse.length > 0) {
+      const avgX = recentMouse.reduce((sum, e) => sum + e.x, 0) / recentMouse.length;
+      const avgY = recentMouse.reduce((sum, e) => sum + e.y, 0) / recentMouse.length;
+      
+      // Find element closest to mouse focus
+      const focusElement = visibleElements.find(el => {
+        const rect = el.getBoundingClientRect();
+        return avgX >= rect.left && avgX <= rect.right && 
+               avgY >= rect.top && avgY <= rect.bottom;
+      });
+
+      if (focusElement) {
+        focusArea = {
+          element: this.getElementPath(focusElement),
+          type: this.identifyContentType([focusElement]),
+          content: focusElement.textContent?.slice(0, 200) || '',
+          position: { x: avgX, y: avgY }
+        };
+      }
+    }
+
+    return focusArea;
+  }
+
+  private getDominantContent(visibleElements: Element[]): any {
+    const opportunityElements = visibleElements.filter(el => 
+      el.hasAttribute('data-opportunity-id') || el.classList.contains('opportunity-card'));
+      
+    if (opportunityElements.length > 0) {
+      const mainOpportunity = opportunityElements[0];
+      return {
+        type: 'funding_opportunity',
+        id: mainOpportunity.getAttribute('data-opportunity-id'),
+        title: mainOpportunity.querySelector('h3, .title')?.textContent || '',
+        sector: mainOpportunity.querySelector('.sector')?.textContent || '',
+        amount: mainOpportunity.querySelector('.amount')?.textContent || '',
+        description: mainOpportunity.querySelector('.description')?.textContent?.slice(0, 300) || ''
+      };
+    }
+
+    return {
+      type: 'general_content',
+      headings: visibleElements.filter(el => el.tagName.match(/^H[1-6]$/))
+        .map(el => el.textContent?.slice(0, 100)).slice(0, 3)
+    };
+  }
+
+  private getInteractionContext(): any {
+    const recentActions = this.clickPatterns.slice(-5);
+    const lastAction = recentActions[recentActions.length - 1];
+    
+    return {
+      lastInteraction: lastAction ? {
+        element: lastAction.element,
+        timestamp: lastAction.timestamp,
+        type: 'click'
+      } : null,
+      interactionFrequency: recentActions.length,
+      sessionInteractions: this.clickPatterns.length
+    };
+  }
+
+  private calculateTimeOnContent(): number {
+    return performance.now() - this.sessionStart;
+  }
+
+  private analyzeScrollPattern(): string {
+    const recentScrolls = this.scrollEvents.slice(-10);
+    if (recentScrolls.length < 3) return 'minimal';
+    
+    const directions = recentScrolls.map(e => e.direction);
+    const backwardScrolls = directions.filter(d => d === 'up').length;
+    const forwardScrolls = directions.filter(d => d === 'down').length;
+    
+    if (backwardScrolls > forwardScrolls * 0.5) return 'reviewing';
+    if (forwardScrolls > 0 && backwardScrolls === 0) return 'linear';
+    return 'mixed';
+  }
+
+  private calculateClickDepth(): number {
+    return this.clickPatterns.length;
+  }
+
+  private estimateContentCompletion(visibleElements: Element[]): number {
+    const totalPageHeight = document.documentElement.scrollHeight;
+    const currentScroll = window.scrollY + window.innerHeight;
+    return Math.min(currentScroll / totalPageHeight, 1);
   }
 
   public destroy() {
