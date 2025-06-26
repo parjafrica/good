@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { couponService, CouponValidationResult } from './services/couponService';
+import QuickPurchase from './QuickPurchase';
 
 interface CreditPackage {
   id: string;

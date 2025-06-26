@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, uuid, jsonb, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, uuid, jsonb, decimal, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -207,6 +207,39 @@ export const systemSettings = pgTable("system_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const savedPaymentMethods = pgTable("saved_payment_methods", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  cardholderName: text("cardholder_name").notNull(),
+  lastFourDigits: varchar("last_four_digits", { length: 4 }).notNull(),
+  cardType: text("card_type").notNull(), // visa, mastercard, amex, discover
+  expiryMonth: integer("expiry_month").notNull(),
+  expiryYear: integer("expiry_year").notNull(),
+  isDefault: boolean("is_default").default(false),
+  encryptedCardToken: text("encrypted_card_token").notNull(), // encrypted card details
+  billingZip: varchar("billing_zip", { length: 10 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  paymentMethodId: uuid("payment_method_id").references(() => savedPaymentMethods.id),
+  packageId: text("package_id").notNull(),
+  originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).default("0"),
+  finalAmount: decimal("final_amount", { precision: 10, scale: 2 }).notNull(),
+  couponCode: text("coupon_code"),
+  creditsAdded: integer("credits_added").notNull(),
+  status: text("status").notNull(), // pending, completed, failed, refunded
+  transactionId: text("transaction_id").unique().notNull(),
+  processorResponse: text("processor_response"), // JSON response from payment processor
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -224,3 +257,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type SavedPaymentMethod = typeof savedPaymentMethods.$inferSelect;
+export type InsertSavedPaymentMethod = typeof savedPaymentMethods.$inferInsert;
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = typeof paymentTransactions.$inferInsert;

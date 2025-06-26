@@ -1,11 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { registerPaymentRoutes } from "./paymentRoutes";
 
 import { proposals, donorOpportunities } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register payment processing routes
+  registerPaymentRoutes(app);
   
   // Admin routes disabled for testing
   // app.get('/admin', (req, res) => {
