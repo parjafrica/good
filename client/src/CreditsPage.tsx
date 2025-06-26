@@ -181,7 +181,7 @@ const CreditsPage: React.FC = () => {
   };
 
   const handlePurchase = (packageId: string) => {
-    navigate(`/purchase/${packageId}`);
+    navigate(`/credits-purchase/${packageId}`);
   };
 
   const getCreditsPerDollar = (pkg: CreditPackage) => {

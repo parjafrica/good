@@ -104,6 +104,7 @@ function App() {
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/credits" element={<CreditsPage />} />
                   <Route path="/purchase/:packageId" element={<PurchasePage />} />
+                  <Route path="/credits-purchase/:packageId" element={<CreditsPurchase />} />
                   <Route path="/ngo-pipeline" element={<NGOPipeline />} />
                   {/* Admin route removed */}
                 </Routes>
