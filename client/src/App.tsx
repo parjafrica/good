@@ -27,6 +27,7 @@ import StudentDashboard from './StudentDashboard';
 import HumanHelpPage from './HumanHelpPage';
 import CreditsPage from './CreditsPage';
 import PurchasePage from './PurchasePage';
+import OnboardPage from './OnboardPage';
 import HumanHelpButton from './shared/HumanHelpButton';
 
 import AddictionProvider from './contexts/AddictionContext';
