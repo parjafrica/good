@@ -214,21 +214,22 @@ export default function OnboardPage() {
     // Start conversation only once using ref to prevent React StrictMode double execution
     if (!isInitializedRef.current) {
       isInitializedRef.current = true;
-      addBotMessage(conversationFlow[0].message);
+      addBotMessage(conversationFlow[0].message, 0);
     }
   }, []);
 
-  const addBotMessage = (content: string) => {
+  const addBotMessage = (content: string, stepIndex?: number) => {
     setIsTyping(true);
     setTimeout(() => {
       const processedContent = processMessageTemplate(content);
+      const flowStep = conversationFlow[stepIndex ?? currentStep];
       const newMessage: Message = {
         id: Date.now().toString(),
         type: 'bot',
         content: processedContent,
         timestamp: new Date(),
-        options: conversationFlow[currentStep]?.options,
-        inputType: conversationFlow[currentStep]?.inputType as 'text' | 'select' | 'multiselect'
+        options: flowStep?.options,
+        inputType: flowStep?.inputType as 'text' | 'select' | 'multiselect'
       };
       
       // Check for duplicate messages to prevent React StrictMode issues
@@ -299,7 +300,7 @@ export default function OnboardPage() {
     if (nextStep < conversationFlow.length) {
       setCurrentStep(nextStep);
       setTimeout(() => {
-        addBotMessage(conversationFlow[nextStep].message);
+        addBotMessage(conversationFlow[nextStep].message, nextStep);
       }, 1500);
     }
 
