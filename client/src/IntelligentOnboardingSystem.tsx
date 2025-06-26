@@ -4,6 +4,7 @@ import { Eye, EyeOff, ChevronDown, Search, Phone, MessageCircle, Globe, Users, B
 import { useLocation } from 'wouter';
 import { intelligentOnboarding, type UserProfileData } from '@/services/intelligentOnboardingEngine';
 import { errorHandler } from '@/services/errorHandlingSystem';
+import FloatingReviews from './FloatingReviews';
 
 const successStories = [
   { name: "Sarah Mwangi", type: "Student", achievement: "Full Scholarship to Oxford", amount: "$45K", quote: "Granada OS found scholarships I never knew existed!", image: "🎓", color: "from-blue-500 to-purple-500", location: "Kenya" },
@@ -30,15 +31,15 @@ export default function IntelligentOnboardingSystem() {
     errorHandler.setupGlobalErrorHandlers();
   }, []);
 
-  // Auto-focus input
+  // Auto-focus input - more stable approach
   useEffect(() => {
-    if (inputRef.current && currentStep) {
+    if (inputRef.current && currentStep && !isProcessing) {
       const timer = setTimeout(() => {
         inputRef.current?.focus();
-      }, 100);
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [currentStep]);
+  }, [currentStep?.id]); // Only depend on step id, not the entire step object
 
   // Detect user location for personalization
   useEffect(() => {
@@ -348,12 +349,8 @@ export default function IntelligentOnboardingSystem() {
         )}
         
         <div className="relative">
-          <motion.div
-            className="bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-green-500/20 p-6 md:p-8 rounded-2xl backdrop-blur-sm relative overflow-hidden"
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            <motion.div
+          <div className="bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-green-500/20 p-6 md:p-8 rounded-2xl backdrop-blur-sm relative overflow-hidden hover:scale-105 transition-transform duration-300 ease-out">
+            <div
               className="absolute inset-0 rounded-2xl"
               style={{
                 background: 'linear-gradient(45deg, #8b5cf6, #3b82f6, #10b981, #8b5cf6)',
@@ -361,14 +358,7 @@ export default function IntelligentOnboardingSystem() {
                 padding: '2px',
                 mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                 maskComposite: 'exclude',
-              }}
-              animate={{
-                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "linear"
+                animation: 'gradient-move 4s ease-in-out infinite'
               }}
             />
             
@@ -452,7 +442,7 @@ export default function IntelligentOnboardingSystem() {
                 Continue
               </motion.button>
             </div>
-          </motion.div>
+          </div>
           
           {/* Social Login Options - shown strategically */}
           {intelligentOnboarding.shouldShowSocialLogins() && (
@@ -534,6 +524,8 @@ export default function IntelligentOnboardingSystem() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center p-4 pb-32">
+      <FloatingReviews />
+      
       <div className="w-full max-w-lg">
         <AnimatePresence mode="wait">
           <AnimatedFormStep />
