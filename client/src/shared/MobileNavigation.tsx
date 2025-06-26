@@ -170,11 +170,11 @@ const MobileNavigation: React.FC = () => {
                     <div className="flex items-center space-x-3 p-3 bg-gray-100 rounded-xl">
                       <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-bold text-sm">
-                          {user.fullName.split(' ').map(n => n[0]).join('')}
+                          {user.fullName ? user.fullName.split(' ').map(n => n[0]).join('') : user.email?.[0]?.toUpperCase() || 'U'}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-gray-900 font-medium truncate">{user.fullName}</p>
+                        <p className="text-gray-900 font-medium truncate">{user.fullName || user.email || 'User'}</p>
                         <p className="text-gray-500 text-sm">
                           {user.is_superuser ? 'Administrator' : isStudent ? 'Student' : 'Executive Director'}
                         </p>

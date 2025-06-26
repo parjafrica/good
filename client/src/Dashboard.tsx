@@ -280,11 +280,11 @@ const Dashboard: React.FC = () => {
         >
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-xl">
-              {user?.fullName.split(' ').map(n => n[0]).join('')}
+              {user?.fullName ? user.fullName.split(' ').map(n => n[0]).join('') : user?.email?.[0]?.toUpperCase() || 'U'}
             </span>
           </div>
           <div className="text-left">
-            <h3 className="text-xl font-bold text-gray-900">{user?.fullName}</h3>
+            <h3 className="text-xl font-bold text-gray-900">{user?.fullName || user?.email || 'User'}</h3>
             <div className="flex items-center space-x-2">
               <p className="text-gray-600">Executive Director</p>
               {userCountry && (
