@@ -199,8 +199,8 @@ export default function OnboardPage() {
   });
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isInitializedRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -211,12 +211,12 @@ export default function OnboardPage() {
   }, [messages]);
 
   useEffect(() => {
-    // Start conversation only once
-    if (!isInitialized) {
-      setIsInitialized(true);
+    // Start conversation only once using ref to prevent React StrictMode double execution
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true;
       addBotMessage(conversationFlow[0].message);
     }
-  }, [isInitialized]);
+  }, []);
 
   const addBotMessage = (content: string) => {
     setIsTyping(true);
@@ -230,7 +230,21 @@ export default function OnboardPage() {
         options: conversationFlow[currentStep]?.options,
         inputType: conversationFlow[currentStep]?.inputType as 'text' | 'select' | 'multiselect'
       };
-      setMessages(prev => [...prev, newMessage]);
+      
+      // Check for duplicate messages to prevent React StrictMode issues
+      setMessages(prev => {
+        const isDuplicate = prev.some(msg => 
+          msg.type === 'bot' && 
+          msg.content === processedContent && 
+          Math.abs(Date.now() - msg.timestamp.getTime()) < 5000 // Within 5 seconds
+        );
+        
+        if (isDuplicate) {
+          return prev; // Don't add duplicate
+        }
+        
+        return [...prev, newMessage];
+      });
       setIsTyping(false);
     }, 1000 + Math.random() * 1000); // Random typing delay
   };
