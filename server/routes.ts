@@ -2432,6 +2432,175 @@ This section demonstrates our commitment to meeting all requirements while deliv
     }
   });
 
+  // AI-powered localized content generation
+  app.post('/api/ai/generate-localized-content', async (req: Request, res: Response) => {
+    try {
+      const { location, userType, prompt } = req.body;
+      
+      // Simulate AI content generation based on location
+      // In production, this would call DeepSeek API
+      const localizedContent = generateLocalizedContent(location, userType);
+      
+      res.json(localizedContent);
+    } catch (error) {
+      console.error('AI content generation error:', error);
+      res.status(500).json({ error: 'Failed to generate localized content' });
+    }
+  });
+
+  function generateLocalizedContent(location: any, userType: string) {
+    const isAfrica = ['Kenya', 'Uganda', 'Tanzania', 'Ethiopia', 'Nigeria', 'Ghana', 'South Africa'].includes(location.country);
+    const currency = location.currency || 'USD';
+    
+    if (isAfrica) {
+      return {
+        successStories: [
+          {
+            name: "Aisha Mwangi",
+            type: `${location.country} University Student`,
+            achievement: `Secured ${currency} 3.2M scholarship for Agricultural Technology`,
+            amount: `${currency} 3.2M`,
+            quote: `Granada OS helped me find ${location.country}-specific funding I never knew existed!`,
+            image: "👩‍🎓",
+            color: "from-green-500 to-emerald-500",
+            location: location.country
+          },
+          {
+            name: `${location.country} Youth Development Foundation`,
+            type: "Local NGO",
+            achievement: `Received ${currency} 12M grant for rural education in ${location.region}`,
+            amount: `${currency} 12M`,
+            quote: "The AI-powered matching connected us with international donors perfectly.",
+            image: "🌍",
+            color: "from-blue-500 to-cyan-500",
+            location: location.country
+          },
+          {
+            name: "TechHub Innovations",
+            type: `${location.country} Startup`,
+            achievement: `Raised ${currency} 8M seed funding for fintech solution`,
+            amount: `${currency} 8M`,
+            quote: "From prototype to funding in 4 months through Granada OS network.",
+            image: "🚀",
+            color: "from-purple-500 to-pink-500",
+            location: location.country
+          },
+          {
+            name: "Dr. James Kiprotich",
+            type: "Medical Researcher",
+            achievement: `Won ${currency} 5.5M research fellowship for malaria prevention`,
+            amount: `${currency} 5.5M`,
+            quote: "The platform matched my research with Gates Foundation priorities.",
+            image: "🩺",
+            color: "from-red-500 to-rose-500",
+            location: location.country
+          },
+          {
+            name: `${location.country} Agriculture Cooperative`,
+            type: "Farmer Collective",
+            achievement: `Secured ${currency} 15M for sustainable farming initiative`,
+            amount: `${currency} 15M`,
+            quote: "Granada OS connected us to climate-focused international funders.",
+            image: "🌾",
+            color: "from-orange-500 to-yellow-500",
+            location: location.country
+          },
+          {
+            name: "EcoEnergy Solutions",
+            type: "Clean Energy Startup",
+            achievement: `Raised ${currency} 20M for solar microgrid project`,
+            amount: `${currency} 20M`,
+            quote: "The platform's network opened doors to impact investors globally.",
+            image: "⚡",
+            color: "from-teal-500 to-green-500",
+            location: location.country
+          }
+        ],
+        localOpportunities: [
+          {
+            title: `${location.country} Innovation Excellence Fund`,
+            organization: "Ministry of Education & Development",
+            amount: `${currency} 50M`,
+            deadline: "6 weeks remaining",
+            description: `Supporting ${userType} initiatives in technology, agriculture, and healthcare across ${location.country}`
+          },
+          {
+            title: "East Africa Development Grant",
+            organization: "African Development Bank",
+            amount: `${currency} 25M`,
+            deadline: "2 months remaining", 
+            description: `Regional funding for sustainable development projects in ${location.continent}`
+          }
+        ],
+        culturalInsights: {
+          greeting: getLocalGreeting(location.country),
+          currency: currency,
+          timeFormat: "24-hour",
+          priorities: getLocalPriorities(location.country),
+          challenges: getLocalChallenges(location.country)
+        }
+      };
+    }
+    
+    // Fallback for other regions
+    return {
+      successStories: [
+        {
+          name: "Local Success Story",
+          type: `${location.country} ${userType}`,
+          achievement: `Secured ${currency} 100,000 funding through Granada OS`,
+          amount: `${currency} 100K`,
+          quote: "The AI matching system found perfect opportunities for my region!",
+          image: "🎯",
+          color: "from-blue-500 to-purple-500",
+          location: location.country
+        }
+      ],
+      localOpportunities: [
+        {
+          title: `${location.country} Development Fund`,
+          organization: "Local Development Agency",
+          amount: `${currency} 1M`,
+          deadline: "Next month",
+          description: `Supporting ${userType} projects in ${location.country}`
+        }
+      ],
+      culturalInsights: {
+        greeting: "Hello",
+        currency: currency,
+        timeFormat: "12-hour",
+        priorities: ["Education", "Technology", "Innovation"],
+        challenges: ["Development", "Infrastructure"]
+      }
+    };
+  }
+
+  function getLocalGreeting(country: string): string {
+    const greetingMap = {
+      'Kenya': 'Jambo', 'Uganda': 'Oli otya', 'Tanzania': 'Hujambo',
+      'Ethiopia': 'Selam', 'Nigeria': 'Bawo', 'Ghana': 'Akwaaba'
+    };
+    return greetingMap[country] || 'Hello';
+  }
+
+  function getLocalPriorities(country: string): string[] {
+    const priorityMap = {
+      'Kenya': ['Agriculture', 'Technology', 'Education', 'Health'],
+      'Uganda': ['Agriculture', 'Health', 'Education', 'Infrastructure'],
+      'Nigeria': ['Technology', 'Oil & Gas', 'Agriculture', 'Education']
+    };
+    return priorityMap[country] || ['Education', 'Technology', 'Development'];
+  }
+
+  function getLocalChallenges(country: string): string[] {
+    const challengeMap = {
+      'Kenya': ['Rural Development', 'Water Access', 'Youth Employment'],
+      'Uganda': ['Infrastructure', 'Health Systems', 'Education Access'],
+      'Nigeria': ['Infrastructure', 'Power Supply', 'Security']
+    };
+    return challengeMap[country] || ['Development', 'Infrastructure'];
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }

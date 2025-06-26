@@ -4,6 +4,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ArrowRight, Sparkles, User, Building, DollarSign, CheckCircle, Star, TrendingUp, Globe, Award, Zap, Heart, Coffee, Users, Eye, EyeOff, Shield, Lock, Github, Mail, Chrome } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { aiLocationService } from './services/aiLocationService';
+import type { LocationData, AIGeneratedContent } from './services/aiLocationService';
 
 interface UserProfile {
   firstName: string;
@@ -195,14 +197,40 @@ export default function OnboardPage() {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [userLocation, setUserLocation] = useState<LocationData | null>(null);
+  const [aiContent, setAiContent] = useState<AIGeneratedContent | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
-  // Auto-rotate success stories continuously
+  // Initialize location detection and AI content generation
   useEffect(() => {
+    const initializeAIContent = async () => {
+      try {
+        setIsLoadingLocation(true);
+        const location = await aiLocationService.detectLocation();
+        setUserLocation(location);
+        
+        // Generate initial content for student type (will update when user selects type)
+        const content = await aiLocationService.generateLocalizedContent(location, 'student');
+        setAiContent(content);
+      } catch (error) {
+        console.warn('Failed to initialize AI content:', error);
+        // Fallback to hardcoded content if AI fails
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    };
+
+    initializeAIContent();
+  }, []);
+
+  // Auto-rotate success stories continuously using AI-generated content
+  useEffect(() => {
+    const stories = aiContent?.successStories || successStories;
     const timer = setInterval(() => {
-      setCurrentStoryIndex((prev) => (prev + 1) % successStories.length);
+      setCurrentStoryIndex((prev) => (prev + 1) % stories.length);
     }, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [aiContent]);
 
   // Filter countries based on input
   useEffect(() => {
@@ -277,8 +305,19 @@ export default function OnboardPage() {
     }, 500);
   };
 
-  const handleUserTypeSelect = (type: 'student' | 'organization' | 'business') => {
+  const handleUserTypeSelect = async (type: 'student' | 'organization' | 'business') => {
     updateProfile('userType', type);
+    
+    // Regenerate AI content for the selected user type
+    if (userLocation) {
+      try {
+        const content = await aiLocationService.generateLocalizedContent(userLocation, type);
+        setAiContent(content);
+      } catch (error) {
+        console.warn('Failed to regenerate AI content for user type:', error);
+      }
+    }
+    
     setCurrentStep(STEPS.AI_INSIGHTS);
   };
 
@@ -341,46 +380,72 @@ export default function OnboardPage() {
     alert(`Social login with ${provider} will be implemented here`);
   };
 
-  // Success Stories Sidebar Component
+  // AI-Powered Success Stories Sidebar Component - repositioned to bottom-right
   const SuccessStoriesSidebar = () => {
-    const currentStory = successStories[currentStoryIndex];
+    const stories = aiContent?.successStories || successStories;
+    const currentStory = stories[currentStoryIndex];
     
     return (
-      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 w-80 z-50">
-        <AnimatePresence mode="wait">
+      <div className="fixed bottom-6 right-6 w-72 z-40 pointer-events-none">
+        {isLoadingLocation ? (
           <motion.div
-            key={currentStoryIndex}
-            initial={{ opacity: 0, x: 100, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: -100, scale: 0.9 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className={`bg-gradient-to-br ${currentStory.color} p-6 rounded-2xl shadow-2xl backdrop-blur-sm border border-white/20`}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="bg-gray-800/90 p-4 rounded-xl shadow-2xl backdrop-blur-sm border border-gray-600 pointer-events-auto"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-3xl">{currentStory.image}</div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-white">{currentStory.amount}</div>
-                <div className="text-white/80 text-sm">Secured</div>
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+              <span className="text-white text-sm">Loading local success stories...</span>
+            </div>
+            {userLocation && (
+              <div className="mt-2 text-xs text-gray-300">
+                Detected: {userLocation.country}
               </div>
-            </div>
-            
-            <h3 className="text-xl font-bold text-white mb-1">{currentStory.name}</h3>
-            <p className="text-white/90 text-sm mb-3">{currentStory.type}</p>
-            <p className="text-white font-semibold mb-3 text-sm leading-relaxed">{currentStory.achievement}</p>
-            <p className="text-white/90 italic text-sm">"{currentStory.quote}"</p>
-            
-            <div className="flex justify-center mt-4 space-x-1">
-              {successStories.map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    index === currentStoryIndex ? 'bg-white w-6' : 'bg-white/50 w-2'
-                  }`}
-                />
-              ))}
-            </div>
+            )}
           </motion.div>
-        </AnimatePresence>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStoryIndex}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -50, scale: 0.9 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className={`bg-gradient-to-br ${currentStory.color} p-4 rounded-xl shadow-2xl backdrop-blur-sm border border-white/20 pointer-events-auto`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-2xl">{currentStory.image}</div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-white">{currentStory.amount}</div>
+                  <div className="text-white/80 text-xs">Secured</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-lg font-bold text-white">{currentStory.name}</h3>
+                {userLocation && (
+                  <span className="text-xs bg-black/20 text-white px-2 py-1 rounded-full">
+                    {(currentStory as any).location || userLocation.country}
+                  </span>
+                )}
+              </div>
+              <p className="text-white/90 text-xs mb-2">{currentStory.type}</p>
+              <p className="text-white font-medium mb-2 text-xs leading-tight">{currentStory.achievement}</p>
+              <p className="text-white/90 italic text-xs">"{currentStory.quote}"</p>
+              
+              <div className="flex justify-center mt-3 space-x-1">
+                {stories.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      index === currentStoryIndex ? 'bg-white w-4' : 'bg-white/50 w-1'
+                    }`}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
     );
   };
