@@ -37,6 +37,80 @@ const Header: React.FC = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
+  const getBrowserCountry = () => {
+    try {
+      // Try to get country from browser locale
+      const locale = navigator.language || navigator.languages?.[0] || 'en-US';
+      const countryCode = locale.split('-')[1]?.toUpperCase();
+      
+      // Map common country codes to country names and flags
+      const countryMap: { [key: string]: { name: string; flag: string } } = {
+        'US': { name: 'United States', flag: '🇺🇸' },
+        'UG': { name: 'Uganda', flag: '🇺🇬' },
+        'KE': { name: 'Kenya', flag: '🇰🇪' },
+        'SS': { name: 'South Sudan', flag: '🇸🇸' },
+        'GB': { name: 'United Kingdom', flag: '🇬🇧' },
+        'DE': { name: 'Germany', flag: '🇩🇪' },
+        'FR': { name: 'France', flag: '🇫🇷' },
+        'CA': { name: 'Canada', flag: '🇨🇦' },
+        'AU': { name: 'Australia', flag: '🇦🇺' },
+        'IN': { name: 'India', flag: '🇮🇳' },
+        'ZA': { name: 'South Africa', flag: '🇿🇦' },
+        'NG': { name: 'Nigeria', flag: '🇳🇬' },
+        'GH': { name: 'Ghana', flag: '🇬🇭' },
+        'ET': { name: 'Ethiopia', flag: '🇪🇹' },
+        'TZ': { name: 'Tanzania', flag: '🇹🇿' },
+        'RW': { name: 'Rwanda', flag: '🇷🇼' }
+      };
+      
+      if (countryCode && countryMap[countryCode]) {
+        return { 
+          code: countryCode, 
+          name: countryMap[countryCode].name, 
+          flag: countryMap[countryCode].flag 
+        };
+      }
+      
+      // Default to Uganda for East African focus
+      return { code: 'UG', name: 'Uganda', flag: '🇺🇬' };
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const setDefaultCountry = () => {
+    setUserCountry('Global');
+    setCountryFlag('🌍');
+  };
+
+  const detectUserCountry = async () => {
+    try {
+      // Get country from search engine (which has better fallbacks)
+      const country = realDonorSearchEngine.getUserCountry();
+      if (country) {
+        setUserCountry(country);
+        const countryCode = realDonorSearchEngine.getCountryCode(country);
+        setCountryFlag(realDonorSearchEngine.getFlagEmoji(countryCode));
+        return;
+      }
+      
+      // Try to detect from browser locale as fallback
+      const browserCountry = getBrowserCountry();
+      if (browserCountry) {
+        setUserCountry(browserCountry.name);
+        setCountryFlag(browserCountry.flag);
+        console.log('User country detected:', browserCountry.code);
+        return;
+      }
+      
+      // Final fallback to default
+      setDefaultCountry();
+    } catch (error) {
+      console.warn('Country detection failed, using default:', error);
+      setDefaultCountry();
+    }
+  };
+
   useEffect(() => {
     if (!isAuthenticated) return;
     
@@ -54,49 +128,6 @@ const Header: React.FC = () => {
     
     return () => unsubscribe();
   }, [isAuthenticated]);
-
-  const detectUserCountry = async () => {
-    try {
-      // Get country from search engine (which has better fallbacks)
-      const country = realDonorSearchEngine.getUserCountry();
-      if (country) {
-        setUserCountry(country);
-        const countryCode = realDonorSearchEngine.getCountryCode(country);
-        setCountryFlag(realDonorSearchEngine.getFlagEmoji(countryCode));
-        return;
-      }
-      
-      // If search engine doesn't have country yet, try direct detection
-      const response = await fetch('https://ipapi.co/json/', {
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.country_name && data.country_code) {
-        setUserCountry(data.country_name);
-        setCountryFlag(getFlagEmoji(data.country_code));
-      } else {
-        // Fallback to default
-        setDefaultCountry();
-      }
-    } catch (error) {
-      console.warn('Country detection failed, using default:', error);
-      // Fallback to default country
-      setDefaultCountry();
-    }
-  };
-
-  const setDefaultCountry = () => {
-    setUserCountry('Global');
-    setCountryFlag('🌍');
-  };
 
   const getFlagEmoji = (countryCode: string) => {
     try {
