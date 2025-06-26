@@ -299,51 +299,49 @@ const DonorDiscovery: React.FC = () => {
         layout
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ y: -4, scale: 1.02 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
+        whileHover={{ y: -2, scale: 1.01 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700"
       >
-        <div className="flex justify-between items-start mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 pr-2">
             {opportunity.title}
           </h3>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const newFavorites = new Set(favoriteIds);
-                if (isFavorite) {
-                  newFavorites.delete(opportunity.id);
-                } else {
-                  newFavorites.add(opportunity.id);
-                }
-                setFavoriteIds(newFavorites);
-                trackInteraction.mutate({ type: 'toggle_favorite', credits: 1 });
-              }}
-              className={`p-2 rounded-lg transition-colors ${
-                isFavorite ? 'bg-red-100 text-red-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-              }`}
-            >
-              <Heart className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              const newFavorites = new Set(favoriteIds);
+              if (isFavorite) {
+                newFavorites.delete(opportunity.id);
+              } else {
+                newFavorites.add(opportunity.id);
+              }
+              setFavoriteIds(newFavorites);
+              trackInteraction.mutate({ type: 'toggle_favorite', credits: 1 });
+            }}
+            className={`p-1.5 rounded-lg transition-colors ${
+              isFavorite ? 'bg-red-100 text-red-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <Heart className="w-3 h-3" fill={isFavorite ? 'currentColor' : 'none'} />
+          </button>
         </div>
         
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
+        <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 line-clamp-2">
           {opportunity.description}
         </p>
         
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-green-600" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">{opportunity.fundingAmount}</span>
+        <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+          <div className="flex items-center gap-1">
+            <DollarSign className="w-3 h-3 text-green-600" />
+            <span className="text-gray-700 dark:text-gray-300 truncate">{opportunity.fundingAmount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-blue-600" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">{opportunity.deadline}</span>
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3 h-3 text-blue-600" />
+            <span className="text-gray-700 dark:text-gray-300 truncate">{opportunity.deadline}</span>
           </div>
         </div>
         
-        <div className="flex justify-between items-center">
-          <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full truncate flex-1">
             {opportunity.sourceName}
           </span>
           <button
@@ -351,7 +349,7 @@ const DonorDiscovery: React.FC = () => {
               setSelectedOpportunity(opportunity);
               trackInteraction.mutate({ type: 'view_details', credits: 2 });
             }}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-medium"
+            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all text-xs font-medium whitespace-nowrap"
           >
             View Details
           </button>
@@ -478,9 +476,9 @@ const DonorDiscovery: React.FC = () => {
         ) : (
           <motion.div
             layout
-            className={`grid gap-6 ${
+            className={`grid gap-4 ${
               viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                 : 'grid-cols-1'
             }`}
           >
