@@ -14,12 +14,14 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - **Bot System**: Python with Selenium and DeepSeek AI integration
 
 ## Recent Changes (June 26, 2025)
-- **INTERACTIVE CHAT ONBOARDING**: Redesigned onboarding page as black-themed conversational interface
-- Full-screen chat experience with bot and user avatars, typing indicators, and smooth animations
-- Dynamic conversation flow collecting user profile data through natural dialogue
-- Multi-step data collection: personal info, organization details, location/focus, funding experience
-- Real-time message rendering with gradient chat bubbles and interactive option selection
-- Timezone-based country detection with local storage caching for improved user experience
+- **COMPREHENSIVE ONBOARDING REDESIGN**: Completely redesigned onboarding to support both students and organizations
+- Auto-advancing conversation flow where single-select options automatically proceed to next step
+- Student pathway: education level, field of study, country, academic/career goals collection
+- Organization pathway: type, name, position, country, focus areas collection
+- Conditional conversation flow that dynamically shows relevant questions based on user type selection
+- Enhanced black-themed conversational interface with gradient chat bubbles and bot/user avatars
+- Professional expert consultation style with typing indicators and smooth animations
+- Fixed conversation progression issues and eliminated need for Continue buttons on single selections
 - **COMPREHENSIVE 404 ERROR SYSTEM**: Built beautiful 404 page with navigation and recovery options
 - Modern gradient design with floating animations and interactive elements
 - Quick navigation cards for Dashboard, Donor Discovery, and Expert Help

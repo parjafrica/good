@@ -1,64 +1,128 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Send, Bot, User, Sparkles, ArrowRight } from 'lucide-react';
+import { User, Bot, Send, ArrowRight, Sparkles } from 'lucide-react';
+
+interface UserProfile {
+  name?: string;
+  email?: string;
+  userType?: string;
+  // Student fields
+  educationLevel?: string;
+  fieldOfStudy?: string;
+  goals?: string[];
+  // Organization fields
+  organizationType?: string;
+  organizationName?: string;
+  position?: string;
+  focusAreas?: string[];
+  // Common fields
+  country?: string;
+  fundingExperience?: string;
+}
 
 interface Message {
   id: string;
-  type: 'bot' | 'user';
+  type: 'user' | 'bot';
   content: string;
   timestamp: Date;
   options?: string[];
   inputType?: 'text' | 'select' | 'multiselect';
 }
 
-interface UserProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  organizationType: string;
-  organizationName: string;
-  position: string;
-  country: string;
-  focusSectors: string[];
-  fundingExperience: string;
-  annualBudget: string;
-  primaryGoals: string[];
-  currentProjects: string;
-  challenges: string;
-}
-
-const conversationFlow: Array<{
-  id: string;
-  message: string;
-  field: string | null;
-  inputType: 'text' | 'select' | 'multiselect' | 'complete';
-  options?: string[];
-}> = [
+// Define conversation flow
+const conversationFlow = [
   {
     id: 'welcome',
-    message: "Hello! I'm here to help you connect with the right funding opportunities. Let's start by getting to know you and your organization. What's your first name?",
-    field: 'firstName',
-    inputType: 'text'
-  },
-  {
-    id: 'lastName',
-    message: "Thank you, {firstName}. And your last name?",
-    field: 'lastName',
+    message: "Welcome to Granada OS! I'm your funding expert, and I'll help you find the perfect funding opportunities. Let's start by getting to know you better. What's your name?",
+    field: 'name',
     inputType: 'text'
   },
   {
     id: 'email',
-    message: "Thanks. I'll need your email to send you matching funding opportunities. What's your email address?",
+    message: "Thanks {name}! I'll need your email to send you matching funding opportunities. What's your email address?",
     field: 'email',
     inputType: 'text'
   },
   {
+    id: 'userType',
+    message: "Now, are you seeking funding as an individual student or representing an organization?",
+    field: 'userType',
+    inputType: 'select',
+    options: [
+      'Individual Student (Scholarships & Educational Grants)',
+      'Organization (Institutional Funding)'
+    ]
+  },
+  // Student Path
+  {
+    id: 'studentLevel',
+    message: "What level of education are you pursuing?",
+    field: 'educationLevel',
+    inputType: 'select',
+    condition: (profile: any) => profile.userType?.includes('Individual Student'),
+    options: [
+      'High School Graduate (Undergraduate)',
+      'Undergraduate Student',
+      'Graduate Student (Masters)',
+      'PhD/Doctoral Student',
+      'Postdoctoral Researcher',
+      'Vocational/Technical Training'
+    ]
+  },
+  {
+    id: 'fieldOfStudy',
+    message: "What field of study are you interested in or currently pursuing?",
+    field: 'fieldOfStudy',
+    inputType: 'select',
+    condition: (profile: any) => profile.userType?.includes('Individual Student'),
+    options: [
+      'STEM (Science, Technology, Engineering, Mathematics)',
+      'Medicine & Health Sciences',
+      'Business & Economics',
+      'Social Sciences & Public Policy',
+      'Arts & Humanities',
+      'Education & Teaching',
+      'Agriculture & Environmental Sciences',
+      'Engineering & Technology',
+      'Law & Legal Studies',
+      'Other'
+    ]
+  },
+  {
+    id: 'studentCountry',
+    message: "Which country are you from or where do you plan to study?",
+    field: 'country',
+    inputType: 'text',
+    condition: (profile: any) => profile.userType?.includes('Individual Student')
+  },
+  {
+    id: 'studentGoals',
+    message: "What are your main academic/career goals? Select all that apply:",
+    field: 'goals',
+    inputType: 'multiselect',
+    condition: (profile: any) => profile.userType?.includes('Individual Student'),
+    options: [
+      'Complete degree program',
+      'Conduct research',
+      'Study abroad',
+      'Professional development',
+      'Start a business/startup',
+      'Community service',
+      'Environmental impact',
+      'Social justice work',
+      'Healthcare advancement',
+      'Technology innovation'
+    ]
+  },
+  // Organization Path
+  {
     id: 'organizationType',
-    message: "Now let's discuss your organization. What type of organization do you work with?",
+    message: "What type of organization do you represent?",
     field: 'organizationType',
     inputType: 'select',
+    condition: (profile: any) => profile.userType?.includes('Organization'),
     options: [
       'Non-Profit Organization',
       'NGO',
@@ -76,103 +140,64 @@ const conversationFlow: Array<{
     id: 'organizationName',
     message: "What's the name of your organization?",
     field: 'organizationName',
-    inputType: 'text'
+    inputType: 'text',
+    condition: (profile: any) => profile.userType?.includes('Organization')
   },
   {
     id: 'position',
     message: "What's your role at {organizationName}?",
     field: 'position',
-    inputType: 'text'
+    inputType: 'text',
+    condition: (profile: any) => profile.userType?.includes('Organization')
   },
   {
-    id: 'country',
+    id: 'organizationCountry',
     message: "Which country is your organization based in?",
     field: 'country',
-    inputType: 'select',
-    options: [
-      'Kenya', 'Uganda', 'South Sudan', 'Tanzania', 'Rwanda', 'Burundi', 'Ethiopia', 'Somalia',
-      'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Netherlands',
-      'Sweden', 'Norway', 'Denmark', 'Switzerland', 'Other'
-    ]
+    inputType: 'text',
+    condition: (profile: any) => profile.userType?.includes('Organization')
   },
   {
-    id: 'focusSectors',
-    message: "Which sectors does your organization focus on? You can select multiple areas:",
-    field: 'focusSectors',
+    id: 'focusAreas',
+    message: "What are your main focus areas? Select all that apply:",
+    field: 'focusAreas',
     inputType: 'multiselect',
+    condition: (profile: any) => profile.userType?.includes('Organization'),
     options: [
-      'Health & Medical',
       'Education',
+      'Healthcare',
       'Environment',
       'Agriculture',
-      'Water & Sanitation',
+      'Technology',
+      'Social Justice',
+      'Economic Development',
+      'Arts & Culture',
+      'Research & Innovation',
       'Human Rights',
-      'Women & Gender',
-      'Youth Development',
       'Community Development',
-      'Emergency Relief',
-      'Poverty Alleviation',
-      'Technology & Innovation'
+      'Youth Programs',
+      'Women Empowerment',
+      'Climate Change',
+      'Poverty Alleviation'
     ]
   },
+  // Common final steps
   {
     id: 'fundingExperience',
-    message: "How would you describe your experience with securing funding?",
+    message: "How would you describe your experience with grant applications?",
     field: 'fundingExperience',
     inputType: 'select',
     options: [
-      'Beginner (0-2 years)',
-      'Intermediate (3-5 years)',
-      'Advanced (6-10 years)',
-      'Expert (10+ years)'
+      'Complete beginner - never applied before',
+      'Some experience - applied to a few grants',
+      'Experienced - regularly apply for funding',
+      'Expert - very successful track record'
     ]
-  },
-  {
-    id: 'annualBudget',
-    message: "What's your organization's approximate annual budget range?",
-    field: 'annualBudget',
-    inputType: 'select',
-    options: [
-      'Under $10,000',
-      '$10,000 - $50,000',
-      '$50,000 - $100,000',
-      '$100,000 - $500,000',
-      '$500,000 - $1M',
-      'Over $1M'
-    ]
-  },
-  {
-    id: 'primaryGoals',
-    message: "What are your primary funding goals? Select all that apply:",
-    field: 'primaryGoals',
-    inputType: 'multiselect',
-    options: [
-      'Start new programs',
-      'Expand existing programs',
-      'Infrastructure development',
-      'Capacity building',
-      'Research projects',
-      'Emergency response',
-      'Sustainability initiatives',
-      'Technology adoption'
-    ]
-  },
-  {
-    id: 'currentProjects',
-    message: "Tell me about your current projects and initiatives. What are you working on?",
-    field: 'currentProjects',
-    inputType: 'text'
-  },
-  {
-    id: 'challenges',
-    message: "What are the main challenges you face when seeking funding? This helps me understand how to better assist you.",
-    field: 'challenges',
-    inputType: 'text'
   },
   {
     id: 'complete',
-    message: "Thank you, {firstName}. I now have a complete picture of your organization and funding needs. Based on your work in {focusSectors} and {fundingExperience} experience level, I've identified several matching opportunities in our database. Let's get you started with your personalized dashboard.",
-    field: null,
+    message: "Perfect! I now have everything I need to find the best funding opportunities for you. Let's get started!",
+    field: 'complete',
     inputType: 'complete'
   }
 ];
@@ -180,24 +205,10 @@ const conversationFlow: Array<{
 export default function OnboardPage() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentInput, setCurrentInput] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    organizationType: '',
-    organizationName: '',
-    position: '',
-    country: '',
-    focusSectors: [],
-    fundingExperience: '',
-    annualBudget: '',
-    primaryGoals: [],
-    currentProjects: '',
-    challenges: ''
-  });
+  const [currentInput, setCurrentInput] = useState('');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile>({});
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitializedRef = useRef(false);
@@ -231,23 +242,9 @@ export default function OnboardPage() {
         options: flowStep?.options,
         inputType: flowStep?.inputType as 'text' | 'select' | 'multiselect'
       };
-      
-      // Check for duplicate messages to prevent React StrictMode issues
-      setMessages(prev => {
-        const isDuplicate = prev.some(msg => 
-          msg.type === 'bot' && 
-          msg.content === processedContent && 
-          Math.abs(Date.now() - msg.timestamp.getTime()) < 5000 // Within 5 seconds
-        );
-        
-        if (isDuplicate) {
-          return prev; // Don't add duplicate
-        }
-        
-        return [...prev, newMessage];
-      });
+      setMessages(prev => prev.some(msg => msg.content === processedContent) ? prev : [...prev, newMessage]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000); // Random typing delay
+    }, 1000);
   };
 
   const addUserMessage = (content: string) => {
@@ -260,16 +257,25 @@ export default function OnboardPage() {
     setMessages(prev => [...prev, newMessage]);
   };
 
-  const processMessageTemplate = (message: string) => {
+  const processMessageTemplate = (message: string): string => {
     let processed = message;
     Object.entries(userProfile).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        processed = processed.replace(`{${key}}`, value.join(', '));
-      } else {
-        processed = processed.replace(`{${key}}`, value || '');
+      const placeholder = `{${key}}`;
+      if (typeof value === 'string') {
+        processed = processed.replace(new RegExp(placeholder, 'g'), value);
       }
     });
     return processed;
+  };
+
+  const findNextStep = (currentStepIndex: number, profile: UserProfile): number => {
+    for (let i = currentStepIndex + 1; i < conversationFlow.length; i++) {
+      const step = conversationFlow[i];
+      if (!step.condition || step.condition(profile)) {
+        return i;
+      }
+    }
+    return conversationFlow.length;
   };
 
   const handleSubmit = () => {
@@ -296,7 +302,7 @@ export default function OnboardPage() {
     }
 
     // Move to next step
-    const nextStep = currentStep + 1;
+    const nextStep = findNextStep(currentStep, newProfileData);
     if (nextStep < conversationFlow.length) {
       setCurrentStep(nextStep);
       setTimeout(() => {
@@ -319,6 +325,27 @@ export default function OnboardPage() {
       );
     } else {
       setCurrentInput(option);
+      // Auto-advance for single select options
+      setTimeout(() => {
+        const newProfileData = { ...userProfile };
+        newProfileData[currentFlow.field as keyof UserProfile] = option as any;
+        
+        addUserMessage(option);
+        setUserProfile(newProfileData);
+
+        // Move to next step
+        const nextStep = findNextStep(currentStep, newProfileData);
+        if (nextStep < conversationFlow.length) {
+          setCurrentStep(nextStep);
+          setTimeout(() => {
+            addBotMessage(conversationFlow[nextStep].message, nextStep);
+          }, 1500);
+        }
+
+        // Reset inputs
+        setCurrentInput('');
+        setSelectedOptions([]);
+      }, 500);
     }
   };
 
@@ -399,15 +426,15 @@ export default function OnboardPage() {
         {/* Typing indicator */}
         {isTyping && (
           <div className="flex justify-start">
-            <div className="flex items-start space-x-3">
+            <div className="flex items-start space-x-3 max-w-2xl">
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="bg-gray-800 rounded-2xl px-4 py-3">
+              <div className="bg-gray-800 text-gray-100 rounded-2xl px-4 py-3">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
@@ -424,8 +451,8 @@ export default function OnboardPage() {
             <div className="flex space-x-3">
               <Input
                 value={currentInput}
-                onChange={(e) => setCurrentInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentInput(e.target.value)}
+                onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && handleSubmit()}
                 placeholder="Type your response..."
                 className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-purple-500"
               />
@@ -439,14 +466,11 @@ export default function OnboardPage() {
             </div>
           )}
 
-          {(currentFlow.inputType === 'select' || currentFlow.inputType === 'multiselect') && (
+          {currentFlow.inputType === 'multiselect' && (
             <div className="flex justify-center">
               <Button
                 onClick={handleSubmit}
-                disabled={
-                  (currentFlow.inputType === 'select' && !currentInput) ||
-                  (currentFlow.inputType === 'multiselect' && selectedOptions.length === 0)
-                }
+                disabled={selectedOptions.length === 0}
                 className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
               >
                 Continue
