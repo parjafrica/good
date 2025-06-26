@@ -83,15 +83,6 @@ export default function IntelligentOnboardingSystem() {
     }
   };
 
-  const handleInputChange = useCallback((value: string) => {
-    setCurrentInput(value);
-    setError('');
-    
-    if (currentStep?.type === 'select' && currentStep.options) {
-      setShowDropdown(value.length > 0);
-    }
-  }, [currentStep?.type, currentStep?.options]);;
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -289,7 +280,7 @@ export default function IntelligentOnboardingSystem() {
     );
   };
 
-  // Enhanced Input Component with Enter key support
+  // Enhanced Input Component with cursor position preservation
   const EnhancedInput = () => {
     const isPhoneStep = currentStep?.id.includes('phone') || currentStep?.id.includes('Phone');
     const isEmailStep = currentStep?.type === 'email';
@@ -298,15 +289,35 @@ export default function IntelligentOnboardingSystem() {
     // Dynamic padding based on input type
     const inputPadding = isPhoneStep ? 'pl-20 pr-6 py-4' : isPasswordStep ? 'px-6 py-4 pr-12' : 'px-6 py-4';
     
+    // Handle input changes with cursor position preservation
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      const cursorPosition = e.target.selectionStart;
+      
+      setCurrentInput(value);
+      setError('');
+      
+      if (currentStep?.type === 'select' && currentStep.options) {
+        setShowDropdown(value.length > 0);
+      }
+      
+      // Preserve cursor position after state update
+      setTimeout(() => {
+        if (inputRef.current && cursorPosition !== null) {
+          inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }
+      }, 0);
+    };
+    
     return (
       <div className="relative">
         <input
           ref={inputRef}
+          key={`input-${currentStep?.id}-${stepIndex}`}
           type={isPasswordStep && !showPassword ? 'password' : isEmailStep ? 'email' : 'text'}
-          value={currentInput}
-          onChange={(e) => handleInputChange(e.target.value)}
+          defaultValue={currentInput}
+          onChange={handleInputChange}
           onKeyPress={handleKeyPress}
-
           placeholder={currentStep?.placeholder}
           className={`w-full ${inputPadding} bg-white/10 border-2 border-transparent rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:bg-white/20 transition-all duration-300 text-lg`}
           autoComplete="off"
