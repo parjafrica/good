@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { ArrowRight, Sparkles, User, Building, DollarSign, CheckCircle, Star, TrendingUp, Globe, Award, Zap, Heart, Coffee, Users } from 'lucide-react';
+import { ArrowRight, Sparkles, User, Building, DollarSign, CheckCircle, Star, TrendingUp, Globe, Award, Zap, Heart, Coffee, Users, Eye, EyeOff, Shield, Lock, Github, Mail, Chrome } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
+  country: string;
   userType: 'student' | 'organization' | 'business';
   educationLevel?: string;
   fieldOfStudy?: string;
@@ -30,6 +32,8 @@ const STEPS = {
   FIRST_NAME: 'firstName',
   LAST_NAME: 'lastName', 
   EMAIL: 'email',
+  PASSWORD: 'password',
+  COUNTRY: 'country',
   USER_TYPE: 'userType',
   STUDENT_DETAILS: 'studentDetails',
   ORGANIZATION_DETAILS: 'organizationDetails',
@@ -42,25 +46,70 @@ const STEPS = {
 const successStories = [
   {
     name: "Sarah Chen",
-    type: "Student",
-    achievement: "Secured $50,000 scholarship for MIT Computer Science",
+    type: "MIT Student",
+    achievement: "Secured $50,000 scholarship for Computer Science",
     image: "👩‍🎓",
-    quote: "Granada OS helped me find scholarships I never knew existed!"
+    quote: "Granada OS helped me find scholarships I never knew existed!",
+    amount: "$50K",
+    color: "from-purple-500 to-pink-500"
   },
   {
     name: "Green Valley NGO",
-    type: "Organization",
-    achievement: "Received $250,000 grant for climate education",
+    type: "Environmental Org",
+    achievement: "Received $250,000 grant for climate education in Kenya",
     image: "🌱",
-    quote: "The AI-powered matching was incredible - we found perfect funders."
+    quote: "The AI-powered matching was incredible - we found perfect funders.",
+    amount: "$250K",
+    color: "from-green-500 to-emerald-500"
   },
   {
     name: "TechStart Solutions",
-    type: "Business",
+    type: "Tech Startup",
     achievement: "Raised $2M seed funding through platform connections",
     image: "🚀",
-    quote: "From idea to funding in 6 months - Granada OS made it possible."
+    quote: "From idea to funding in 6 months - Granada OS made it possible.",
+    amount: "$2M",
+    color: "from-blue-500 to-cyan-500"
+  },
+  {
+    name: "Maria Rodriguez",
+    type: "Medical Student",
+    achievement: "Won $75,000 medical research fellowship",
+    image: "🩺",
+    quote: "The personalized recommendations matched my research perfectly.",
+    amount: "$75K",
+    color: "from-red-500 to-rose-500"
+  },
+  {
+    name: "African Education Fund",
+    type: "Education NGO",
+    achievement: "Secured $500,000 for rural school development",
+    image: "📚",
+    quote: "Granada OS connects us to funders who truly understand our mission.",
+    amount: "$500K",
+    color: "from-orange-500 to-yellow-500"
+  },
+  {
+    name: "EcoTech Innovations",
+    type: "Clean Energy Startup",
+    achievement: "Raised $1.5M for sustainable technology development",
+    image: "⚡",
+    quote: "The platform's network opened doors we couldn't reach alone.",
+    amount: "$1.5M",
+    color: "from-teal-500 to-green-500"
   }
+];
+
+const countries = [
+  'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria', 
+  'Bangladesh', 'Belgium', 'Brazil', 'Canada', 'Chile', 'China', 'Colombia', 
+  'Denmark', 'Egypt', 'Ethiopia', 'Finland', 'France', 'Germany', 'Ghana', 
+  'Greece', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 
+  'Japan', 'Jordan', 'Kenya', 'South Korea', 'Lebanon', 'Malaysia', 'Mexico', 
+  'Morocco', 'Netherlands', 'New Zealand', 'Nigeria', 'Norway', 'Pakistan', 
+  'Philippines', 'Poland', 'Portugal', 'Romania', 'Russia', 'Saudi Arabia', 
+  'South Africa', 'South Sudan', 'Spain', 'Sweden', 'Switzerland', 'Thailand', 
+  'Turkey', 'Uganda', 'Ukraine', 'United Kingdom', 'United States', 'Vietnam'
 ];
 
 const aiInsights = {
@@ -120,6 +169,14 @@ const validateName = (name: string): boolean => {
   return name.trim().length >= 2;
 };
 
+const validatePassword = (password: string): boolean => {
+  return password.length >= 8;
+};
+
+const validateCountry = (country: string): boolean => {
+  return countries.includes(country);
+};
+
 export default function OnboardPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(STEPS.WELCOME);
@@ -127,22 +184,38 @@ export default function OnboardPage() {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
+    country: '',
     userType: 'student'
   });
   const [currentInput, setCurrentInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
-  // Auto-rotate success stories
+  // Auto-rotate success stories continuously
   useEffect(() => {
-    if (currentStep === STEPS.SUCCESS_STORIES) {
-      const timer = setInterval(() => {
-        setCurrentStoryIndex((prev) => (prev + 1) % successStories.length);
-      }, 4000);
-      return () => clearInterval(timer);
+    const timer = setInterval(() => {
+      setCurrentStoryIndex((prev) => (prev + 1) % successStories.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Filter countries based on input
+  useEffect(() => {
+    if (currentStep === STEPS.COUNTRY && currentInput) {
+      const filtered = countries.filter(country => 
+        country.toLowerCase().includes(currentInput.toLowerCase())
+      );
+      setFilteredCountries(filtered);
+      setShowCountryDropdown(filtered.length > 0);
+    } else {
+      setShowCountryDropdown(false);
     }
-  }, [currentStep]);
+  }, [currentInput, currentStep]);
 
   const updateProfile = (field: keyof UserProfile, value: any) => {
     setUserProfile(prev => ({ ...prev, [field]: value }));
@@ -173,9 +246,35 @@ export default function OnboardPage() {
         return;
       }
       updateProfile('email', currentInput);
+      setCurrentStep(STEPS.PASSWORD);
+      setCurrentInput('');
+    } else if (currentStep === STEPS.PASSWORD) {
+      if (!validatePassword(currentInput)) {
+        setError('Password must be at least 8 characters long');
+        return;
+      }
+      updateProfile('password', currentInput);
+      setCurrentStep(STEPS.COUNTRY);
+      setCurrentInput('');
+    } else if (currentStep === STEPS.COUNTRY) {
+      if (!validateCountry(currentInput)) {
+        setError('Please select a valid country from the list');
+        return;
+      }
+      updateProfile('country', currentInput);
       setCurrentStep(STEPS.USER_TYPE);
       setCurrentInput('');
     }
+  };
+
+  const handleCountrySelect = (country: string) => {
+    setCurrentInput(country);
+    setShowCountryDropdown(false);
+    updateProfile('country', country);
+    setTimeout(() => {
+      setCurrentStep(STEPS.USER_TYPE);
+      setCurrentInput('');
+    }, 500);
   };
 
   const handleUserTypeSelect = (type: 'student' | 'organization' | 'business') => {
@@ -236,6 +335,218 @@ export default function OnboardPage() {
       saveToDatabase();
     }, 8000);
   };
+
+  const handleSocialLogin = (provider: string) => {
+    // Simulate social login - replace with actual implementation
+    alert(`Social login with ${provider} will be implemented here`);
+  };
+
+  // Success Stories Sidebar Component
+  const SuccessStoriesSidebar = () => {
+    const currentStory = successStories[currentStoryIndex];
+    
+    return (
+      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 w-80 z-50">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStoryIndex}
+            initial={{ opacity: 0, x: 100, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -100, scale: 0.9 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className={`bg-gradient-to-br ${currentStory.color} p-6 rounded-2xl shadow-2xl backdrop-blur-sm border border-white/20`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-3xl">{currentStory.image}</div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-white">{currentStory.amount}</div>
+                <div className="text-white/80 text-sm">Secured</div>
+              </div>
+            </div>
+            
+            <h3 className="text-xl font-bold text-white mb-1">{currentStory.name}</h3>
+            <p className="text-white/90 text-sm mb-3">{currentStory.type}</p>
+            <p className="text-white font-semibold mb-3 text-sm leading-relaxed">{currentStory.achievement}</p>
+            <p className="text-white/90 italic text-sm">"{currentStory.quote}"</p>
+            
+            <div className="flex justify-center mt-4 space-x-1">
+              {successStories.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    index === currentStoryIndex ? 'bg-white w-6' : 'bg-white/50 w-2'
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  // Animated Form Input Component
+  const AnimatedFormInput = ({ 
+    title, 
+    subtitle, 
+    placeholder, 
+    value, 
+    type = "text",
+    showToggle = false,
+    isCountry = false
+  }: {
+    title: string;
+    subtitle: string;
+    placeholder: string;
+    value: string;
+    type?: string;
+    showToggle?: boolean;
+    isCountry?: boolean;
+  }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="text-center max-w-md mx-auto"
+    >
+      <h2 className="text-3xl font-bold text-white mb-2">{title}</h2>
+      <p className="text-gray-400 mb-8">{subtitle}</p>
+      
+      <div className="relative">
+        <motion.div
+          className="bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-green-500/20 p-8 rounded-2xl backdrop-blur-sm relative overflow-hidden"
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+          {/* Animated border */}
+          <motion.div
+            className="absolute inset-0 rounded-2xl"
+            style={{
+              background: 'linear-gradient(45deg, #8b5cf6, #3b82f6, #10b981, #8b5cf6)',
+              backgroundSize: '300% 300%',
+              padding: '2px',
+              mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              maskComposite: 'exclude',
+            }}
+            animate={{
+              backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+          
+          <div className="relative">
+            <div className="relative">
+              <Input
+                value={value}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setCurrentInput(e.target.value);
+                  if (isCountry) {
+                    setShowCountryDropdown(true);
+                  }
+                }}
+                onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && handleNext()}
+                placeholder={placeholder}
+                type={showToggle && !showPassword ? 'password' : 'text'}
+                className="mb-4 bg-gray-800/50 border-gray-600 text-white text-lg p-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 pr-12"
+                autoFocus
+              />
+              
+              {showToggle && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-4 text-gray-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              )}
+            </div>
+            
+            {/* Country Dropdown */}
+            {isCountry && showCountryDropdown && filteredCountries.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute z-10 w-full bg-gray-800 border border-gray-600 rounded-lg mt-1 max-h-48 overflow-y-auto"
+              >
+                {filteredCountries.slice(0, 8).map((country) => (
+                  <button
+                    key={country}
+                    onClick={() => handleCountrySelect(country)}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-700 text-white transition-colors"
+                  >
+                    {country}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+            
+            {error && (
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-400 text-sm mb-4"
+              >
+                {error}
+              </motion.p>
+            )}
+            
+            <Button 
+              onClick={handleNext}
+              disabled={!currentInput.trim()}
+              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 py-3 text-lg font-semibold"
+            >
+              Continue
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+            
+            {/* Social Login Options */}
+            {currentStep === STEPS.EMAIL && (
+              <div className="mt-6">
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-600"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  <Button
+                    onClick={() => handleSocialLogin('Google')}
+                    variant="outline"
+                    className="border-gray-600 hover:bg-gray-700"
+                  >
+                    <Chrome className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={() => handleSocialLogin('GitHub')}
+                    variant="outline"
+                    className="border-gray-600 hover:bg-gray-700"
+                  >
+                    <Github className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={() => handleSocialLogin('Email')}
+                    variant="outline"
+                    className="border-gray-600 hover:bg-gray-700"
+                  >
+                    <Mail className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
 
   const containerVariants = {
     hidden: { opacity: 0, y: 50 },
@@ -345,49 +656,6 @@ export default function OnboardPage() {
         Begin Your Journey
         <ArrowRight className="w-5 h-5 ml-2" />
       </Button>
-    </motion.div>
-  );
-
-  const renderTextInput = (title: string, subtitle: string, placeholder: string, value: string) => (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="text-center max-w-md mx-auto"
-    >
-      <h2 className="text-3xl font-bold text-white mb-2">{title}</h2>
-      <p className="text-gray-400 mb-8">{subtitle}</p>
-      
-      <div className="bg-gray-800/50 rounded-xl p-8 backdrop-blur-sm">
-        <Input
-          value={value}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentInput(e.target.value)}
-          onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && handleNext()}
-          placeholder={placeholder}
-          className="mb-4 bg-gray-700 border-gray-600 text-white text-lg p-4 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
-          autoFocus
-        />
-        
-        {error && (
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-red-400 text-sm mb-4"
-          >
-            {error}
-          </motion.p>
-        )}
-        
-        <Button 
-          onClick={handleNext}
-          disabled={!currentInput.trim()}
-          className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 py-3"
-        >
-          Continue
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
     </motion.div>
   );
 
@@ -681,16 +949,6 @@ export default function OnboardPage() {
                   <option value="other">Other</option>
                 </select>
               </div>
-
-              <div>
-                <label className="block text-left text-sm font-medium text-gray-300 mb-2">Study Country</label>
-                <Input
-                  value={userProfile.studyCountry || ''}
-                  onChange={(e) => updateProfile('studyCountry', e.target.value)}
-                  placeholder="Where are you studying or plan to study?"
-                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
-                />
-              </div>
             </>
           )}
 
@@ -733,16 +991,6 @@ export default function OnboardPage() {
                   value={userProfile.position || ''}
                   onChange={(e) => updateProfile('position', e.target.value)}
                   placeholder="e.g., Executive Director, Program Manager"
-                  className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
-                />
-              </div>
-
-              <div>
-                <label className="block text-left text-sm font-medium text-gray-300 mb-2">Country</label>
-                <Input
-                  value={userProfile.organizationCountry || ''}
-                  onChange={(e) => updateProfile('organizationCountry', e.target.value)}
-                  placeholder="Organization's country"
                   className="bg-gray-700 border-gray-600 text-white py-3 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
@@ -948,26 +1196,54 @@ export default function OnboardPage() {
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-green-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
       </div>
       
+      {/* Success Stories Sidebar - only show after welcome screen */}
+      {currentStep !== STEPS.WELCOME && <SuccessStoriesSidebar />}
+      
       <div className="w-full relative z-10">
         <AnimatePresence mode="wait">
           {currentStep === STEPS.WELCOME && renderWelcome()}
-          {currentStep === STEPS.FIRST_NAME && renderTextInput(
-            "What's your first name?", 
-            "Let's start by getting to know you personally",
-            "Enter your first name", 
-            currentInput
+          {currentStep === STEPS.FIRST_NAME && (
+            <AnimatedFormInput
+              title="What's your first name?"
+              subtitle="Let's start by getting to know you personally"
+              placeholder="Enter your first name"
+              value={currentInput}
+            />
           )}
-          {currentStep === STEPS.LAST_NAME && renderTextInput(
-            `Nice to meet you, ${userProfile.firstName}!`, 
-            "What's your last name?",
-            "Enter your last name", 
-            currentInput
+          {currentStep === STEPS.LAST_NAME && (
+            <AnimatedFormInput
+              title={`Nice to meet you, ${userProfile.firstName}!`}
+              subtitle="What's your last name?"
+              placeholder="Enter your last name"
+              value={currentInput}
+            />
           )}
-          {currentStep === STEPS.EMAIL && renderTextInput(
-            "What's your email address?", 
-            "We'll send you personalized funding opportunities and updates",
-            "Enter your email address", 
-            currentInput
+          {currentStep === STEPS.EMAIL && (
+            <AnimatedFormInput
+              title="What's your email address?"
+              subtitle="We'll send you personalized funding opportunities and updates"
+              placeholder="Enter your email address"
+              value={currentInput}
+            />
+          )}
+          {currentStep === STEPS.PASSWORD && (
+            <AnimatedFormInput
+              title="Create a secure password"
+              subtitle="Choose a strong password to protect your account"
+              placeholder="Enter your password (min 8 characters)"
+              value={currentInput}
+              type="password"
+              showToggle={true}
+            />
+          )}
+          {currentStep === STEPS.COUNTRY && (
+            <AnimatedFormInput
+              title="Which country are you from?"
+              subtitle="This helps us find location-specific funding opportunities"
+              placeholder="Start typing your country..."
+              value={currentInput}
+              isCountry={true}
+            />
           )}
           {currentStep === STEPS.USER_TYPE && renderUserTypeSelection()}
           {currentStep === STEPS.AI_INSIGHTS && renderAIInsights()}
