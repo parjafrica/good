@@ -9,7 +9,7 @@ import {
   Eye, Clock, ArrowRight, Plus, Coins, Flame, Lightbulb,
   MousePointer, ThumbsUp, MessageCircle, Settings, SortAsc,
   Grid, List, Map, FileText, Download, Bell, AlertCircle,
-  CheckCircle, ExternalLink, Layers, Activity, TrendingDown, X, FileEdit
+  CheckCircle, ExternalLink, Layers, Activity, TrendingDown, X
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { apiRequest } from './lib/queryClient';
@@ -520,7 +520,11 @@ const DonorDiscovery: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedOpportunity(null)}
+            onClick={() => {
+              if (!showApplyModal) {
+                setSelectedOpportunity(null);
+              }
+            }}
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0, y: 50 }}
@@ -699,7 +703,13 @@ const DonorDiscovery: React.FC = () => {
                   boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)"
                 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setShowApplyModal(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Apply Now clicked, selectedOpportunity:', selectedOpportunity);
+                  console.log('Setting showApplyModal to true');
+                  setShowApplyModal(true);
+                }}
                 transition={{ 
                   type: "spring", 
                   duration: 0.6
@@ -747,7 +757,7 @@ const DonorDiscovery: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-60 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
             onClick={() => setShowApplyModal(false)}
           >
             <motion.div
@@ -759,7 +769,13 @@ const DonorDiscovery: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="text-center mb-6">
+              <div className="relative text-center mb-6">
+                <button
+                  onClick={() => setShowApplyModal(false)}
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Zap className="w-8 h-8 text-white" />
                 </div>
