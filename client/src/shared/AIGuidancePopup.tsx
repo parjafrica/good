@@ -72,7 +72,14 @@ const AIGuidancePopup: React.FC<AIGuidancePopupProps> = ({
     }
   };
 
-  if (!isVisible || !insight) return null;
+  // Debug logging to see what insights are being received
+  useEffect(() => {
+    if (insight) {
+      console.log('AI Insight received for popup:', insight);
+    }
+  }, [insight]);
+
+  if (!insight) return null;
 
   return (
     <AnimatePresence>

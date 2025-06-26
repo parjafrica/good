@@ -224,8 +224,8 @@ Based on this analysis, should we provide guidance to the user? If yes, what spe
       return false;
     }
 
-    // Only show high-confidence insights
-    if (insight.metadata.confidence < 0.6) {
+    // Only show medium-confidence insights or higher
+    if (insight.metadata.confidence < 0.5) {
       return false;
     }
 
@@ -234,12 +234,12 @@ Based on this analysis, should we provide guidance to the user? If yes, what spe
       return true;
     }
 
-    // Limit insight frequency
+    // Limit insight frequency (reduced intervals for better responsiveness)
     const timeSinceLastInsight = this.lastInsight 
       ? Date.now() - this.getInsightTimestamp(this.lastInsight)
       : Infinity;
 
-    const minInterval = insight.priority === 'high' ? 10000 : 30000; // 10s for high, 30s for others
+    const minInterval = insight.priority === 'high' ? 5000 : 15000; // 5s for high, 15s for others
     
     return timeSinceLastInsight > minInterval;
   }
@@ -250,25 +250,85 @@ Based on this analysis, should we provide guidance to the user? If yes, what spe
   }
 
   private fallbackAnalysis(analysis: BehaviorAnalysis): AIInsight | null {
-    const { metrics, intent } = analysis;
+    const { metrics, intent, sessionDuration } = analysis;
+
+    // Generate insights based on user behavior patterns
+    
+    // High engagement with reading behavior
+    if (metrics.engagementScore > 0.6 && sessionDuration > 30000) {
+      return {
+        type: 'suggestion',
+        priority: 'medium',
+        title: 'Expert Insight Available',
+        message: 'Based on your reading patterns, I can provide targeted funding recommendations for your sector. Would you like personalized suggestions?',
+        actions: [
+          {
+            id: 'get_recommendations',
+            label: 'Get Recommendations',
+            type: 'tutorial',
+            target: '#opportunity-grid'
+          },
+          {
+            id: 'dismiss',
+            label: 'Maybe Later',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.9,
+          reasoning: 'High engagement with content reading detected',
+          triggerConditions: ['engagement_score > 0.6', 'session_duration > 30s'],
+          estimatedImpact: 0.8
+        }
+      };
+    }
+
+    // Scrolling patterns indicate browsing behavior
+    if (metrics.scrollDistance > 1000 && metrics.clickCount > 5) {
+      return {
+        type: 'guidance',
+        priority: 'medium',
+        title: 'Browsing Multiple Opportunities?',
+        message: 'I see you\'re exploring several funding options. Try using filters to narrow down opportunities that match your organization\'s focus.',
+        actions: [
+          {
+            id: 'show_filters',
+            label: 'Show Filter Options',
+            type: 'highlight',
+            target: '#filter-panel'
+          },
+          {
+            id: 'dismiss',
+            label: 'Continue Browsing',
+            type: 'dismiss'
+          }
+        ],
+        metadata: {
+          confidence: 0.7,
+          reasoning: 'Active browsing behavior with multiple interactions',
+          triggerConditions: ['scroll_distance > 1000px', 'click_count > 5'],
+          estimatedImpact: 0.6
+        }
+      };
+    }
 
     // High frustration detection
     if (metrics.frustrationScore > 0.7) {
       return {
         type: 'help_offer',
         priority: 'high',
-        title: 'Need help finding opportunities?',
-        message: 'I notice you might be having trouble. Would you like me to suggest some funding opportunities based on your interests?',
+        title: 'Need Expert Assistance?',
+        message: 'Having trouble finding the right opportunities? Our expert system can help you discover funding that matches your specific needs.',
         actions: [
           {
-            id: 'get_personalized_help',
-            label: 'Get Personalized Suggestions',
+            id: 'get_expert_help',
+            label: 'Get Expert Help',
             type: 'tutorial',
             target: '#search-input'
           },
           {
             id: 'dismiss_help',
-            label: 'No thanks',
+            label: 'Continue Searching',
             type: 'dismiss'
           }
         ],
@@ -306,6 +366,35 @@ Based on this analysis, should we provide guidance to the user? If yes, what spe
           reasoning: 'Low engagement with content finding struggle',
           triggerConditions: ['low_engagement', 'finding_content_struggle'],
           estimatedImpact: 0.6
+        }
+      };
+    }
+
+    // Default insight for active users (ensures AI guidance is visible)
+    if (metrics.clickCount > 1 && sessionDuration > 5000) {
+      return {
+        type: 'guidance',
+        priority: 'medium',
+        title: 'Expert System Active',
+        message: 'The AI expert system is analyzing your behavior to provide personalized funding recommendations. Continue exploring to receive targeted suggestions.',
+        actions: [
+          {
+            id: 'continue_exploring',
+            label: 'Continue Exploring',
+            type: 'dismiss'
+          },
+          {
+            id: 'get_help',
+            label: 'Get Expert Help',
+            type: 'tutorial',
+            target: '#opportunity-grid'
+          }
+        ],
+        metadata: {
+          confidence: 0.8,
+          reasoning: 'Active user engagement detected',
+          triggerConditions: ['click_count > 1', 'session_duration > 5s'],
+          estimatedImpact: 0.7
         }
       };
     }
