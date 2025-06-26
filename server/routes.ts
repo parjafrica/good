@@ -2193,11 +2193,11 @@ This section demonstrates our commitment to meeting all requirements while deliv
         savingsPercentage: Math.round((discountAmount / selectedPackage.price) * 100)
       });
 
-      // Return successful payment response
+      // Return successful payment response for direct credit addition
       res.json({
         payment_id: paymentId,
-        payment_url: `https://pay.dodopayments.com/test-payment-${paymentId}`,
-        status: 'pending',
+        payment_url: null, // No redirect needed for test mode
+        status: 'completed',
         amount: finalPrice,
         original_amount: selectedPackage.price,
         discount_amount: discountAmount,
@@ -2208,7 +2208,9 @@ This section demonstrates our commitment to meeting all requirements while deliv
           name: selectedPackage.name,
           credits: totalCredits,
           description: selectedPackage.description
-        }
+        },
+        message: `Payment completed! ${totalCredits} credits added to your account.`,
+        savings_message: couponCode ? `You saved $${discountAmount.toFixed(2)} with coupon ${couponCode}!` : null
       });
     } catch (error) {
       console.error('Payment creation error:', error);
@@ -2252,6 +2254,7 @@ This section demonstrates our commitment to meeting all requirements while deliv
   }
 
   // Test payment completion route
+  // Test payment page for 99% discount testing
   app.get('/test-payment', (req: Request, res: Response) => {
     const { id } = req.query;
     

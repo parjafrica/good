@@ -203,8 +203,18 @@ const PurchasePage: React.FC = () => {
 
       const paymentData = await response.json();
       
-      // Redirect to DodoPay checkout
-      window.location.href = paymentData.payment_url;
+      // Handle direct payment completion or redirect if needed
+      if (paymentData.status === 'completed' && !paymentData.payment_url) {
+        // Payment completed directly - show success message
+        alert(`${paymentData.message || 'Payment completed successfully!'}\n${paymentData.savings_message || ''}`);
+        // Redirect to credits page to show updated balance
+        window.location.href = '/credits?success=true';
+      } else if (paymentData.payment_url) {
+        // Redirect to external payment processor
+        window.location.href = paymentData.payment_url;
+      } else {
+        throw new Error('Invalid payment response');
+      }
       
     } catch (error: any) {
       console.error('Payment error:', error);
