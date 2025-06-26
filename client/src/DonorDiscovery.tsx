@@ -548,7 +548,7 @@ const DonorDiscovery: React.FC = () => {
                       <h2 className="text-2xl font-bold leading-tight mb-2">
                         {selectedOpportunity.title}
                       </h2>
-                      <div className="flex items-center gap-4 text-sm opacity-90 mb-4">
+                      <div className="flex items-center gap-4 text-sm opacity-90">
                         <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
                           {selectedOpportunity.fundingAmount}
@@ -558,18 +558,6 @@ const DonorDiscovery: React.FC = () => {
                           {selectedOpportunity.deadline}
                         </div>
                       </div>
-                      
-                      {/* Prominent Apply Now Button */}
-                      <motion.button
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setShowApplyModal(true)}
-                        className="flex items-center gap-3 px-6 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-lg"
-                      >
-                        <Zap className="w-5 h-5" />
-                        Apply Now
-                        <ArrowRight className="w-4 h-4" />
-                      </motion.button>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -700,6 +688,53 @@ const DonorDiscovery: React.FC = () => {
                   </motion.button>
                 </div>
               </div>
+
+              {/* Circular Apply Now Button - Bottom Right */}
+              <motion.button
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                whileHover={{ 
+                  scale: 1.1, 
+                  rotate: 360,
+                  boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)"
+                }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowApplyModal(true)}
+                transition={{ 
+                  type: "spring", 
+                  duration: 0.6,
+                  rotate: { duration: 0.8, ease: "easeInOut" }
+                }}
+                className="absolute bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-2xl hover:shadow-blue-500/40 transition-all duration-300"
+              >
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    opacity: [1, 0.7, 1]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "loop"
+                  }}
+                >
+                  <Zap className="w-8 h-8" />
+                </motion.div>
+                
+                {/* Pulsing Ring Animation */}
+                <motion.div
+                  className="absolute inset-0 rounded-full border-4 border-blue-400"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [0.8, 0, 0.8]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "loop"
+                  }}
+                />
+              </motion.button>
             </motion.div>
           </motion.div>
         )}

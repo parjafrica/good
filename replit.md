@@ -46,7 +46,8 @@ Granada OS is a comprehensive funding opportunities platform successfully migrat
 - Much more subtle guidance focused on general exploration tips rather than directing users to expert help
 - **ENHANCED OPPORTUNITY DETAIL POPUPS**: Completely redesigned with modern graphics and superior UX
 - Beautiful gradient header with animated background elements and spring transitions
-- Prominent "Apply Now" button in header with white styling and lightning icon animation
+- Circular "Apply Now" button positioned at bottom-right with advanced animations and pulsing effects
+- Multiple animation layers: entrance rotation, hover 360-degree spin, continuous icon pulsing, and ring borders
 - Secondary choice modal with professional card layouts for application methods
 - Three application options: Apply Yourself (5 credits), Expert Help (8 credits), View Source (1 credit)
 - Color-coded sections with visual hierarchy: Description, Eligibility, Location, Requirements
