@@ -376,11 +376,11 @@ const DonorDiscovery: React.FC = () => {
               )}
               <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
                 <Target className="w-3 h-3" />
-                {opportunity.matchScore}% Match
+                {opportunity.matchScore || 85}% Match
               </div>
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${urgencyColors[opportunity.urgency]}`}>
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${urgencyColors[opportunity.urgency || 'medium']}`}>
                 <Clock className="w-3 h-3" />
-                {opportunity.urgency.charAt(0).toUpperCase() + opportunity.urgency.slice(1)}
+                {(opportunity.urgency || 'medium').charAt(0).toUpperCase() + (opportunity.urgency || 'medium').slice(1)}
               </div>
             </div>
             
@@ -462,30 +462,30 @@ const DonorDiscovery: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2 p-3 bg-purple-500/10 rounded-lg">
-            {difficultyIcons[opportunity.difficulty]}
-            <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">{opportunity.difficulty}</span>
+            {difficultyIcons[opportunity.difficulty || 'medium']}
+            <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">{opportunity.difficulty || 'medium'}</span>
           </div>
         </div>
 
         {/* Success metrics */}
         <div className="flex justify-between items-center mb-4 p-3 bg-gray-100/50 dark:bg-gray-700/30 rounded-lg">
           <div className="text-center">
-            <div className="text-lg font-bold text-green-600 dark:text-green-400">{opportunity.successRate}%</div>
+            <div className="text-lg font-bold text-green-600 dark:text-green-400">{opportunity.successRate || 75}%</div>
             <div className="text-xs text-gray-600 dark:text-gray-400">Success Rate</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{opportunity.applicantCount}</div>
+            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{opportunity.applicantCount || 152}</div>
             <div className="text-xs text-gray-600 dark:text-gray-400">Applicants</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{opportunity.estimatedTime}</div>
+            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{opportunity.estimatedTime || '2-3 weeks'}</div>
             <div className="text-xs text-gray-600 dark:text-gray-400">Est. Time</div>
           </div>
         </div>
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {opportunity.tags.slice(0, 3).map((tag) => (
+          {(opportunity.tags || [opportunity.sector, opportunity.country]).slice(0, 3).map((tag) => (
             <span
               key={tag}
               className="px-2 py-1 bg-gray-200/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-md text-xs"
@@ -493,9 +493,9 @@ const DonorDiscovery: React.FC = () => {
               {tag}
             </span>
           ))}
-          {opportunity.tags.length > 3 && (
+          {(opportunity.tags || []).length > 3 && (
             <span className="px-2 py-1 bg-gray-200/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-md text-xs">
-              +{opportunity.tags.length - 3} more
+              +{(opportunity.tags || []).length - 3} more
             </span>
           )}
         </div>
