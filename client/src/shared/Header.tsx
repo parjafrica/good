@@ -22,7 +22,6 @@ import {
   Menu
 } from 'lucide-react';
 import { useAuth } from '.././contexts/AuthContext';
-import ThemeSelector from '../ThemeSelector';
 import { notificationService } from '.././services/notificationService';
 import { Notification } from '.././types';
 import { realDonorSearchEngine } from '.././services/realDonorSearchEngine';
@@ -255,8 +254,7 @@ const Header: React.FC = () => {
             </div>
           )}
 
-          {/* Theme Selector */}
-          <ThemeSelector />
+          {/* Theme Selector removed due to context hierarchy */}
 
           {/* New Proposal Button */}
           <motion.button
