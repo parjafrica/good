@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { Send, User, Bot, Sparkles, Globe, Heart, Zap, MapPin, Github } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Globe, Heart, Zap, MapPin, Github, Edit3, Check, X } from 'lucide-react';
 import { FaGoogle, FaLinkedin } from 'react-icons/fa';
 import FloatingReviews from './FloatingReviews';
 
@@ -123,7 +123,13 @@ export default function ChatOnboarding() {
   const [countrySuggestions, setCountrySuggestions] = useState<string[]>([]);
   const [showCountrySuggestions, setShowCountrySuggestions] = useState(false);
   const [userCountry, setUserCountry] = useState<string>('');
-  const [initialized, setInitialized] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+  const [showProfileSummary, setShowProfileSummary] = useState(false);
+  const [showSocialOptions, setShowSocialOptions] = useState(false);
+  const [personalizedInsights, setPersonalizedInsights] = useState<string[]>([]);
+  const [learningProgress, setLearningProgress] = useState(0);
+  const initRef = useRef(false);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -144,8 +150,8 @@ export default function ChatOnboarding() {
 
   // Initialize everything once
   useEffect(() => {
-    if (!initialized) {
-      setInitialized(true);
+    if (!initRef.current) {
+      initRef.current = true;
       
       // Detect user country
       try {
@@ -255,6 +261,132 @@ export default function ChatOnboarding() {
     }]);
   };
 
+  const analyzeUserInput = (input: string, field: string) => {
+    const insights: string[] = [];
+    
+    // Analyze based on field type and learn about user
+    if (field === 'firstName') {
+      insights.push(`I notice you're ${input} - that's a beautiful name!`);
+      setLearningProgress(15);
+    } else if (field === 'country') {
+      if (input.toLowerCase().includes('uganda')) {
+        insights.push('Uganda has amazing opportunities in agriculture, health, and education sectors');
+      } else if (input.toLowerCase().includes('kenya')) {
+        insights.push('Kenya is a hub for fintech and innovation funding');
+      }
+      setLearningProgress(prev => prev + 25);
+    } else if (field === 'userType') {
+      if (input.toLowerCase().includes('student')) {
+        insights.push('Students have access to exclusive scholarship and research funding');
+      } else if (input.toLowerCase().includes('organization')) {
+        insights.push('NGOs and organizations can access multi-year institutional grants');
+      }
+      setLearningProgress(prev => prev + 20);
+    } else if (field === 'sector') {
+      insights.push(`The ${input} sector has particularly strong funding opportunities right now`);
+      setLearningProgress(prev => prev + 20);
+    }
+    
+    if (insights.length > 0) {
+      setPersonalizedInsights(prev => [...prev, ...insights]);
+    }
+    
+    // Trigger social options when we have enough information
+    if (learningProgress >= 60 && !showSocialOptions) {
+      setTimeout(() => {
+        setShowSocialOptions(true);
+        addBotMessage("🔗 I'm getting to know you better! Would you like to connect a social account to speed this up and get more personalized recommendations?");
+      }, 2000);
+    }
+  };
+
+  const handleSocialLogin = (provider: string) => {
+    // Create dynamic popup overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 10000; display: flex;
+      align-items: center; justify-content: center; backdrop-filter: blur(10px);
+    `;
+    
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px; border-radius: 20px; text-align: center;
+      color: white; font-family: system-ui; max-width: 400px;
+      transform: scale(0); transition: all 0.3s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    `;
+    
+    const providerColors = {
+      google: 'linear-gradient(135deg, #4285f4 0%, #34a853 100%)',
+      github: 'linear-gradient(135deg, #333 0%, #24292e 100%)', 
+      linkedin: 'linear-gradient(135deg, #0077b5 0%, #00a0dc 100%)'
+    };
+    
+    popup.style.background = providerColors[provider as keyof typeof providerColors] || popup.style.background;
+    
+    popup.innerHTML = `
+      <div style="font-size: 48px; margin-bottom: 20px;">🔗</div>
+      <h2 style="margin: 0 0 10px 0;">Connecting to ${provider.charAt(0).toUpperCase() + provider.slice(1)}</h2>
+      <p style="margin: 0 0 20px 0; opacity: 0.9;">Securely linking your account for better recommendations...</p>
+      <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
+        <div id="progress" style="height: 100%; background: #4ade80; width: 0%; transition: width 2s ease;"></div>
+      </div>
+    `;
+    
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+    
+    // Animate popup in
+    setTimeout(() => {
+      popup.style.transform = 'scale(1)';
+      const progressBar = popup.querySelector('#progress') as HTMLElement;
+      if (progressBar) progressBar.style.width = '100%';
+    }, 100);
+    
+    // Simulate authentication process
+    setTimeout(() => {
+      const socialData = {
+        google: {
+          email: `${userProfile.firstName?.toLowerCase() || 'user'}@gmail.com`,
+          organization: 'Google Workspace',
+          experience: 'Professional'
+        },
+        github: {
+          email: `${userProfile.firstName?.toLowerCase() || 'dev'}@users.noreply.github.com`,
+          sector: 'Technology',
+          organization: 'Open Source Community'
+        },
+        linkedin: {
+          email: `${userProfile.firstName?.toLowerCase() || 'professional'}@company.com`,
+          experience: 'Senior Level',
+          organization: 'Professional Network'
+        }
+      }[provider];
+
+      setUserProfile(prev => ({
+        ...prev,
+        ...socialData
+      }));
+
+      // Remove popup with animation
+      popup.style.transform = 'scale(0)';
+      setTimeout(() => {
+        document.body.removeChild(overlay);
+      }, 300);
+
+      setShowSocialOptions(false);
+      addBotMessage(`🎉 Perfect! I've connected your ${provider.charAt(0).toUpperCase() + provider.slice(1)} account. Now I understand your background much better and can provide highly personalized funding recommendations!`);
+      
+      // Skip ahead based on enriched data
+      setCurrentStep(Math.min(currentStep + 2, chatFlow.length - 1));
+      setLearningProgress(100);
+    }, 2500);
+  };
+
+
+
   const handleSendMessage = () => {
     if (!currentInput.trim()) return;
 
@@ -267,11 +399,14 @@ export default function ChatOnboarding() {
     // Add user message
     addUserMessage(currentInput);
     
-    // Update profile
+    // Update profile and analyze input for learning
     setUserProfile(prev => ({
       ...prev,
       [currentStepData.field]: currentInput
     }));
+    
+    // Intelligent learning from user input
+    analyzeUserInput(currentInput, currentStepData.field);
 
     setCurrentInput('');
     setShowOptions(false);
@@ -334,35 +469,68 @@ export default function ChatOnboarding() {
     }
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'github' | 'linkedin') => {
-    addBotMessage(`🚀 Redirecting you to ${provider === 'github' ? 'GitHub' : provider === 'google' ? 'Google' : 'LinkedIn'} for quick sign up...`, false);
-    
-    // Simulate social login redirect (in production, these would be real OAuth flows)
-    setTimeout(() => {
-      addBotMessage(`✅ Welcome back! I've pre-filled your information from ${provider === 'github' ? 'GitHub' : provider === 'google' ? 'Google' : 'LinkedIn'}. Let me just confirm a few details with you...`, false);
-      
-      // Pre-fill common information from social login
+
+
+  const handleEditField = (field: string, currentValue: string) => {
+    setEditingField(field);
+    setEditValue(currentValue);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingField && editValue.trim()) {
       setUserProfile(prev => ({
         ...prev,
-        firstName: provider === 'google' ? 'Sarah' : provider === 'github' ? 'Alex' : 'Jordan',
-        lastName: provider === 'google' ? 'Johnson' : provider === 'github' ? 'Chen' : 'Smith',
-        email: provider === 'google' ? 'sarah.johnson@gmail.com' : provider === 'github' ? 'alex.chen@github.dev' : 'jordan.smith@company.com',
-        country: userCountry || 'Uganda'
+        [editingField]: editValue
       }));
       
-      // Skip to a later step in the flow (like organization/sector questions)
-      setTimeout(() => {
-        setCurrentStep(4); // Skip name, email steps
-        const nextStepData = chatFlow[4];
-        addBotMessage(nextStepData.botMessage as string);
-      }, 1500);
-    }, 2000);
+      // Update the corresponding message
+      setMessages(prev => prev.map(msg => {
+        if (msg.type === 'user' && msg.content === userProfile[editingField as keyof UserProfile]) {
+          return { ...msg, content: editValue };
+        }
+        return msg;
+      }));
+      
+      addBotMessage(`✅ Got it! I've updated your ${editingField} to "${editValue}". Let's continue...`);
+      setEditingField(null);
+      setEditValue('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const toggleProfileSummary = () => {
+    setShowProfileSummary(!showProfileSummary);
+  };
+
+  const getFieldName = (step: number): string => {
+    const field = chatFlow[step]?.field;
+    const fieldNames: { [key: string]: string } = {
+      'firstName': 'first name',
+      'lastName': 'last name', 
+      'email': 'email',
+      'country': 'country',
+      'userType': 'user type',
+      'organization': 'organization',
+      'sector': 'sector',
+      'experience': 'experience',
+      'goals': 'goals',
+      'password': 'password'
+    };
+    return fieldNames[field] || field;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      if (editingField) {
+        handleSaveEdit();
+      } else {
+        handleSendMessage();
+      }
     }
   };
 
