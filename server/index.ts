@@ -4,6 +4,349 @@ import { setupVite, serveStatic, log } from "./vite";
 import { spawn } from "child_process";
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
+function generateAdminDashboard() {
+  return `<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Granada OS Wabden Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); }
+        .card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); backdrop-filter: blur(10px); }
+        .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar-gradient shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Wabden Admin
+                    </h1>
+                </div>
+                
+                <nav class="space-y-2">
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-blue-600/30 cursor-pointer">
+                        <i class="fas fa-tachometer-alt text-blue-400"></i>
+                        <span class="text-blue-300">Dashboard</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/users'">
+                        <i class="fas fa-users text-green-400"></i>
+                        <span>User Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                        <i class="fas fa-bullseye text-yellow-400"></i>
+                        <span>Opportunities</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/hr'">
+                        <i class="fas fa-user-tie text-purple-400"></i>
+                        <span>HR Management</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/accounting'">
+                        <i class="fas fa-chart-line text-emerald-400"></i>
+                        <span>Accounting</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/submissions'">
+                        <i class="fas fa-file-alt text-orange-400"></i>
+                        <span>Submissions</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/bots'">
+                        <i class="fas fa-robot text-cyan-400"></i>
+                        <span>Bot Control</span>
+                    </div>
+                    <div class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/heatmap'">
+                        <i class="fas fa-fire text-red-400"></i>
+                        <span>Activity Heatmap</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="bg-gray-800/50 backdrop-blur-lg shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Granada OS Admin Dashboard</h2>
+                        <p class="text-gray-400 mt-1">Complete system administration and monitoring</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="refreshDashboard()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i> Refresh
+                        </button>
+                        <button onclick="exportSystemData()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                            <i class="fas fa-download mr-2"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="p-6">
+                <!-- System Overview Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Total Users</p>
+                                <p class="text-3xl font-bold text-white mt-1" id="totalUsers">Loading...</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">Active Opportunities</p>
+                                <p class="text-3xl font-bold text-white mt-1" id="activeOpportunities">Loading...</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullseye text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">FastAPI Services</p>
+                                <p class="text-3xl font-bold text-white mt-1" id="activeServices">6/6</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-server text-purple-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm uppercase tracking-wide">System Health</p>
+                                <p class="text-3xl font-bold text-green-400 mt-1">Optimal</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-heartbeat text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- User Management Quick Access -->
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">
+                            <i class="fas fa-users text-green-400 mr-2"></i>
+                            User Management
+                        </h3>
+                        <div class="space-y-3">
+                            <button onclick="window.location.href='/wabden/users'" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                <i class="fas fa-user-cog mr-2"></i>
+                                Manage Users
+                            </button>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button onclick="exportUsers()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-lg transition-colors text-sm">
+                                    <i class="fas fa-download mr-1"></i> Export Users
+                                </button>
+                                <button onclick="refreshUsers()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-lg transition-colors text-sm">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Services Status -->
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">
+                            <i class="fas fa-server text-blue-400 mr-2"></i>
+                            FastAPI Services
+                        </h3>
+                        <div class="space-y-2" id="servicesStatus">
+                            <!-- Services status will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Modules Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card-gradient rounded-xl p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-bullseye text-yellow-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">Opportunities</h3>
+                            <p class="text-gray-400 text-sm">Manage funding opportunities</p>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/hr'">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-user-tie text-purple-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">HR Management</h3>
+                            <p class="text-gray-400 text-sm">Employee management</p>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/accounting'">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-chart-line text-emerald-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">Accounting</h3>
+                            <p class="text-gray-400 text-sm">Financial management</p>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/submissions'">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-file-alt text-orange-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">Submissions</h3>
+                            <p class="text-gray-400 text-sm">Document management</p>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/bots'">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-robot text-cyan-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">Bot Control</h3>
+                            <p class="text-gray-400 text-sm">Automation management</p>
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/heatmap'">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-fire text-red-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">Activity Heatmap</h3>
+                            <p class="text-gray-400 text-sm">Real-time analytics</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dashboard
+        async function initializeDashboard() {
+            await loadSystemStats();
+            await loadServicesStatus();
+        }
+
+        // Load system statistics
+        async function loadSystemStats() {
+            try {
+                // Load user count
+                const usersResponse = await fetch('/api/wabden/users');
+                if (usersResponse.ok) {
+                    const userData = await usersResponse.json();
+                    document.getElementById('totalUsers').textContent = userData.total || userData.users?.length || 0;
+                }
+
+                // Load opportunities count
+                const oppsResponse = await fetch('/api/wabden/opportunities');
+                if (oppsResponse.ok) {
+                    const oppData = await oppsResponse.json();
+                    document.getElementById('activeOpportunities').textContent = oppData.total || oppData.opportunities?.length || 0;
+                }
+            } catch (error) {
+                console.warn('Failed to load system stats:', error);
+                document.getElementById('totalUsers').textContent = 'N/A';
+                document.getElementById('activeOpportunities').textContent = 'N/A';
+            }
+        }
+
+        // Load services status
+        async function loadServicesStatus() {
+            const services = [
+                { name: 'Master Orchestrator', port: 8000, icon: 'fas fa-crown' },
+                { name: 'Bot Service', port: 8001, icon: 'fas fa-robot' },
+                { name: 'Genesis Engine', port: 8002, icon: 'fas fa-lightbulb' },
+                { name: 'Career Engine', port: 8003, icon: 'fas fa-briefcase' },
+                { name: 'Academic Engine', port: 8004, icon: 'fas fa-graduation-cap' },
+                { name: 'Wabden API', port: 8005, icon: 'fas fa-shield-alt' }
+            ];
+
+            const container = document.getElementById('servicesStatus');
+            
+            const statusHTML = await Promise.all(services.map(async (service) => {
+                let status = 'checking';
+                let statusColor = 'yellow';
+                
+                try {
+                    const response = await fetch(\`http://localhost:\${service.port}/\`, { 
+                        method: 'GET',
+                        timeout: 2000 
+                    });
+                    status = response.ok ? 'online' : 'offline';
+                    statusColor = response.ok ? 'green' : 'red';
+                } catch (error) {
+                    status = 'offline';
+                    statusColor = 'red';
+                }
+
+                return \`<div class="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <i class="\${service.icon} text-blue-400"></i>
+                        <span class="text-sm">\${service.name}</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-400">:\${service.port}</span>
+                        <div class="w-2 h-2 bg-\${statusColor}-500 rounded-full"></div>
+                        <span class="text-xs text-\${statusColor}-400">\${status}</span>
+                    </div>
+                </div>\`;
+            }));
+
+            container.innerHTML = statusHTML.join('');
+        }
+
+        // Dashboard actions
+        function refreshDashboard() {
+            location.reload();
+        }
+
+        function exportSystemData() {
+            window.open('/api/wabden/export/users', '_blank');
+        }
+
+        function exportUsers() {
+            window.open('/api/wabden/export/users', '_blank');
+        }
+
+        function refreshUsers() {
+            loadSystemStats();
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>`;
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -14,7 +357,8 @@ const FASTAPI_SERVICES = {
   bot: { port: 8001, script: 'server/bot_service.py' },
   genesis: { port: 8002, script: 'server/genesis_engine.py' },
   career: { port: 8003, script: 'server/career_engine.py' },
-  academic: { port: 8004, script: 'server/academic_engine.py' }
+  academic: { port: 8004, script: 'server/academic_engine.py' },
+  wabden: { port: 8005, script: 'server/wabden_api.py' }
 };
 
 // Start FastAPI Services
@@ -87,6 +431,12 @@ app.use('/api/academic', createProxyMiddleware({
   target: 'http://localhost:8004', 
   changeOrigin: true,
   pathRewrite: { '^/api/academic': '' }
+}));
+
+app.use('/api/wabden', createProxyMiddleware({ 
+  target: 'http://localhost:8005', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/wabden': '' }
 }));
 
 app.use((req, res, next) => {
@@ -337,6 +687,11 @@ app.use((req, res, next) => {
   app.get('/wabden*', (req, res) => {
     // Check if it's a specific module request
     const path = req.path;
+    if (path === '/wabden' || path === '/wabden/') {
+      // Serve main admin dashboard
+      res.send(generateAdminDashboard());
+      return;
+    }
     if (path === '/wabden/heatmap') {
       // Serve real-time activity heatmap
       res.sendFile('/home/runner/workspace/server/wabden_dashboard_heatmap.html');
