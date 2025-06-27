@@ -34,6 +34,7 @@ import NotFoundPage from './NotFoundPage';
 import L1Page from './L1Page';
 import GenesisEngine from './GenesisEngine';
 import CareerSuite from './CareerSuite';
+import AcademicSuite from './AcademicSuite';
 import HumanHelpButton from './shared/HumanHelpButton';
 
 import AddictionProvider from './contexts/AddictionContext';
@@ -118,6 +119,14 @@ function App() {
                   <Route path="/l1" element={<L1Page />} />
                   <Route path="/genesis" element={<GenesisEngine />} />
                   <Route path="/career" element={<CareerSuite />} />
+                  <Route path="/academic" element={<AcademicSuite />} />
+                  
+                  {/* FastAPI Engine Routes */}
+                  <Route path="/orchestrator" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Master Orchestrator</h1><p>Central AI coordination service coming soon...</p><a href="http://localhost:8000/docs" className="text-blue-600 hover:underline" target="_blank">View API Documentation</a></div>} />
+                  <Route path="/bots" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Bot Service</h1><p>Web scraping and automation bots...</p><a href="http://localhost:8001/docs" className="text-blue-600 hover:underline" target="_blank">View API Documentation</a></div>} />
+                  <Route path="/health" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Service Health</h1><p>Monitor all FastAPI services...</p><a href="http://localhost:8000/health" className="text-blue-600 hover:underline" target="_blank">Check Service Health</a></div>} />
+                  <Route path="/database" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Database</h1><p>Granada OS database management...</p></div>} />
+                  
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>

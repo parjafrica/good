@@ -11,6 +11,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Sparkles,
   Building,
   Shield,
@@ -22,9 +24,29 @@ import {
   Award,
   Users,
   Lightbulb,
-  Briefcase
+  Briefcase,
+  Brain,
+  Zap,
+  Microscope,
+  Library,
+  PenTool,
+  Bot,
+  GitBranch,
+  Server,
+  Database,
+  Cpu,
+  Network
 } from 'lucide-react';
 import { useAuth } from '.././contexts/AuthContext';
+
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<any>;
+  path?: string;
+  badge?: string;
+  children?: MenuItem[];
+}
 
 interface SidebarProps {
   collapsed: boolean;
@@ -35,57 +57,326 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set(['ai-engines']));
 
   // Check if user is a student
   const isStudent = user?.userType === 'student';
 
-  // Different navigation items based on user type
-  const studentNavigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
-    { id: 'scholarships', label: 'Scholarships', icon: Award, path: '/scholarships' },
-    { id: 'courses', label: 'Courses', icon: BookOpen, path: '/courses' },
-    { id: 'research', label: 'Research', icon: Search, path: '/research' },
-    { id: 'ai-assistant', label: 'Professional Help', icon: Users, path: '/human-help' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+  // Toggle section expansion
+  const toggleSection = (sectionId: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionId)) {
+      newExpanded.delete(sectionId);
+    } else {
+      newExpanded.add(sectionId);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  // AI Engines Menu Structure (90% Python FastAPI)
+  const aiEnginesMenu: MenuItem = {
+    id: 'ai-engines',
+    label: 'AI Engines (FastAPI)',
+    icon: Brain,
+    badge: '90%',
+    children: [
+      {
+        id: 'master-orchestrator',
+        label: 'Master Orchestrator',
+        icon: Cpu,
+        path: '/orchestrator',
+        badge: '8000'
+      },
+      {
+        id: 'genesis-engine',
+        label: 'Genesis Engine',
+        icon: Zap,
+        path: '/genesis',
+        badge: '8002'
+      },
+      {
+        id: 'career-engine',
+        label: 'Career Engine',
+        icon: Briefcase,
+        path: '/career',
+        badge: '8003'
+      },
+      {
+        id: 'academic-engine',
+        label: 'Academic Engine',
+        icon: Microscope,
+        path: '/academic',
+        badge: '8004'
+      },
+      {
+        id: 'bot-service',
+        label: 'Bot Service',
+        icon: Bot,
+        path: '/bots',
+        badge: '8001'
+      }
+    ]
+  };
+
+  // Core Platform Menu
+  const corePlatformMenu: MenuItem = {
+    id: 'core-platform',
+    label: 'Core Platform',
+    icon: Server,
+    children: [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: Home,
+        path: '/'
+      },
+      {
+        id: 'donor-discovery',
+        label: 'Donor Discovery',
+        icon: Target,
+        path: '/donor-discovery'
+      },
+      {
+        id: 'proposals',
+        label: 'Proposals',
+        icon: FileText,
+        path: '/proposals'
+      },
+      {
+        id: 'funding',
+        label: 'Funding',
+        icon: DollarSign,
+        path: '/funding'
+      }
+    ]
+  };
+
+  // Academic Suite Menu
+  const academicSuiteMenu: MenuItem = {
+    id: 'academic-suite',
+    label: 'Academic Suite',
+    icon: Library,
+    children: [
+      {
+        id: 'literature-review',
+        label: 'Literature Review',
+        icon: BookOpen,
+        path: '/academic?tab=literature'
+      },
+      {
+        id: 'research-assistant',
+        label: 'Research Assistant',
+        icon: Search,
+        path: '/academic?tab=research'
+      },
+      {
+        id: 'academic-writing',
+        label: 'Academic Writing',
+        icon: PenTool,
+        path: '/academic?tab=writing'
+      },
+      {
+        id: 'citations',
+        label: 'Citation Manager',
+        icon: FileCheck,
+        path: '/academic?tab=citations'
+      }
+    ]
+  };
+
+  // System Menu
+  const systemMenu: MenuItem = {
+    id: 'system',
+    label: 'System',
+    icon: Settings,
+    children: [
+      {
+        id: 'service-health',
+        label: 'Service Health',
+        icon: Network,
+        path: '/health'
+      },
+      {
+        id: 'database',
+        label: 'Database',
+        icon: Database,
+        path: '/database'
+      },
+      {
+        id: 'analytics',
+        label: 'Analytics',
+        icon: BarChart3,
+        path: '/analytics'
+      },
+      {
+        id: 'credits',
+        label: 'Credits',
+        icon: Gem,
+        path: '/credits'
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        icon: Settings,
+        path: '/settings'
+      }
+    ]
+  };
+
+  // Different navigation structure for students vs organizations
+  const studentNavigationStructure = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: Home,
+      path: '/'
+    },
+    {
+      id: 'scholarships',
+      label: 'Scholarships',
+      icon: Award,
+      path: '/scholarships'
+    },
+    academicSuiteMenu,
+    {
+      id: 'career-development',
+      label: 'Career Development',
+      icon: Briefcase,
+      path: '/career'
+    },
+    {
+      id: 'human-help',
+      label: 'Professional Help',
+      icon: Users,
+      path: '/human-help'
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+      path: '/settings'
+    }
   ];
 
-  const ngoNavigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/' },
-    { id: 'genesis', label: 'Genesis Engine', icon: Lightbulb, path: '/genesis' },
-    { id: 'donor-discovery', label: 'Donor Discovery', icon: Target, path: '/donor-discovery' },
-    { id: 'career', label: 'Career Suite', icon: Briefcase, path: '/career' },
-    { id: 'proposal-generator', label: 'Professional Proposal', icon: Sparkles, path: '/proposal-generator' },
-    { id: 'proposals', label: 'Proposals', icon: FileText, path: '/proposals' },
-    { id: 'ngo-pipeline', label: 'NGO Pipeline', icon: Building, path: '/ngo-pipeline' },
-    { id: 'funding', label: 'Funding', icon: DollarSign, path: '/funding' },
-    { id: 'documents', label: 'Documents', icon: FileCheck, path: '/documents' },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics' },
-    { id: 'human-help', label: 'Professional Help', icon: Users, path: '/human-help' },
-    { id: 'credits', label: 'Credits', icon: Gem, path: '/credits' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+  const organizationNavigationStructure = [
+    aiEnginesMenu,
+    corePlatformMenu,
+    academicSuiteMenu,
+    systemMenu,
+    {
+      id: 'human-help',
+      label: 'Professional Help',
+      icon: Users,
+      path: '/human-help'
+    }
   ];
 
-  // Choose navigation items based on user type
-  const navigationItems = isStudent ? studentNavigationItems : ngoNavigationItems;
+  // Choose navigation structure based on user type
+  const navigationStructure = isStudent ? studentNavigationStructure : organizationNavigationStructure;
 
-  // Add admin dashboard for superusers
-  const allItems = user?.is_superuser 
-    ? [...navigationItems, { id: 'admin', label: 'Admin', icon: Shield, path: '/admin' }]
-    : navigationItems;
+  // Add admin for superusers
+  const allMenuItems = user?.is_superuser 
+    ? [...navigationStructure, { id: 'admin', label: 'Admin', icon: Shield, path: '/admin' }]
+    : navigationStructure;
 
   const handleNavigation = (path: string) => {
     navigate(path);
   };
 
+  const renderMenuItem = (item: MenuItem, depth: number = 0) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedSections.has(item.id);
+    const isActive = item.path && location.pathname === item.path;
+    
+    return (
+      <div key={item.id}>
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => {
+            if (hasChildren) {
+              toggleSection(item.id);
+            } else if (item.path) {
+              handleNavigation(item.path);
+            }
+          }}
+          className={`w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition-all ${
+            depth > 0 ? 'ml-4' : ''
+          } ${
+            isActive 
+              ? 'bg-blue-50 text-blue-600 border border-blue-100' 
+              : hasChildren 
+                ? 'text-gray-800 hover:text-gray-900 hover:bg-gray-50'
+                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          <item.icon className={`flex-shrink-0 ${depth > 0 ? 'w-4 h-4' : 'w-5 h-5'}`} />
+          
+          {!collapsed && (
+            <>
+              <span className={`font-medium truncate ${depth > 0 ? 'text-sm' : ''}`}>
+                {item.label}
+              </span>
+              
+              {item.badge && (
+                <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                  item.badge === '90%' 
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {item.badge}
+                </span>
+              )}
+              
+              {hasChildren && (
+                <motion.div
+                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                  className="ml-auto"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </motion.div>
+              )}
+            </>
+          )}
+        </motion.button>
+        
+        {/* Children */}
+        {hasChildren && !collapsed && (
+          <motion.div
+            initial={false}
+            animate={{
+              height: isExpanded ? 'auto' : 0,
+              opacity: isExpanded ? 1 : 0
+            }}
+            className="overflow-hidden"
+          >
+            <div className="ml-2 mt-1 space-y-1">
+              {item.children?.map((child) => renderMenuItem(child, depth + 1))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={false}
-      animate={{ width: collapsed ? 64 : 256 }}
+      animate={{ width: collapsed ? 64 : 280 }}
       className="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 z-40 overflow-y-auto hidden md:block"
     >
       <div className="flex flex-col h-full">
         {/* Toggle Button */}
-        <div className="flex justify-end p-4">
+        <div className="flex justify-between items-center p-4">
+          {!collapsed && (
+            <div className="flex items-center space-x-2">
+              <Brain className="w-5 h-5 text-blue-600" />
+              <span className="font-bold text-gray-900">Granada OS</span>
+              <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full font-medium">
+                FastAPI 90%
+              </span>
+            </div>
+          )}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -98,27 +389,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 space-y-2">
-          {allItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <motion.button
-                key={item.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleNavigation(item.path)}
-                className={`w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition-all ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-600 border border-blue-100' 
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && (
-                  <span className="font-medium truncate">{item.label}</span>
-                )}
-              </motion.button>
-            );
-          })}
+          {allMenuItems.map((item) => renderMenuItem(item))}
         </nav>
 
         {/* User Profile */}
