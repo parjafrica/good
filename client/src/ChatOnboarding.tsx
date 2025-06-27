@@ -1,8 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { Send, User, Bot, Sparkles, Globe, Heart, Zap } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Globe, Heart, Zap, MapPin } from 'lucide-react';
 import FloatingReviews from './FloatingReviews';
+
+// Comprehensive country list with geo-location priority
+const COUNTRIES = [
+  // East Africa (Priority based on geo-location)
+  'Uganda', 'Kenya', 'Tanzania', 'Rwanda', 'Ethiopia', 'Burundi', 'South Sudan',
+  // West Africa
+  'Nigeria', 'Ghana', 'Senegal', 'Mali', 'Burkina Faso', 'Ivory Coast', 'Guinea', 'Benin', 'Togo', 'Sierra Leone', 'Liberia', 'Mauritania', 'Niger', 'Gambia', 'Guinea-Bissau', 'Cape Verde',
+  // North Africa
+  'Egypt', 'Morocco', 'Algeria', 'Tunisia', 'Libya', 'Sudan',
+  // Southern Africa
+  'South Africa', 'Zimbabwe', 'Botswana', 'Namibia', 'Zambia', 'Malawi', 'Mozambique', 'Angola', 'Swaziland', 'Lesotho', 'Madagascar', 'Mauritius', 'Seychelles', 'Comoros',
+  // Central Africa
+  'Democratic Republic of Congo', 'Cameroon', 'Chad', 'Central African Republic', 'Republic of Congo', 'Gabon', 'Equatorial Guinea', 'São Tomé and Príncipe',
+  // Europe
+  'United Kingdom', 'Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'Belgium', 'Switzerland', 'Austria', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Czech Republic', 'Portugal', 'Greece', 'Ireland', 'Hungary', 'Romania', 'Bulgaria', 'Croatia', 'Slovakia', 'Slovenia', 'Luxembourg', 'Malta', 'Cyprus', 'Estonia', 'Latvia', 'Lithuania',
+  // North America
+  'United States', 'Canada', 'Mexico',
+  // Asia
+  'China', 'India', 'Japan', 'South Korea', 'Thailand', 'Vietnam', 'Philippines', 'Indonesia', 'Malaysia', 'Singapore', 'Bangladesh', 'Pakistan', 'Sri Lanka', 'Myanmar', 'Cambodia', 'Laos', 'Nepal', 'Bhutan', 'Maldives', 'Afghanistan', 'Iran', 'Iraq', 'Turkey', 'Israel', 'Palestine', 'Jordan', 'Lebanon', 'Syria', 'Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Yemen',
+  // South America
+  'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru', 'Venezuela', 'Ecuador', 'Bolivia', 'Paraguay', 'Uruguay', 'Guyana', 'Suriname', 'French Guiana',
+  // Oceania
+  'Australia', 'New Zealand', 'Papua New Guinea', 'Fiji', 'Solomon Islands', 'Vanuatu', 'Samoa', 'Tonga', 'Kiribati', 'Palau', 'Marshall Islands', 'Micronesia', 'Nauru', 'Tuvalu'
+];
 
 interface Message {
   id: string;
@@ -66,7 +90,7 @@ const chatFlow = [
     id: 'country',
     botMessage: "Excellent choice! Which country are you based in? 🌍",
     field: 'country',
-    options: ['Kenya', 'Uganda', 'Tanzania', 'Ethiopia', 'Rwanda', 'Nigeria', 'Ghana', 'South Africa', 'United States', 'United Kingdom', 'Canada', 'Germany', 'Other'],
+    isCountryField: true,
     validation: (value: string) => value.length >= 2
   },
   {
@@ -95,6 +119,10 @@ export default function ChatOnboarding() {
   const [currentStory, setCurrentStory] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [countrySuggestions, setCountrySuggestions] = useState<string[]>([]);
+  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false);
+  const [userCountry, setUserCountry] = useState<string>('');
+  const [initialized, setInitialized] = useState(false);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -113,12 +141,83 @@ export default function ChatOnboarding() {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize chat
+  // Detect user country for geo-located suggestions
   useEffect(() => {
-    setTimeout(() => {
-      addBotMessage(chatFlow[0].botMessage as string);
-    }, 1000);
+    const detectUserCountry = () => {
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (timezone.includes('Africa/Kampala') || timezone.includes('Africa/Nairobi')) {
+          setUserCountry('Uganda');
+        } else if (timezone.includes('Africa/Nairobi')) {
+          setUserCountry('Kenya');
+        } else if (timezone.includes('Africa/Dar_es_Salaam')) {
+          setUserCountry('Tanzania');
+        } else if (timezone.includes('America/New_York')) {
+          setUserCountry('United States');
+        } else if (timezone.includes('Europe/London')) {
+          setUserCountry('United Kingdom');
+        } else {
+          setUserCountry('Uganda'); // Default fallback
+        }
+        console.log('User country detected:', userCountry);
+      } catch (error) {
+        setUserCountry('Uganda'); // Safe fallback
+      }
+    };
+    detectUserCountry();
   }, []);
+
+  // Initialize chat (only once)
+  useEffect(() => {
+    if (!initialized) {
+      setInitialized(true);
+      setTimeout(() => {
+        addBotMessage(chatFlow[0].botMessage as string);
+      }, 1000);
+    }
+  }, [initialized]);
+
+  // Smart country filtering with geo-location priority
+  const filterCountries = (input: string): string[] => {
+    const searchTerm = input.toLowerCase().trim();
+    if (!searchTerm) {
+      // Return geo-located suggestions first when no input
+      const geoSuggestions = [userCountry];
+      const nearby = userCountry === 'Uganda' 
+        ? ['Kenya', 'Tanzania', 'Rwanda', 'Ethiopia'] 
+        : userCountry === 'Kenya'
+        ? ['Uganda', 'Tanzania', 'Ethiopia', 'Rwanda']
+        : ['Uganda', 'Kenya', 'Tanzania', 'Nigeria', 'Ghana'];
+      
+      return [...geoSuggestions, ...nearby, ...COUNTRIES.filter(c => !geoSuggestions.includes(c) && !nearby.includes(c))].slice(0, 8);
+    }
+    
+    // Filter countries based on input, prioritizing geo-location
+    const exactMatches = COUNTRIES.filter(country => 
+      country.toLowerCase().startsWith(searchTerm)
+    );
+    const partialMatches = COUNTRIES.filter(country => 
+      country.toLowerCase().includes(searchTerm) && !country.toLowerCase().startsWith(searchTerm)
+    );
+    
+    // Prioritize user's detected country if it matches
+    const prioritized = [];
+    if (userCountry.toLowerCase().includes(searchTerm)) {
+      prioritized.push(userCountry);
+    }
+    
+    return [...prioritized, ...exactMatches, ...partialMatches]
+      .filter((country, index, self) => self.indexOf(country) === index)
+      .slice(0, 6);
+  };
+
+  // Handle country input changes
+  const handleCountryInput = (value: string) => {
+    setCurrentInput(value);
+    const suggestions = filterCountries(value);
+    setCountrySuggestions(suggestions);
+    setShowCountrySuggestions(suggestions.length > 0 && value.length > 0);
+  };
 
   const addBotMessage = (content: string, typing = true) => {
     if (typing) {
@@ -392,9 +491,28 @@ export default function ChatOnboarding() {
               ref={inputRef}
               type={chatFlow[currentStep]?.isPassword ? 'password' : 'text'}
               value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (chatFlow[currentStep]?.isCountryField) {
+                  handleCountryInput(value);
+                } else {
+                  setCurrentInput(value);
+                  setShowCountrySuggestions(false);
+                }
+              }}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
+              onFocus={() => {
+                if (chatFlow[currentStep]?.isCountryField && !currentInput) {
+                  const initialSuggestions = filterCountries('');
+                  setCountrySuggestions(initialSuggestions);
+                  setShowCountrySuggestions(true);
+                }
+              }}
+              onBlur={() => {
+                // Hide suggestions after a short delay to allow clicking
+                setTimeout(() => setShowCountrySuggestions(false), 200);
+              }}
+              placeholder={chatFlow[currentStep]?.isCountryField ? `Type your country (detected: ${userCountry})...` : "Type your message..."}
               className="flex-1 bg-white/10 backdrop-blur-md text-white placeholder-white/50 px-4 py-3 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               disabled={isTyping || showOptions}
             />
@@ -406,6 +524,38 @@ export default function ChatOnboarding() {
               <Send className="w-5 h-5" />
             </button>
           </div>
+          
+          {/* Country Suggestions Dropdown */}
+          {showCountrySuggestions && chatFlow[currentStep]?.isCountryField && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="max-w-4xl mx-auto mt-2"
+            >
+              <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 max-h-48 overflow-y-auto">
+                {countrySuggestions.map((country, index) => (
+                  <button
+                    key={`${country}-${index}`}
+                    onClick={() => {
+                      setCurrentInput(country);
+                      setShowCountrySuggestions(false);
+                      setTimeout(() => handleSendMessage(), 100);
+                    }}
+                    className="w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors duration-200 flex items-center gap-3 border-b border-white/10 last:border-b-0"
+                  >
+                    <MapPin className="w-4 h-4 text-blue-400" />
+                    <span>{country}</span>
+                    {country === userCountry && (
+                      <span className="ml-auto text-xs text-blue-400 bg-blue-400/20 px-2 py-1 rounded-full">
+                        Your Location
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
