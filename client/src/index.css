@@ -453,3 +453,297 @@ main {
 .floating-review:nth-child(18) { animation-delay: 5.5s; left: 80%; animation-name: float-review-3; }
 .floating-review:nth-child(19) { animation-delay: 6.5s; left: 90%; animation-name: float-review; }
 .floating-review:nth-child(20) { animation-delay: 7.5s; left: 12%; animation-name: float-review-2; }
+
+/* ========================================
+   MOBILE RESPONSIVENESS UTILITIES
+   ======================================== */
+
+/* Safe area insets for mobile devices */
+.safe-area-inset {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Mobile-friendly scrolling */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Touch-friendly sizing */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Responsive text sizes using clamp */
+.text-responsive-xs { font-size: clamp(0.75rem, 2vw, 0.875rem); }
+.text-responsive-sm { font-size: clamp(0.875rem, 2.5vw, 1rem); }
+.text-responsive-base { font-size: clamp(1rem, 3vw, 1.125rem); }
+.text-responsive-lg { font-size: clamp(1.125rem, 3.5vw, 1.25rem); }
+.text-responsive-xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
+.text-responsive-2xl { font-size: clamp(1.5rem, 5vw, 2rem); }
+
+/* Mobile grid systems that adapt to screen size */
+.grid-mobile-1 { 
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 1rem;
+}
+
+.grid-mobile-2 { 
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .grid-mobile-1 { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 1.25rem;
+  }
+  .grid-mobile-2 { 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid-mobile-1 { 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1.5rem;
+  }
+  .grid-mobile-2 { 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-mobile-1 { 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 2rem;
+  }
+  .grid-mobile-2 { 
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 1.5rem;
+  }
+}
+
+/* Card responsive sizes */
+.card-mobile {
+  @apply p-3 rounded-lg shadow-sm border;
+}
+
+@media (min-width: 640px) {
+  .card-mobile {
+    @apply p-4 rounded-xl shadow-md;
+  }
+}
+
+@media (min-width: 768px) {
+  .card-mobile {
+    @apply p-6 rounded-xl shadow-lg;
+  }
+}
+
+.card-mobile-compact {
+  @apply p-2 rounded-md shadow-sm border;
+}
+
+@media (min-width: 640px) {
+  .card-mobile-compact {
+    @apply p-3 rounded-lg shadow-md;
+  }
+}
+
+@media (min-width: 768px) {
+  .card-mobile-compact {
+    @apply p-4 rounded-lg shadow-lg;
+  }
+}
+
+/* Button responsive sizes */
+.btn-mobile {
+  @apply px-3 py-2 text-sm font-medium rounded-lg transition-all;
+}
+
+@media (min-width: 640px) {
+  .btn-mobile {
+    @apply px-4 py-2.5 text-base rounded-xl;
+  }
+}
+
+.btn-mobile-large {
+  @apply px-4 py-3 text-base font-semibold rounded-lg transition-all;
+}
+
+@media (min-width: 640px) {
+  .btn-mobile-large {
+    @apply px-6 py-3 text-lg rounded-xl;
+  }
+}
+
+/* Spacing responsive utilities */
+.space-mobile-y > * + * {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .space-mobile-y > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .space-mobile-y > * + * {
+    margin-top: 1rem;
+  }
+}
+
+.space-mobile-x > * + * {
+  margin-left: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .space-mobile-x > * + * {
+    margin-left: 0.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .space-mobile-x > * + * {
+    margin-left: 1rem;
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 14px;
+  }
+}
+
+/* Mobile navigation specific styles */
+.mobile-nav-slide {
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.mobile-nav-slide.open {
+  transform: translateX(0);
+}
+
+/* Mobile-optimized modal */
+.modal-mobile {
+  @apply fixed inset-0 z-50 overflow-hidden;
+}
+
+@media (max-width: 640px) {
+  .modal-mobile .modal-content {
+    @apply h-full w-full rounded-none;
+  }
+}
+
+/* Mobile-friendly dropdown */
+.dropdown-mobile {
+  @apply w-full;
+}
+
+@media (min-width: 640px) {
+  .dropdown-mobile {
+    @apply w-auto min-w-48;
+  }
+}
+
+/* Hide scrollbars on mobile for cleaner look */
+@media (max-width: 768px) {
+  .hide-scrollbar-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar-mobile::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Mobile-optimized table */
+.table-mobile {
+  @apply w-full text-sm;
+}
+
+@media (max-width: 640px) {
+  .table-mobile thead {
+    @apply hidden;
+  }
+  
+  .table-mobile tbody tr {
+    @apply block border border-gray-200 mb-2 rounded-lg p-3;
+  }
+  
+  .table-mobile tbody td {
+    @apply block text-right;
+  }
+  
+  .table-mobile tbody td::before {
+    content: attr(data-label) ": ";
+    @apply float-left font-semibold;
+  }
+}
+
+/* Mobile-friendly form layouts */
+.form-mobile {
+  @apply space-y-4;
+}
+
+@media (min-width: 640px) {
+  .form-mobile {
+    @apply space-y-6;
+  }
+}
+
+.form-row-mobile {
+  @apply flex flex-col gap-4;
+}
+
+@media (min-width: 640px) {
+  .form-row-mobile {
+    @apply flex-row gap-6;
+  }
+}
+
+/* Mobile navigation badge positioning */
+.nav-badge-mobile {
+  @apply absolute -top-1 -right-1 text-xs;
+}
+
+@media (min-width: 640px) {
+  .nav-badge-mobile {
+    @apply -top-2 -right-2 text-sm;
+  }
+}
+
+/* Mobile-optimized floating action button */
+.fab-mobile {
+  @apply fixed bottom-20 right-4 z-40;
+}
+
+@media (min-width: 768px) {
+  .fab-mobile {
+    @apply bottom-4 right-6;
+  }
+}

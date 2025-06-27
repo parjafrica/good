@@ -92,10 +92,11 @@ function App() {
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
               />
               
-              <main className={`flex-1 transition-all duration-300 pt-16 ${
-                sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-64'
+              <main className={`flex-1 transition-all duration-300 pt-16 pb-16 md:pb-0 ${
+                sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-72'
               }`}>
-                <Routes>
+                <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+                  <Routes>
                   <Route path="/" element={isStudent ? <StudentDashboard /> : <DonorDashboard />} />
                   <Route path="/dashboard" element={<DonorDashboard />} />
                   <Route path="/donor-dashboard" element={<DonorDashboard />} />
@@ -127,8 +128,9 @@ function App() {
                   <Route path="/health" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Service Health</h1><p>Monitor all FastAPI services...</p><a href="http://localhost:8000/health" className="text-blue-600 hover:underline" target="_blank">Check Service Health</a></div>} />
                   <Route path="/database" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Database</h1><p>Granada OS database management...</p></div>} />
                   
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </div>
               </main>
             </div>
             

@@ -20,12 +20,34 @@ import {
   BookOpen,
   Search,
   Award,
-  Users
+  Users,
+  Brain,
+  Zap,
+  Briefcase,
+  Microscope,
+  Bot,
+  Cpu,
+  Server,
+  Library,
+  Network,
+  Database,
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import { useAuth } from '.././contexts/AuthContext';
 
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<any>;
+  path?: string;
+  badge?: string;
+  children?: MenuItem[];
+}
+
 const MobileNavigation: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['ai-engines']));
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -33,54 +55,216 @@ const MobileNavigation: React.FC = () => {
   // Check if user is a student
   const isStudent = user?.userType === 'student';
 
-  // Different navigation items based on user type
-  const studentNavigationItems = [
+  // Toggle section expansion
+  const toggleSection = (sectionId: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionId)) {
+      newExpanded.delete(sectionId);
+    } else {
+      newExpanded.add(sectionId);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  // AI Engines Menu Structure (90% Python FastAPI)
+  const aiEnginesMenu: MenuItem = {
+    id: 'ai-engines',
+    label: 'AI Engines',
+    icon: Brain,
+    badge: '90%',
+    children: [
+      { id: 'orchestrator', label: 'Orchestrator', icon: Cpu, path: '/orchestrator', badge: '8000' },
+      { id: 'genesis', label: 'Genesis', icon: Zap, path: '/genesis', badge: '8002' },
+      { id: 'career', label: 'Career', icon: Briefcase, path: '/career', badge: '8003' },
+      { id: 'academic', label: 'Academic', icon: Microscope, path: '/academic', badge: '8004' },
+      { id: 'bots', label: 'Bots', icon: Bot, path: '/bots', badge: '8001' }
+    ]
+  };
+
+  // Core Platform Menu
+  const corePlatformMenu: MenuItem = {
+    id: 'core-platform',
+    label: 'Platform',
+    icon: Server,
+    children: [
+      { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
+      { id: 'donor-discovery', label: 'Donors', icon: Target, path: '/donor-discovery' },
+      { id: 'proposals', label: 'Proposals', icon: FileText, path: '/proposals' },
+      { id: 'funding', label: 'Funding', icon: DollarSign, path: '/funding' }
+    ]
+  };
+
+  // Academic Suite Menu
+  const academicSuiteMenu: MenuItem = {
+    id: 'academic-suite',
+    label: 'Academic',
+    icon: Library,
+    children: [
+      { id: 'literature', label: 'Literature', icon: BookOpen, path: '/academic?tab=literature' },
+      { id: 'research', label: 'Research', icon: Search, path: '/academic?tab=research' },
+      { id: 'writing', label: 'Writing', icon: FileText, path: '/academic?tab=writing' },
+      { id: 'citations', label: 'Citations', icon: Award, path: '/academic?tab=citations' }
+    ]
+  };
+
+  // System Menu
+  const systemMenu: MenuItem = {
+    id: 'system',
+    label: 'System',
+    icon: Settings,
+    children: [
+      { id: 'health', label: 'Health', icon: Network, path: '/health' },
+      { id: 'database', label: 'Database', icon: Database, path: '/database' },
+      { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/analytics' },
+      { id: 'credits', label: 'Credits', icon: Gem, path: '/credits' }
+    ]
+  };
+
+  // Student navigation structure
+  const studentNavigationStructure = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
     { id: 'scholarships', label: 'Scholarships', icon: Award, path: '/scholarships' },
-    { id: 'courses', label: 'Courses', icon: BookOpen, path: '/courses' },
-    { id: 'research', label: 'Research', icon: Search, path: '/research' },
-    { id: 'human-help', label: 'Professional Help', icon: Users, path: '/human-help' },
+    academicSuiteMenu,
+    { id: 'career', label: 'Career', icon: Briefcase, path: '/career' },
+    { id: 'human-help', label: 'Help', icon: Users, path: '/human-help' }
   ];
 
-  const ngoNavigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
+  // Organization navigation structure
+  const organizationNavigationStructure = [
+    aiEnginesMenu,
+    corePlatformMenu,
+    academicSuiteMenu,
+    systemMenu,
+    { id: 'human-help', label: 'Help', icon: Users, path: '/human-help' }
+  ];
+
+  // Choose navigation structure based on user type
+  const navigationStructure = isStudent ? studentNavigationStructure : organizationNavigationStructure;
+
+  // Add admin for superusers
+  const allMenuItems = user?.is_superuser 
+    ? [...navigationStructure, { id: 'admin', label: 'Admin', icon: Shield, path: '/admin' }]
+    : navigationStructure;
+
+  // Bottom tab navigation items (simplified for mobile)
+  const bottomNavItems = isStudent ? [
+    { id: 'dashboard', label: 'Home', icon: Home, path: '/' },
+    { id: 'scholarships', label: 'Scholarships', icon: Award, path: '/scholarships' },
+    { id: 'academic', label: 'Research', icon: BookOpen, path: '/academic' },
+    { id: 'career', label: 'Career', icon: Briefcase, path: '/career' },
+    { id: 'menu', label: 'Menu', icon: Menu, action: 'menu' }
+  ] : [
+    { id: 'dashboard', label: 'Home', icon: Home, path: '/' },
     { id: 'donor-discovery', label: 'Donors', icon: Target, path: '/donor-discovery' },
-    { id: 'proposal-generator', label: 'Proposals', icon: Sparkles, path: '/proposal-generator' },
-    { id: 'funding', label: 'Funding', icon: DollarSign, path: '/funding' },
-    { id: 'human-help', label: 'Professional Help', icon: Users, path: '/human-help' },
+    { id: 'genesis', label: 'Genesis', icon: Zap, path: '/genesis' },
+    { id: 'proposals', label: 'Proposals', icon: FileText, path: '/proposals' },
+    { id: 'menu', label: 'Menu', icon: Menu, action: 'menu' }
   ];
-
-  // Choose navigation items based on user type
-  const navigationItems = isStudent ? studentNavigationItems : ngoNavigationItems;
-
-  // Add admin dashboard for superusers
-  const allItems = user?.is_superuser 
-    ? [...navigationItems, { id: 'admin', label: 'Admin', icon: Shield, path: '/admin' }]
-    : navigationItems;
 
   const handleNavigate = (path: string) => {
     navigate(path);
     setIsOpen(false);
   };
 
+  const handleBottomNavAction = (item: any) => {
+    if (item.action === 'menu') {
+      setIsOpen(true);
+    } else if (item.path) {
+      navigate(item.path);
+    }
+  };
+
+  const renderMenuItem = (item: MenuItem, depth: number = 0) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedSections.has(item.id);
+    const isActive = item.path && location.pathname === item.path;
+    
+    return (
+      <div key={item.id} className="w-full">
+        <motion.button
+          whileHover={{ scale: 1.01, x: 5 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            if (hasChildren) {
+              toggleSection(item.id);
+            } else if (item.path) {
+              handleNavigate(item.path);
+            }
+          }}
+          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
+            depth > 0 ? 'ml-4 text-sm' : ''
+          } ${
+            isActive 
+              ? 'bg-blue-50 text-blue-600 border border-blue-100' 
+              : hasChildren 
+                ? 'text-gray-800 hover:text-gray-900 hover:bg-gray-50'
+                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          <item.icon className={`flex-shrink-0 ${depth > 0 ? 'w-4 h-4' : 'w-5 h-5'}`} />
+          
+          <span className="font-medium truncate flex-1 text-left">
+            {item.label}
+          </span>
+          
+          {item.badge && (
+            <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+              item.badge === '90%' 
+                ? 'bg-green-100 text-green-700'
+                : 'bg-blue-100 text-blue-600'
+            }`}>
+              {item.badge}
+            </span>
+          )}
+          
+          {hasChildren && (
+            <motion.div
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </motion.div>
+          )}
+        </motion.button>
+        
+        {/* Children */}
+        {hasChildren && (
+          <motion.div
+            initial={false}
+            animate={{
+              height: isExpanded ? 'auto' : 0,
+              opacity: isExpanded ? 1 : 0
+            }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="ml-2 mt-1 space-y-1">
+              {item.children?.map((child) => renderMenuItem(child, depth + 1))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
   // Bottom tab navigation for mobile
   const renderBottomNav = () => {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-40 md:hidden">
-        <div className="flex justify-around items-center h-16">
-          {navigationItems.slice(0, 5).map((item) => {
-            const isActive = location.pathname === item.path;
+      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-40 md:hidden safe-area-inset">
+        <div className="flex justify-around items-center h-16 px-2">
+          {bottomNavItems.map((item) => {
+            const isActive = item.path && location.pathname === item.path;
             return (
               <motion.button
                 key={item.id}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => handleNavigate(item.path)}
-                className={`flex flex-col items-center justify-center p-2 ${
+                onClick={() => handleBottomNavAction(item)}
+                className={`flex flex-col items-center justify-center p-2 min-w-0 flex-1 ${
                   isActive ? 'text-blue-600' : 'text-gray-500'
                 }`}
               >
                 <item.icon className="w-5 h-5 mb-1" />
-                <span className="text-xs">{item.label}</span>
+                <span className="text-xs truncate">{item.label}</span>
               </motion.button>
             );
           })}
@@ -120,16 +304,24 @@ const MobileNavigation: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25 }}
-              className="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 md:hidden overflow-y-auto"
+              className="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-200 z-50 md:hidden overflow-y-auto"
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-white" />
+                      <Brain className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-xl font-bold text-gray-900">Granada</span>
+                    <div>
+                      <span className="text-lg font-bold text-gray-900">Granada OS</span>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-xs text-gray-500">FastAPI</span>
+                        <span className="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded font-medium">
+                          90%
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -142,26 +334,8 @@ const MobileNavigation: React.FC = () => {
                 </div>
                 
                 {/* Navigation */}
-                <nav className="flex-1 px-2 py-4 space-y-1">
-                  {allItems.map((item, index) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                      <motion.button
-                        key={item.id}
-                        whileHover={{ scale: 1.02, x: 5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleNavigate(item.path)}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
-                          isActive 
-                            ? 'bg-blue-50 text-blue-600 border border-blue-100' 
-                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5 flex-shrink-0" />
-                        <span className="font-medium">{item.label}</span>
-                      </motion.button>
-                    );
-                  })}
+                <nav className="flex-1 px-3 py-4 space-y-2">
+                  {allMenuItems.map((item) => renderMenuItem(item))}
                 </nav>
                 
                 {/* User Profile */}

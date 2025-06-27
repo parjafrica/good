@@ -212,30 +212,58 @@ const Header: React.FC = () => {
     <motion.header 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-white to-blue-50 shadow-sm z-50 border-b border-gray-200"
+      className="fixed top-0 left-0 right-0 h-14 sm:h-16 bg-gradient-to-r from-white to-blue-50 shadow-sm z-50 border-b border-gray-200"
     >
-      <div className="flex items-center justify-between h-full px-6">
+      <div className="flex items-center justify-between h-full px-3 sm:px-4 md:px-6">
         {/* Logo */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           onClick={() => navigate('/')}
-          className="flex items-center space-x-3"
+          className="flex items-center space-x-2 sm:space-x-3"
         >
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Granada</span>
+          <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Granada</span>
         </motion.button>
 
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
+        {/* Mobile Right Side */}
+        <div className="flex md:hidden items-center space-x-2">
+          {/* Mobile Credits */}
+          {user && (
+            <div className="flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+              <Gem className="w-3 h-3 text-blue-600" />
+              <span className="text-xs font-semibold text-blue-700">{user.credits || 0}</span>
+            </div>
+          )}
+          
+          {/* Mobile Notifications */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg touch-target"
           >
-            <Menu className="w-6 h-6" />
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </motion.button>
+          
+          {/* Mobile User Menu */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="p-1 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg touch-target"
+          >
+            <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">
+                {user?.firstName?.[0] || user?.email?.[0] || 'U'}
+              </span>
+            </div>
           </motion.button>
         </div>
 
