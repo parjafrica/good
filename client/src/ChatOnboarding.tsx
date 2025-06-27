@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { Send, User, Bot, Sparkles, Globe, Heart, Zap, MapPin, Github, Edit3, Check, X } from 'lucide-react';
 import { FaGoogle, FaLinkedin } from 'react-icons/fa';
-import FloatingReviews from './FloatingReviews';
+import AnimatedReviews from './AnimatedReviews';
+import ChatInput from './ChatInput';
+import TypingIndicator from './TypingIndicator';
 
 // Comprehensive country list with geo-location priority
 const COUNTRIES = [
@@ -115,7 +117,6 @@ export default function ChatOnboarding() {
   const [currentInput, setCurrentInput] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const [userProfile, setUserProfile] = useState<UserProfile>({});
-  const [isTyping, setIsTyping] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [currentStory, setCurrentStory] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -129,6 +130,9 @@ export default function ChatOnboarding() {
   const [showSocialOptions, setShowSocialOptions] = useState(false);
   const [personalizedInsights, setPersonalizedInsights] = useState<string[]>([]);
   const [learningProgress, setLearningProgress] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentInputType, setCurrentInputType] = useState<'text' | 'password' | 'select'>('text');
+  const [currentOptions, setCurrentOptions] = useState<string[]>([]);
   const initRef = useRef(false);
 
   // Auto-scroll to bottom
@@ -506,8 +510,8 @@ export default function ChatOnboarding() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex relative">
-      {/* Floating Reviews */}
-      <FloatingReviews />
+      {/* Animated Reviews */}
+      <AnimatedReviews />
       
       {/* Success Stories Sidebar */}
       <div className="hidden lg:block w-80 p-6 border-r border-white/10">

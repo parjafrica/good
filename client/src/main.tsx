@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App.tsx';
-import ChatOnboarding from './ChatOnboarding.tsx';
+import ChatOnboardingNew from './ChatOnboardingNew.tsx';
 import LandingPage from './LandingPage.tsx';
 import LoginPage from './LoginPage.tsx';
 import RegisterPage from './RegisterPage.tsx';
@@ -18,7 +18,7 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <AuthProvider>
           <Routes>
-            <Route path="/onboard" element={<ChatOnboarding />} />
+            <Route path="/onboard" element={<ChatOnboardingNew />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />

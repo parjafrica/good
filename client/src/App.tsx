@@ -29,6 +29,7 @@ import CreditsPage from './CreditsPage';
 import PurchasePage from './PurchasePage';
 import OnboardPageFixed from './OnboardPageFixed';
 import IntelligentOnboardingSystem from './IntelligentOnboardingSystem';
+import ChatOnboardingNew from './ChatOnboardingNew';
 import NotFoundPage from './NotFoundPage';
 import HumanHelpButton from './shared/HumanHelpButton';
 
@@ -110,6 +111,7 @@ function App() {
                   <Route path="/credits-purchase/:packageId" element={<CreditsPurchase />} />
                   <Route path="/ngo-pipeline" element={<NGOPipeline />} />
                   <Route path="/onboard-intelligent" element={<IntelligentOnboardingSystem />} />
+                  <Route path="/onboard" element={<ChatOnboardingNew />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>
