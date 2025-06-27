@@ -1,0 +1,186 @@
+This document integrates every concept we've discussed: the universal audience, the advanced AI multi-bot architecture, the platform economy, global localization, and now, a hybrid database architecture using both PostgreSQL and a Graph Database (like Neo4j) for unparalleled relationship-based matching.
+It is structured to be the single source of truth for "vibe coding"—providing not just the "what" but the "how" and "why," including conceptual CLI commands to represent the development actions.
+________________________________________
+GRANADA: The Master Blueprint for the Universal AI-Native OS
+________________________________________
+Part 1: Foundational Architecture & Core Logic
+1.1. Core Technology Stack
+•	Primary Backend Language: Python (3.11+)
+•	Backend Framework: FastAPI
+•	Frontend Language: TypeScript
+•	Frontend Framework: React (with Next.js)
+•	Primary Database (Transactional & Vector): PostgreSQL (with PgVector & PostGIS extensions)
+o	Logic: Handles all structured data (users, organizations, projects, financials, documents) and performs high-speed semantic vector searches.
+•	Secondary Database (Relational & Graph): Neo4j (or similar Graph DB)
+o	Logic: Models complex, many-to-many relationships. Essential for advanced matching where the path between entities matters (e.g., "Find investors who funded companies founded by people from my university").
+•	In-Memory Store: Redis (for caching, real-time messaging, and task queuing).
+•	Containerization: Docker & Docker Compose.
+1.2. The "Vibe Coding" Command Philosophy
+To make this blueprint actionable, we'll use a conceptual command-line interface (CLI) syntax. These commands represent the "vibe" or intent of a development sprint or task.
+•	granada generate:module [module_name] - Creates the full directory structure for a new module.
+•	granada generate:page [module_name]/[page_name] - Creates the frontend component files for a new page.
+•	granada generate:bot [bot_name] --language=python - Scaffolds the files for a new AI bot.
+•	granada db:migrate "[migration_description]" - Generates and applies a database schema change.
+•	granada deploy:service [service_name] - Deploys a specific microservice.
+________________________________________
+Part 2: The General System (User-Facing)
+Total Pages: ~140 | Total Flows: ~107 | Total AI Bots: ~103
+________________________________________
+Section 1.0: Core Platform & Authentication
+•	Pages (10): Public Landing, Login, Register, Forgot/Reset Password, Profile/Security Settings, Org/Team Settings, Notification Prefs, Billing/Credits, Integrations (API/Webhooks).
+•	Flows (6): New User Onboarding, Password Recovery, Team Invitation, Credit Purchase, Plan Upgrade, API Key Generation.
+•	AI Bots (6): Contextual Adaptation, Onboarding Path, Security Risk, Smart Upsell, Notification Digest, Threat Intelligence.
+•	"Vibe Coding" Commands:
+Generated bash
+      # Scaffold the entire auth system
+granada generate:module auth
+granada generate:page auth/Login --flow=authentication
+granada generate:page auth/Register --flow=onboarding
+
+# Create the core adaptation logic
+granada generate:bot ContextualAdaptationEngine --language=python
+
+# Set up the database tables
+granada db:migrate "Create users, organizations, roles tables"
+    
+________________________________________
+Section 2.0: The Genesis Engine (Step Zero)
+•	Pages (12): Genesis Dashboard, Idea Incubator, Document Foundry, Doc Editor, Brand Forge, Logo Editor, Letterhead Maker, Presentation Maker, Mockup Gallery, Digital Pipeline, Website Editor, Deploy Settings.
+•	Flows (5): Idea-to-Entity ("Genesis Flow"), Policy Generation, Brand Creation, Website Creation, Re-branding.
+•	AI Bots (10): AI Mentor, Mission Synthesis, Policy Generation, Profile Writing, Brand Identity, Brand Asset, AI Mockup, Website Generation, SEO Strategy, Domain Suggestion.
+•	"Vibe Coding" Commands:
+Generated bash
+      # Build the entire Genesis module
+granada generate:module genesis --depends-on=auth
+granada generate:page genesis/Incubator --flow="Genesis Flow"
+granada generate:page genesis/Foundry
+
+# Create the AI bots that power it
+granada generate:bot PolicyGenerationBot --language=python --uses-llm=true
+granada generate:bot BrandIdentityEngine --language=python --uses-image-gen=true
+    
+IGNORE_WHEN_COPYING_START
+content_copy download 
+Use code with caution. Bash
+IGNORE_WHEN_COPYING_END
+________________________________________
+Section 3.0: Main Dashboard & Universal Navigation
+•	Pages (3): Main Dashboard, Global Search Results, Communications Center.
+•	Flows (3): "Day-in-the-Life," Global Search, Collaboration/Messaging.
+•	AI Bots (5): Criticality & Prioritization, Project Risk Prediction, M&E Anomaly Detection, Semantic Matching, Universal Semantic Search.
+•	"Vibe Coding" Commands:
+Generated bash
+      # Create the core user dashboard
+granada generate:page dashboard/Main --is-adaptive=true
+
+# Build the master AI orchestrator for the dashboard
+granada generate:bot CriticalityPrioritizationEngine --language=python
+    
+IGNORE_WHEN_COPYING_START
+content_copy download 
+Use code with caution. Bash
+IGNORE_WHEN_COPYING_END
+________________________________________
+Section 4.0: Core Functional Modules
+This encompasses all the specialized suites.
+•	Pages (65+): Covering Strategic Planning, Funding, Project Execution, M&E, Academic, Business, Career, Creative, Governance, and Office Editors.
+•	Flows (~60+): From "Write a Grant" to "Simulate an Interview" and "Analyze a Contract."
+•	AI Bots (~60+): Including AI Proposal Bot, AI Logistics Bot, AI Literature Review Bot, AI CV Bot, AI Video Bot, AI Contract Analysis Bot, etc.
+•	Key Bot Architecture: Hybrid Database Matching
+o	Bot: Advanced Investor Matching Bot
+o	Languages: Python, Cypher (for Neo4j), SQL (for PostgreSQL).
+o	Business Logic: Find an investor for a startup who not only invests in their sector but has a trusted connection to the founder.
+o	Algorithm:
+1.	User initiates a search for investors.
+2.	PostgreSQL Query (Semantic Search): The backend first queries PostgreSQL to find investors whose investment thesis (text) is semantically similar to the startup's pitch deck summary (text). (SELECT investor_id FROM investors WHERE vector_similarity > 0.8) -> This provides a list of potentially good fits.
+3.	Graph DB Query (Relational Search): The backend then takes this list of potential investors and queries the Neo4j graph database. Core Logic: The Cypher query looks for the shortest path between the (Founder) node and the (Investor) nodes from the previous step. MATCH p=shortestPath((f:Person {id: 'founder_id'})-[*..6]-(i:Investor)) WHERE i.id IN [potential_investor_ids] RETURN i, p
+4.	The query might find a path like: (Founder) -> [ATTENDED] -> (University) <- [ATTENDED] <- (Person) -> [WORKED_AT] -> (Company) <- [FUNDED] <- (Investor).
+5.	Synthesizer Bot: An AI bot analyzes these results and decides on the final ranking. It prioritizes investors who are both a good semantic fit AND have a close relational path to the founder.
+o	Control Flow (ASCII) for Hybrid Search:
+Generated code
+      [User Search] -> [Backend API]
+                      |
+        +-------------+-------------+
+        |                           |
+        V                           V
+[PostgreSQL Query]          [Graph DB Query]
+(Get Semantic Matches)      (Get Relational Paths)
+        |                           |
+        +-------------+-------------+
+                      |
+                      V
+          [AI Synthesizer Bot]
+   (Decides final ranked list)
+                      |
+                      V
+             [Return to Frontend]
+    
+IGNORE_WHEN_COPYING_START
+content_copy download 
+Use code with caution. 
+IGNORE_WHEN_COPYING_END
+•	"Vibe Coding" Commands:
+Generated bash
+      # Build a module and its bots
+granada generate:module career_suite
+granada generate:page career_suite/CVBuilder --uses-editor=true
+granada generate:bot CVRewriterBot --language=python
+granada generate:bot InterviewCoachBot --language=python --uses-speech-to-text=true
+
+# Set up the hybrid database connections
+granada db:migrate "Add investor and founder nodes to graph DB"
+    
+IGNORE_WHEN_COPYING_START
+content_copy download 
+Use code with caution. Bash
+IGNORE_WHEN_COPYING_END
+________________________________________
+Section 5.0: Ecosystem & Platform Systems
+•	Pages (10+): Community Forum, Threads, Marketplace, Expert Profiles, Plugin Store, Plugin Details, Review Modals, Language/Region Settings, etc.
+•	Flows (8+): Get Community Help, Hire Expert, Extend Functionality, Contribute Review, Cross-Language Collaboration, etc.
+•	AI Bots (12+): Dynamic Translation, Geo-Prioritization, Cultural Nuance, Expert Matching, Plugin Recommendation, Moderation, PII Redaction, etc.
+•	"Vibe Coding" Commands:
+Generated bash
+      # Build the platform extensibility features
+granada generate:module plugins
+granada generate:page plugins/Store
+
+# Build the core globalization bots
+granada generate:bot DynamicTranslationBot --language=python
+granada generate:bot GeoSpatialPrioritizationBot --language=python
+    
+IGNORE_WHEN_COPYING_START
+content_copy download 
+Use code with caution. Bash
+IGNORE_WHEN_COPYING_END
+________________________________________
+Part 3: The Admin System (Platform Control)
+Total Pages: ~15 | Total Flows: ~12 | Total AI Bots: 5
+________________________________________
+Section 6.0: Admin Dashboard & System Controls
+•	Pages (15): Admin Dashboard, User/Org Management, Subscription/Credit Controls, Scraper & Bot Management Console, AI Usage Monitoring, Security Threat Dashboard, Audit Log Explorer, Moderation Queues (Reviews, Plugins), Localization Management.
+•	Flows (12): User Support/Impersonation, Scraper Debugging, Revenue Management, Security Response, Plugin Approval, etc.
+•	AI Bots (5): System Health Analytics, Admin Log Search, User Anomaly (Admin Interface), AI Cost Prediction, Bot Performance Analysis.
+•	"Vibe Coding" Commands:
+Generated bash
+      # Build the entire admin interface
+granada generate:module admin --is-restricted=true
+granada generate:page admin/Dashboard --data-source=system_metrics
+granada generate:page admin/Scrapers --has-controls=true
+
+# Build the admin-facing AI bots
+granada generate:bot AICostPredictionBot --language=python
+    
+IGNORE_WHEN_COPYING_START
+content_copy download 
+Use code with caution. Bash
+IGNORE_WHEN_COPYING_END
+________________________________________
+Final Grand Total & Architectural Summary
+•	Total Pages/Views: ~140+
+•	Total Key User Flows: ~107+
+•	Total Specialized AI Bots/Engines: ~103+
+•	Core Languages: Python, TypeScript, SQL, Cypher.
+•	Core Architecture: A decoupled microservices backend powered by FastAPI, serving a highly adaptive and interactive Next.js frontend. The data layer is a hybrid of PostgreSQL (for structured data and semantic search) and a Graph Database (for relational/path-based search), providing unparalleled query and matching capabilities. The entire system is orchestrated by a suite of over 100 specialized AI bots that collaborate to deliver a proactive, personalized, and intelligent user experience.
+This blueprint provides the complete, logical structure required to build the Granada ecosystem. It is ready for your team to begin "vibe coding."
+

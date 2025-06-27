@@ -20,7 +20,9 @@ import {
   BookOpen,
   Search,
   Award,
-  Users
+  Users,
+  Lightbulb,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '.././contexts/AuthContext';
 
@@ -49,7 +51,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
 
   const ngoNavigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/' },
+    { id: 'genesis', label: 'Genesis Engine', icon: Lightbulb, path: '/genesis' },
     { id: 'donor-discovery', label: 'Donor Discovery', icon: Target, path: '/donor-discovery' },
+    { id: 'career', label: 'Career Suite', icon: Briefcase, path: '/career' },
     { id: 'proposal-generator', label: 'Professional Proposal', icon: Sparkles, path: '/proposal-generator' },
     { id: 'proposals', label: 'Proposals', icon: FileText, path: '/proposals' },
     { id: 'ngo-pipeline', label: 'NGO Pipeline', icon: Building, path: '/ngo-pipeline' },

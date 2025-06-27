@@ -32,6 +32,8 @@ import IntelligentOnboardingSystem from './IntelligentOnboardingSystem';
 import ChatOnboardingNew from './ChatOnboardingNew';
 import NotFoundPage from './NotFoundPage';
 import L1Page from './L1Page';
+import GenesisEngine from './GenesisEngine';
+import CareerSuite from './CareerSuite';
 import HumanHelpButton from './shared/HumanHelpButton';
 
 import AddictionProvider from './contexts/AddictionContext';
@@ -114,6 +116,8 @@ function App() {
                   <Route path="/onboard-intelligent" element={<IntelligentOnboardingSystem />} />
                   <Route path="/onboard" element={<ChatOnboardingNew />} />
                   <Route path="/l1" element={<L1Page />} />
+                  <Route path="/genesis" element={<GenesisEngine />} />
+                  <Route path="/career" element={<CareerSuite />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>
