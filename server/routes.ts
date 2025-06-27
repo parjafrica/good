@@ -182,6 +182,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Social OAuth routes for onboarding
+  app.get('/api/auth/google', (req, res) => {
+    const redirectUrl = req.query.redirect || '/';
+    // In production, redirect to Google OAuth
+    // For demo, redirect to callback with demo data
+    const params = new URLSearchParams({
+      code: 'demo_code',
+      state: 'demo_state'
+    });
+    res.redirect(`/api/auth/callback/google?${params.toString()}&redirect=${encodeURIComponent(redirectUrl as string)}`);
+  });
+
+  app.get('/api/auth/github', (req, res) => {
+    const redirectUrl = req.query.redirect || '/';
+    const params = new URLSearchParams({
+      code: 'demo_code',
+      state: 'demo_state'
+    });
+    res.redirect(`/api/auth/callback/github?${params.toString()}&redirect=${encodeURIComponent(redirectUrl as string)}`);
+  });
+
+  app.get('/api/auth/linkedin', (req, res) => {
+    const redirectUrl = req.query.redirect || '/';
+    const params = new URLSearchParams({
+      code: 'demo_code',
+      state: 'demo_state'
+    });
+    res.redirect(`/api/auth/callback/linkedin?${params.toString()}&redirect=${encodeURIComponent(redirectUrl as string)}`);
+  });
+
+  // OAuth callbacks (demo implementation)
+  app.get('/api/auth/callback/:provider', (req, res) => {
+    const { provider } = req.params;
+    const redirectUrl = req.query.redirect || '/';
+    
+    // Demo social login data
+    const demoData = {
+      google: { 
+        firstName: 'John',
+        lastName: 'Doe', 
+        email: 'john.doe@gmail.com',
+        organization: 'Google Workspace',
+        experience: 'Professional'
+      },
+      github: { 
+        firstName: 'Alex',
+        lastName: 'Developer', 
+        email: 'alex.dev@users.noreply.github.com',
+        organization: 'Open Source Community',
+        sector: 'Technology'
+      },
+      linkedin: { 
+        firstName: 'Sarah',
+        lastName: 'Professional', 
+        email: 'sarah.pro@company.com',
+        organization: 'Professional Network',
+        experience: 'Senior Level'
+      }
+    };
+    
+    const userData = demoData[provider as keyof typeof demoData];
+    const params = new URLSearchParams({
+      auth_success: 'true',
+      provider: provider,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      organization: userData.organization,
+      experience: userData.experience || '',
+      sector: userData.sector || ''
+    });
+    
+    res.redirect(`${redirectUrl}?${params.toString()}`);
+  });
+
   // Error logging endpoint for frontend error handling system
   app.post("/api/errors/log", async (req, res) => {
     try {

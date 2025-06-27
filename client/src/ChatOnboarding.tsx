@@ -176,10 +176,47 @@ export default function ChatOnboarding() {
         setUserCountry('Uganda');
       }
       
-      // Initialize chat after a delay
-      setTimeout(() => {
-        addBotMessage(chatFlow[0].botMessage as string);
-      }, 1000);
+      // Check for OAuth callback parameters first
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('auth_success') === 'true') {
+        const provider = urlParams.get('provider');
+        const firstName = urlParams.get('firstName');
+        const lastName = urlParams.get('lastName');
+        const email = urlParams.get('email');
+        const organization = urlParams.get('organization');
+        const experience = urlParams.get('experience');
+        const sector = urlParams.get('sector');
+
+        // Populate user profile with OAuth data
+        setUserProfile(prev => ({
+          ...prev,
+          firstName: firstName || prev.firstName,
+          lastName: lastName || prev.lastName,
+          email: email || prev.email,
+          organization: organization || prev.organization,
+          experience: experience || prev.experience,
+          sector: sector || prev.sector
+        }));
+
+        // Add success message and advance flow
+        setTimeout(() => {
+          addBotMessage(`🎉 Perfect! I've connected your ${provider?.charAt(0).toUpperCase()}${provider?.slice(1)} account successfully!`);
+          setTimeout(() => {
+            addBotMessage("Now I understand your background much better. Let me provide you with highly personalized funding recommendations based on your profile!");
+            setLearningProgress(85);
+            setCurrentStep(Math.min(currentStep + 2, chatFlow.length - 1));
+            setShowSocialOptions(false);
+          }, 2000);
+        }, 1000);
+
+        // Clean up URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Initialize chat normally after a delay
+        setTimeout(() => {
+          addBotMessage(chatFlow[0].botMessage as string);
+        }, 1000);
+      }
     }
   }, []);
 
@@ -291,8 +328,9 @@ export default function ChatOnboarding() {
       setPersonalizedInsights(prev => [...prev, ...insights]);
     }
     
-    // Trigger social options when we have enough information
-    if (learningProgress >= 60 && !showSocialOptions) {
+    // Trigger social options only when we have sufficient information (at least 3 fields filled)
+    const filledFields = Object.values(userProfile).filter(value => value && value.trim() !== '').length;
+    if (learningProgress >= 60 && filledFields >= 3 && !showSocialOptions) {
       setTimeout(() => {
         setShowSocialOptions(true);
         addBotMessage("🔗 I'm getting to know you better! Would you like to connect a social account to speed this up and get more personalized recommendations?");
@@ -301,88 +339,20 @@ export default function ChatOnboarding() {
   };
 
   const handleSocialLogin = (provider: string) => {
-    // Create dynamic popup overlay
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); z-index: 10000; display: flex;
-      align-items: center; justify-content: center; backdrop-filter: blur(10px);
-    `;
-    
-    const popup = document.createElement('div');
-    popup.style.cssText = `
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 40px; border-radius: 20px; text-align: center;
-      color: white; font-family: system-ui; max-width: 400px;
-      transform: scale(0); transition: all 0.3s ease;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    `;
-    
-    const providerColors = {
-      google: 'linear-gradient(135deg, #4285f4 0%, #34a853 100%)',
-      github: 'linear-gradient(135deg, #333 0%, #24292e 100%)', 
-      linkedin: 'linear-gradient(135deg, #0077b5 0%, #00a0dc 100%)'
+    // Redirect to actual OAuth provider
+    const authUrls = {
+      google: `/api/auth/google?redirect=${encodeURIComponent(window.location.href)}`,
+      github: `/api/auth/github?redirect=${encodeURIComponent(window.location.href)}`,
+      linkedin: `/api/auth/linkedin?redirect=${encodeURIComponent(window.location.href)}`
     };
     
-    popup.style.background = providerColors[provider as keyof typeof providerColors] || popup.style.background;
+    // Show brief loading message
+    addBotMessage(`🚀 Redirecting you to ${provider.charAt(0).toUpperCase() + provider.slice(1)} for secure authentication...`);
     
-    popup.innerHTML = `
-      <div style="font-size: 48px; margin-bottom: 20px;">🔗</div>
-      <h2 style="margin: 0 0 10px 0;">Connecting to ${provider.charAt(0).toUpperCase() + provider.slice(1)}</h2>
-      <p style="margin: 0 0 20px 0; opacity: 0.9;">Securely linking your account for better recommendations...</p>
-      <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
-        <div id="progress" style="height: 100%; background: #4ade80; width: 0%; transition: width 2s ease;"></div>
-      </div>
-    `;
-    
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
-    
-    // Animate popup in
+    // Redirect to actual OAuth provider
     setTimeout(() => {
-      popup.style.transform = 'scale(1)';
-      const progressBar = popup.querySelector('#progress') as HTMLElement;
-      if (progressBar) progressBar.style.width = '100%';
-    }, 100);
-    
-    // Simulate authentication process
-    setTimeout(() => {
-      const socialData = {
-        google: {
-          email: `${userProfile.firstName?.toLowerCase() || 'user'}@gmail.com`,
-          organization: 'Google Workspace',
-          experience: 'Professional'
-        },
-        github: {
-          email: `${userProfile.firstName?.toLowerCase() || 'dev'}@users.noreply.github.com`,
-          sector: 'Technology',
-          organization: 'Open Source Community'
-        },
-        linkedin: {
-          email: `${userProfile.firstName?.toLowerCase() || 'professional'}@company.com`,
-          experience: 'Senior Level',
-          organization: 'Professional Network'
-        }
-      }[provider];
-
-      setUserProfile(prev => ({
-        ...prev,
-        ...socialData
-      }));
-
-      // Remove popup with animation
-      popup.style.transform = 'scale(0)';
-      setTimeout(() => {
-        document.body.removeChild(overlay);
-      }, 300);
-
-      setShowSocialOptions(false);
-      addBotMessage(`🎉 Perfect! I've connected your ${provider.charAt(0).toUpperCase() + provider.slice(1)} account. Now I understand your background much better and can provide highly personalized funding recommendations!`);
-      
-      // Skip ahead based on enriched data
-      setCurrentStep(Math.min(currentStep + 2, chatFlow.length - 1));
-      setLearningProgress(100);
-    }, 2500);
+      window.location.href = authUrls[provider as keyof typeof authUrls];
+    }, 1000);
   };
 
 
@@ -653,8 +623,8 @@ export default function ChatOnboarding() {
             </motion.div>
           )}
 
-          {/* Social Login Options - Show after initial message */}
-          {messages.length === 1 && !isTyping && (
+          {/* Intelligent Social Login Options - Only show when system has learned enough */}
+          {showSocialOptions && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -663,7 +633,14 @@ export default function ChatOnboarding() {
             >
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 max-w-md">
                 <div className="text-center mb-4">
-                  <p className="text-white/80 text-sm mb-3">Quick Sign Up Options</p>
+                  <p className="text-white/80 text-sm mb-3">🚀 Speed up with social login</p>
+                  <div className="bg-white/10 rounded-full h-2 mb-3">
+                    <div 
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${learningProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-white/60 text-xs">I've learned {learningProgress}% about you!</p>
                 </div>
                 <div className="space-y-3">
                   <button
@@ -692,9 +669,15 @@ export default function ChatOnboarding() {
                       <div className="w-full border-t border-white/20"></div>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-transparent px-2 text-white/60">or continue with chat</span>
+                      <span className="bg-transparent px-2 text-white/60">or continue chatting</span>
                     </div>
                   </div>
+                  <button
+                    onClick={() => setShowSocialOptions(false)}
+                    className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition-all duration-200 text-sm"
+                  >
+                    Continue with chat instead
+                  </button>
                 </div>
               </div>
             </motion.div>
