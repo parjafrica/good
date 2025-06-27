@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { Send, User, Bot, Sparkles, Globe, Heart, Zap } from 'lucide-react';
+import FloatingReviews from './FloatingReviews';
 
 interface Message {
   id: string;
@@ -55,7 +56,11 @@ const chatFlow = [
     botMessage: "Awesome! Now, which best describes you? 🎯",
     field: 'userType',
     options: ['Student', 'Non-profit Organization', 'Business/Startup', 'Individual Researcher'],
-    validation: (value: string) => ['Student', 'Non-profit Organization', 'Business/Startup', 'Individual Researcher'].includes(value)
+    validation: (value: string) => {
+      const normalizedValue = value.toLowerCase().trim();
+      const validOptions = ['student', 'non-profit organization', 'business/startup', 'individual researcher', 'organization', 'business', 'startup', 'researcher', 'nonprofit'];
+      return validOptions.some(option => normalizedValue.includes(option)) || value.length >= 3;
+    }
   },
   {
     id: 'country',
@@ -120,7 +125,7 @@ export default function ChatOnboarding() {
       setIsTyping(true);
       setTimeout(() => {
         setMessages(prev => [...prev, {
-          id: Date.now().toString(),
+          id: `bot-${Date.now()}-${Math.random()}`,
           type: 'bot',
           content,
           timestamp: new Date()
@@ -134,7 +139,7 @@ export default function ChatOnboarding() {
       }, 1500);
     } else {
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: `bot-${Date.now()}-${Math.random()}`,
         type: 'bot',
         content,
         timestamp: new Date()
@@ -144,7 +149,7 @@ export default function ChatOnboarding() {
 
   const addUserMessage = (content: string) => {
     setMessages(prev => [...prev, {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}-${Math.random()}`,
       type: 'user',
       content,
       timestamp: new Date()
@@ -238,7 +243,10 @@ export default function ChatOnboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex relative">
+      {/* Floating Reviews */}
+      <FloatingReviews />
+      
       {/* Success Stories Sidebar */}
       <div className="hidden lg:block w-80 p-6 border-r border-white/10">
         <div className="sticky top-6">

@@ -7,7 +7,7 @@ const REVIEWS = [
   "Life-changing platform! Got scholarship ✨",
   "Expert help was incredible! $80K grant 🎯",
   "Found EU funding worth €200K! 🇪🇺",
-  "Brilliant AI matching! Got funded 🤖",
+  "Brilliant Expert matching! Got funded 🤖",
   "Saved months of research time ⏰",
   "Perfect match for our project! $75K 💡",
   "Outstanding support team! Got $45K 👏",
@@ -23,7 +23,7 @@ const REVIEWS = [
   "Life-saving for students! $35K ✨",
   "Perfect for East Africa! $90K 🌍",
   "Incredible database! Found $105K 📚",
-  "AI recommendations perfect! $60K 🎯",
+  "Expert recommendations perfect! $60K 🎯",
   "Outstanding platform! $140K 🏅",
   "Changed our organization! $85K 🔄",
   "Found dream funder! $75K 💫",
@@ -44,7 +44,7 @@ const REVIEW_COLORS = [
 
 export default function FloatingReviews() {
   const [reviews, setReviews] = useState<Array<{
-    id: number;
+    id: string;
     text: string;
     color: string;
     delay: number;
@@ -53,13 +53,13 @@ export default function FloatingReviews() {
   }>>([]);
 
   useEffect(() => {
-    // Create 20 floating reviews with random properties
-    const floatingReviews = Array.from({ length: 20 }, (_, index) => ({
-      id: index,
+    // Create 15 floating reviews with random properties for better performance
+    const floatingReviews = Array.from({ length: 15 }, (_, index) => ({
+      id: `floating-review-${index}-${Date.now()}`,
       text: REVIEWS[Math.floor(Math.random() * REVIEWS.length)],
       color: REVIEW_COLORS[Math.floor(Math.random() * REVIEW_COLORS.length)],
       delay: index * 0.8, // Stagger the animations
-      left: `${5 + (index * 4.5) % 90}%`, // Spread across screen width
+      left: `${5 + (index * 6) % 90}%`, // Spread across screen width
       animation: `float-review${(index % 3) + 1}` // Cycle through 3 animation types
     }));
 
