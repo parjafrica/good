@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { Send, User, Bot, Sparkles, Globe, Heart, Zap, MapPin } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Globe, Heart, Zap, MapPin, Github } from 'lucide-react';
+import { FaGoogle, FaLinkedin } from 'react-icons/fa';
 import FloatingReviews from './FloatingReviews';
 
 // Comprehensive country list with geo-location priority
@@ -141,41 +142,40 @@ export default function ChatOnboarding() {
     return () => clearInterval(interval);
   }, []);
 
-  // Detect user country for geo-located suggestions
-  useEffect(() => {
-    const detectUserCountry = () => {
-      try {
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (timezone.includes('Africa/Kampala') || timezone.includes('Africa/Nairobi')) {
-          setUserCountry('Uganda');
-        } else if (timezone.includes('Africa/Nairobi')) {
-          setUserCountry('Kenya');
-        } else if (timezone.includes('Africa/Dar_es_Salaam')) {
-          setUserCountry('Tanzania');
-        } else if (timezone.includes('America/New_York')) {
-          setUserCountry('United States');
-        } else if (timezone.includes('Europe/London')) {
-          setUserCountry('United Kingdom');
-        } else {
-          setUserCountry('Uganda'); // Default fallback
-        }
-        console.log('User country detected:', userCountry);
-      } catch (error) {
-        setUserCountry('Uganda'); // Safe fallback
-      }
-    };
-    detectUserCountry();
-  }, []);
-
-  // Initialize chat (only once)
+  // Initialize everything once
   useEffect(() => {
     if (!initialized) {
       setInitialized(true);
+      
+      // Detect user country
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        let detectedCountry = 'Uganda'; // Default fallback
+        
+        if (timezone.includes('Africa/Kampala')) {
+          detectedCountry = 'Uganda';
+        } else if (timezone.includes('Africa/Nairobi')) {
+          detectedCountry = 'Kenya';
+        } else if (timezone.includes('Africa/Dar_es_Salaam')) {
+          detectedCountry = 'Tanzania';
+        } else if (timezone.includes('America/New_York')) {
+          detectedCountry = 'United States';
+        } else if (timezone.includes('Europe/London')) {
+          detectedCountry = 'United Kingdom';
+        }
+        
+        setUserCountry(detectedCountry);
+        console.log('User country detected:', detectedCountry);
+      } catch (error) {
+        setUserCountry('Uganda');
+      }
+      
+      // Initialize chat after a delay
       setTimeout(() => {
         addBotMessage(chatFlow[0].botMessage as string);
       }, 1000);
     }
-  }, [initialized]);
+  }, []);
 
   // Smart country filtering with geo-location priority
   const filterCountries = (input: string): string[] => {
@@ -334,6 +334,31 @@ export default function ChatOnboarding() {
     }
   };
 
+  const handleSocialLogin = async (provider: 'google' | 'github' | 'linkedin') => {
+    addBotMessage(`🚀 Redirecting you to ${provider === 'github' ? 'GitHub' : provider === 'google' ? 'Google' : 'LinkedIn'} for quick sign up...`, false);
+    
+    // Simulate social login redirect (in production, these would be real OAuth flows)
+    setTimeout(() => {
+      addBotMessage(`✅ Welcome back! I've pre-filled your information from ${provider === 'github' ? 'GitHub' : provider === 'google' ? 'Google' : 'LinkedIn'}. Let me just confirm a few details with you...`, false);
+      
+      // Pre-fill common information from social login
+      setUserProfile(prev => ({
+        ...prev,
+        firstName: provider === 'google' ? 'Sarah' : provider === 'github' ? 'Alex' : 'Jordan',
+        lastName: provider === 'google' ? 'Johnson' : provider === 'github' ? 'Chen' : 'Smith',
+        email: provider === 'google' ? 'sarah.johnson@gmail.com' : provider === 'github' ? 'alex.chen@github.dev' : 'jordan.smith@company.com',
+        country: userCountry || 'Uganda'
+      }));
+      
+      // Skip to a later step in the flow (like organization/sector questions)
+      setTimeout(() => {
+        setCurrentStep(4); // Skip name, email steps
+        const nextStepData = chatFlow[4];
+        addBotMessage(nextStepData.botMessage as string);
+      }, 1500);
+    }, 2000);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -454,6 +479,53 @@ export default function ChatOnboarding() {
                     <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                     <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Social Login Options - Show after initial message */}
+          {messages.length === 1 && !isTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex justify-center"
+            >
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 max-w-md">
+                <div className="text-center mb-4">
+                  <p className="text-white/80 text-sm mb-3">Quick Sign Up Options</p>
+                </div>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleSocialLogin('google')}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-3 font-medium"
+                  >
+                    <FaGoogle className="w-5 h-5" />
+                    Continue with Google
+                  </button>
+                  <button
+                    onClick={() => handleSocialLogin('github')}
+                    className="w-full bg-gray-800 hover:bg-gray-900 text-white px-4 py-3 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-3 font-medium"
+                  >
+                    <Github className="w-5 h-5" />
+                    Continue with GitHub
+                  </button>
+                  <button
+                    onClick={() => handleSocialLogin('linkedin')}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-3 font-medium"
+                  >
+                    <FaLinkedin className="w-5 h-5" />
+                    Continue with LinkedIn
+                  </button>
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-white/20"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-transparent px-2 text-white/60">or continue with chat</span>
+                    </div>
                   </div>
                 </div>
               </div>
