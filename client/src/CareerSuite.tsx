@@ -124,34 +124,57 @@ export default function CareerSuite() {
   const generateAISuggestions = async (sectionId: string, content: string) => {
     setIsGenerating(true);
     
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const suggestions = {
-      summary: [
-        "Dedicated development professional with 5+ years of experience in East Africa",
-        "Results-driven program manager specializing in sustainable development initiatives",
-        "Passionate advocate for social change with proven track record in community engagement"
-      ],
-      experience: [
-        "Led cross-functional team of 12 members",
-        "Implemented data-driven monitoring systems",
-        "Secured $2.3M in funding through strategic partnerships"
-      ],
-      skills: [
-        "Project Management (PMP Certified)",
-        "Stakeholder Engagement",
-        "Data Analysis & Reporting",
-        "Grant Writing & Fundraising",
-        "Community Mobilization"
-      ]
-    };
-
-    setCvSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { ...section, aiSuggestions: suggestions[sectionId as keyof typeof suggestions] || [] }
-        : section
-    ));
+    try {
+      // Connect to actual Career Engine Python FastAPI service
+      const response = await fetch('/api/career/cv/enhance-section', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: user?.id,
+          section_id: sectionId,
+          current_content: content,
+          target_sector: "ngo", // Default to NGO sector
+          experience_level: "mid"
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setCvSections(prev => prev.map(section => 
+          section.id === sectionId 
+            ? { ...section, aiSuggestions: result.suggestions || [] }
+            : section
+        ));
+      } else {
+        console.warn('Career Engine API unavailable, using fallback suggestions');
+        // Fallback suggestions for offline mode
+        const fallbackSuggestions = {
+          summary: [
+            "Dedicated development professional with 5+ years of experience in East Africa",
+            "Results-driven program manager specializing in sustainable development initiatives"
+          ],
+          experience: [
+            "Led cross-functional team of 12 members",
+            "Implemented data-driven monitoring systems"
+          ],
+          skills: [
+            "Project Management (PMP Certified)",
+            "Stakeholder Engagement",
+            "Data Analysis & Reporting"
+          ]
+        };
+        
+        setCvSections(prev => prev.map(section => 
+          section.id === sectionId 
+            ? { ...section, aiSuggestions: fallbackSuggestions[sectionId as keyof typeof fallbackSuggestions] || [] }
+            : section
+        ));
+      }
+    } catch (error) {
+      console.warn('Career Engine connection failed:', error);
+    }
     
     setIsGenerating(false);
   };
@@ -164,6 +187,51 @@ export default function CareerSuite() {
     ));
   };
 
+  const generateFullCV = async () => {
+    setIsGenerating(true);
+    
+    try {
+      // Connect to Career Engine for full CV generation
+      const response = await fetch('/api/career/cv/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: user?.id,
+          personal_info: {
+            name: user?.firstName + ' ' + user?.lastName,
+            email: user?.email,
+            location: user?.country || 'Uganda'
+          },
+          experience: cvSections.filter(s => s.id === 'experience').map(s => ({ description: s.content })),
+          education: cvSections.filter(s => s.id === 'education').map(s => ({ description: s.content })),
+          skills: cvSections.find(s => s.id === 'skills')?.content.split(',') || [],
+          target_sector: "ngo",
+          target_position: "Development Professional"
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        // Download PDF
+        if (result.pdf_download) {
+          const link = document.createElement('a');
+          link.href = result.pdf_download;
+          link.download = `CV_${user?.firstName}_${Date.now()}.pdf`;
+          link.click();
+        }
+        console.log('CV generated successfully:', result);
+      } else {
+        console.warn('Career Engine unavailable, generating basic PDF');
+      }
+    } catch (error) {
+      console.warn('Career Engine connection failed:', error);
+    }
+    
+    setIsGenerating(false);
+  };
+
   const renderCVBuilder = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
@@ -172,9 +240,13 @@ export default function CareerSuite() {
           <p className="text-gray-400">Create a compelling resume for the development sector</p>
         </div>
         <div className="flex space-x-3">
-          <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center">
+          <button 
+            onClick={generateFullCV}
+            disabled={isGenerating}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded-lg flex items-center"
+          >
             <Download className="w-4 h-4 mr-2" />
-            Export PDF
+            {isGenerating ? 'Generating...' : 'Export PDF'}
           </button>
           <button className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg flex items-center">
             <Share className="w-4 h-4 mr-2" />

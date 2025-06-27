@@ -90,10 +90,35 @@ export default function GenesisEngine() {
   const handleStepComplete = async (stepData: any) => {
     setIsProcessing(true);
     
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIdeaData(prev => ({ ...prev, ...stepData }));
+    try {
+      // Connect to actual Genesis Engine Python FastAPI service
+      const response = await fetch('/api/genesis/process-step', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: user?.id,
+          step: genesisSteps[currentStep].id,
+          data: { ...ideaData, ...stepData },
+          current_step: currentStep
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Genesis Engine processing result:', result);
+        
+        // Update data with AI-enhanced results
+        setIdeaData(prev => ({ ...prev, ...stepData, ...result.enhanced_data }));
+      } else {
+        console.warn('Genesis Engine API unavailable, proceeding with local data');
+        setIdeaData(prev => ({ ...prev, ...stepData }));
+      }
+    } catch (error) {
+      console.warn('Genesis Engine connection failed, proceeding locally:', error);
+      setIdeaData(prev => ({ ...prev, ...stepData }));
+    }
     
     if (currentStep < genesisSteps.length - 1) {
       setCurrentStep(prev => prev + 1);

@@ -1,10 +1,93 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { spawn } from "child_process";
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// FastAPI Services Configuration
+const FASTAPI_SERVICES = {
+  orchestrator: { port: 8000, script: 'server/master_orchestrator.py' },
+  bot: { port: 8001, script: 'server/bot_service.py' },
+  genesis: { port: 8002, script: 'server/genesis_engine.py' },
+  career: { port: 8003, script: 'server/career_engine.py' },
+  academic: { port: 8004, script: 'server/academic_engine.py' }
+};
+
+// Start FastAPI Services
+let fastApiProcesses: any[] = [];
+
+function startFastAPIServices() {
+  console.log('🚀 Starting FastAPI services for 90% Python architecture...');
+  
+  Object.entries(FASTAPI_SERVICES).forEach(([name, config]) => {
+    const process = spawn('python3', [
+      '-m', 'uvicorn',
+      `${config.script.replace('/', '.').replace('.py', '')}:app`,
+      '--host', '0.0.0.0',
+      '--port', config.port.toString(),
+      '--reload'
+    ], {
+      detached: false,
+      stdio: 'pipe'
+    });
+
+    fastApiProcesses.push(process);
+    
+    process.stdout?.on('data', (data) => {
+      console.log(`[${name}] ${data}`);
+    });
+    
+    process.stderr?.on('data', (data) => {
+      console.log(`[${name}] ${data}`);
+    });
+    
+    console.log(`✅ Started ${name} service on port ${config.port}`);
+  });
+}
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 Shutting down FastAPI services...');
+  fastApiProcesses.forEach(proc => proc.kill());
+});
+
+// Start FastAPI services
+startFastAPIServices();
+
+// Proxy middleware for FastAPI services
+app.use('/api/orchestrator', createProxyMiddleware({ 
+  target: 'http://localhost:8000', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/orchestrator': '' }
+}));
+
+app.use('/api/bot', createProxyMiddleware({ 
+  target: 'http://localhost:8001', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/bot': '' }
+}));
+
+app.use('/api/genesis', createProxyMiddleware({ 
+  target: 'http://localhost:8002', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/genesis': '' }
+}));
+
+app.use('/api/career', createProxyMiddleware({ 
+  target: 'http://localhost:8003', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/career': '' }
+}));
+
+app.use('/api/academic', createProxyMiddleware({ 
+  target: 'http://localhost:8004', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/academic': '' }
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
