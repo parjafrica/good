@@ -41,6 +41,7 @@ import HumanHelpButton from './shared/HumanHelpButton';
 import AddictionProvider from './contexts/AddictionContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MoodThemeProvider } from './components/MoodThemeProvider';
 
 // Create a client outside of component to avoid recreation
 const queryClient = new QueryClient({
@@ -83,69 +84,71 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AddictionProvider>
-          <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
-            <Header />
-            
-            <div className="flex">
-              <Sidebar 
-                collapsed={sidebarCollapsed} 
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-              />
+        <MoodThemeProvider>
+          <AddictionProvider>
+            <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
+              <Header />
               
-              <main className={`flex-1 transition-all duration-300 pt-16 pb-16 md:pb-0 ${
-                sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-72'
-              }`}>
-                <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-                  <Routes>
-                  <Route path="/" element={isStudent ? <StudentDashboard /> : <PersonalizedDashboard />} />
-                  <Route path="/dashboard" element={<PersonalizedDashboard />} />
-                  <Route path="/donor-dashboard" element={<DonorDashboard />} />
-                  <Route path="/student" element={<StudentDashboard />} />
-                  <Route path="/donor-discovery" element={<DonorDiscovery />} />
-                  <Route path="/proposal-generator" element={<ProposalGenerator />} />
-                  <Route path="/proposals" element={<ProposalManager />} />
-                  <Route path="/projects" element={<ProjectManager />} />
-                  <Route path="/ai-assistant" element={<AIAssistant />} />
-                  <Route path="/human-help" element={<HumanHelpPage />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/funding" element={<Funding />} />
-                  <Route path="/documents" element={<Documents />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/credits" element={<CreditsPage />} />
-                  <Route path="/purchase/:packageId" element={<PurchasePage />} />
-                  <Route path="/credits-purchase/:packageId" element={<CreditsPurchase />} />
-                  <Route path="/ngo-pipeline" element={<NGOPipeline />} />
-                  <Route path="/onboard-intelligent" element={<IntelligentOnboardingSystem />} />
-                  <Route path="/onboard" element={<ChatOnboardingNew />} />
-                  <Route path="/l1" element={<L1Page />} />
-                  <Route path="/genesis" element={<GenesisEngine />} />
-                  <Route path="/career" element={<CareerSuite />} />
-                  <Route path="/academic" element={<AcademicSuite />} />
-                  
-                  {/* FastAPI Engine Routes */}
-                  <Route path="/orchestrator" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Master Orchestrator</h1><p>Central AI coordination service coming soon...</p><a href="http://localhost:8000/docs" className="text-blue-600 hover:underline" target="_blank">View API Documentation</a></div>} />
-                  <Route path="/bots" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Bot Service</h1><p>Web scraping and automation bots...</p><a href="http://localhost:8001/docs" className="text-blue-600 hover:underline" target="_blank">View API Documentation</a></div>} />
-                  <Route path="/health" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Service Health</h1><p>Monitor all FastAPI services...</p><a href="http://localhost:8000/health" className="text-blue-600 hover:underline" target="_blank">Check Service Health</a></div>} />
-                  <Route path="/database" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Database</h1><p>Granada OS database management...</p></div>} />
-                  
-                    <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </div>
-              </main>
+              <div className="flex">
+                <Sidebar 
+                  collapsed={sidebarCollapsed} 
+                  onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                />
+                
+                <main className={`flex-1 transition-all duration-300 pt-16 pb-16 md:pb-0 ${
+                  sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-72'
+                }`}>
+                  <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+                    <Routes>
+                    <Route path="/" element={isStudent ? <StudentDashboard /> : <PersonalizedDashboard />} />
+                    <Route path="/dashboard" element={<PersonalizedDashboard />} />
+                    <Route path="/donor-dashboard" element={<DonorDashboard />} />
+                    <Route path="/student" element={<StudentDashboard />} />
+                    <Route path="/donor-discovery" element={<DonorDiscovery />} />
+                    <Route path="/proposal-generator" element={<ProposalGenerator />} />
+                    <Route path="/proposals" element={<ProposalManager />} />
+                    <Route path="/projects" element={<ProjectManager />} />
+                    <Route path="/ai-assistant" element={<AIAssistant />} />
+                    <Route path="/human-help" element={<HumanHelpPage />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/funding" element={<Funding />} />
+                    <Route path="/documents" element={<Documents />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/credits" element={<CreditsPage />} />
+                    <Route path="/purchase/:packageId" element={<PurchasePage />} />
+                    <Route path="/credits-purchase/:packageId" element={<CreditsPurchase />} />
+                    <Route path="/ngo-pipeline" element={<NGOPipeline />} />
+                    <Route path="/onboard-intelligent" element={<IntelligentOnboardingSystem />} />
+                    <Route path="/onboard" element={<ChatOnboardingNew />} />
+                    <Route path="/l1" element={<L1Page />} />
+                    <Route path="/genesis" element={<GenesisEngine />} />
+                    <Route path="/career" element={<CareerSuite />} />
+                    <Route path="/academic" element={<AcademicSuite />} />
+                    
+                    {/* FastAPI Engine Routes */}
+                    <Route path="/orchestrator" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Master Orchestrator</h1><p>Central AI coordination service coming soon...</p><a href="http://localhost:8000/docs" className="text-blue-600 hover:underline" target="_blank">View API Documentation</a></div>} />
+                    <Route path="/bots" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Bot Service</h1><p>Web scraping and automation bots...</p><a href="http://localhost:8001/docs" className="text-blue-600 hover:underline" target="_blank">View API Documentation</a></div>} />
+                    <Route path="/health" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Service Health</h1><p>Monitor all FastAPI services...</p><a href="http://localhost:8000/health" className="text-blue-600 hover:underline" target="_blank">Check Service Health</a></div>} />
+                    <Route path="/database" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Database</h1><p>Granada OS database management...</p></div>} />
+                    
+                      <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                  </div>
+                </main>
+              </div>
+              
+              {/* Mobile Navigation */}
+              <MobileNavigation />
+              
+              {/* Human Help Button */}
+              <HumanHelpButton />
+              
+              {/* Intelligent Assistant System */}
+              <IntelligentAssistantUI />
+              <AssistantFloatingButton />
             </div>
-            
-            {/* Mobile Navigation */}
-            <MobileNavigation />
-            
-            {/* Human Help Button */}
-            <HumanHelpButton />
-            
-            {/* Intelligent Assistant System */}
-            <IntelligentAssistantUI />
-            <AssistantFloatingButton />
-          </div>
-        </AddictionProvider>
+          </AddictionProvider>
+        </MoodThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

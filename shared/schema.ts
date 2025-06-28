@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, uuid, jsonb, decimal, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, uuid, jsonb, decimal, varchar, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -490,3 +490,26 @@ export type PersonalAIBot = typeof personalAIBots.$inferSelect;
 export type InsertPersonalAIBot = typeof personalAIBots.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+// Mood tracking tables
+export const userMoodHistory = pgTable("user_mood_history", {
+  id: varchar("id").primaryKey().$defaultFn(() => `mood_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
+  userId: varchar("user_id").notNull(),
+  detectedMood: varchar("detected_mood").notNull(),
+  confidence: numeric("confidence").notNull(),
+  interactionData: jsonb("interaction_data"),
+  themeApplied: jsonb("theme_applied"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userThemePreferences = pgTable("user_theme_preferences", {
+  id: varchar("id").primaryKey().$defaultFn(() => `pref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
+  userId: varchar("user_id").notNull().unique(),
+  preferences: jsonb("preferences").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type UserMoodHistory = typeof userMoodHistory.$inferSelect;
+export type InsertUserMoodHistory = typeof userMoodHistory.$inferInsert;
+export type UserThemePreferences = typeof userThemePreferences.$inferSelect;
+export type InsertUserThemePreferences = typeof userThemePreferences.$inferInsert;

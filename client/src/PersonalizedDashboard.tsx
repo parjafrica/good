@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './contexts/AuthContext';
+import { MoodSelector } from './components/MoodSelector';
 import { 
   TrendingUp, 
   Target, 
@@ -193,6 +194,16 @@ const PersonalizedDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Mood Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <MoodSelector compact={true} showLabel={true} className="max-w-xs" />
         </motion.div>
 
         {/* Personalized Stats Grid */}

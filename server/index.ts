@@ -619,7 +619,8 @@ const FASTAPI_SERVICES = {
   career: { port: 8003, script: 'server/career_engine.py' },
   academic: { port: 8004, script: 'server/academic_engine.py' },
   wabden: { port: 8005, script: 'server/wabden_api.py' },
-  personalization: { port: 8006, script: 'server/personalization_engine.py' }
+  personalization: { port: 8006, script: 'server/personalization_engine.py' },
+  mood: { port: 8007, script: 'server/mood_theme_engine.py' }
 };
 
 // Start FastAPI Services
@@ -717,6 +718,12 @@ app.use('/api/personalization', createProxyMiddleware({
   target: 'http://localhost:8006', 
   changeOrigin: true,
   pathRewrite: { '^/api/personalization': '' }
+}));
+
+app.use('/api/mood', createProxyMiddleware({ 
+  target: 'http://localhost:8007', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/mood': '' }
 }));
 
 // AI-powered admin insights endpoint
