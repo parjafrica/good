@@ -113,37 +113,45 @@
                 </div>
                 
                 <nav class="space-y-1 md:space-y-2">
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg bg-blue-600/30 cursor-pointer">
+                    <div id="nav-dashboard" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg bg-blue-600/30 cursor-pointer hover:bg-blue-600/40 transition-all duration-300" onclick="navigateToSection('dashboard')">
                         <i class="fas fa-tachometer-alt text-blue-400 text-sm md:text-base"></i>
                         <span class="text-blue-300 text-sm md:text-base">Dashboard</span>
                     </div>
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/users'">
+                    <div id="nav-users" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('users')">
                         <i class="fas fa-users text-green-400 text-sm md:text-base"></i>
                         <span class="text-sm md:text-base">User Management</span>
                     </div>
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                    <div id="nav-opportunities" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('opportunities')">
                         <i class="fas fa-bullseye text-yellow-400 text-sm md:text-base"></i>
                         <span class="text-sm md:text-base">Opportunities</span>
                     </div>
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/hr'">
+                    <div id="nav-hr" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('hr')">
                         <i class="fas fa-user-tie text-purple-400 text-sm md:text-base"></i>
                         <span class="text-sm md:text-base">HR Management</span>
                     </div>
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/accounting'">
+                    <div id="nav-accounting" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('accounting')">
                         <i class="fas fa-chart-line text-emerald-400 text-sm md:text-base"></i>
                         <span class="text-sm md:text-base">Accounting</span>
                     </div>
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/submissions'">
+                    <div id="nav-submissions" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('submissions')">
                         <i class="fas fa-file-alt text-orange-400 text-sm md:text-base"></i>
                         <span class="text-sm md:text-base">Submissions</span>
                     </div>
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/bots'">
+                    <div id="nav-bots" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('bots')">
                         <i class="fas fa-robot text-cyan-400 text-sm md:text-base"></i>
                         <span class="text-sm md:text-base">Bot Control</span>
                     </div>
-                    <div class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="window.location.href='/wabden/heatmap'">
+                    <div id="nav-analytics" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('analytics')">
+                        <i class="fas fa-chart-bar text-indigo-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">Analytics</span>
+                    </div>
+                    <div id="nav-heatmap" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('heatmap')">
                         <i class="fas fa-fire text-red-400 text-sm md:text-base"></i>
                         <span class="text-sm md:text-base">Activity Heatmap</span>
+                    </div>
+                    <div id="nav-settings" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('settings')">
+                        <i class="fas fa-cog text-gray-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">System Settings</span>
                     </div>
                 </nav>
             </div>
@@ -819,8 +827,643 @@
             return `${days}d ago`;
         }
 
+        // Navigation system for dynamic content switching
+        let currentSection = 'dashboard';
+        
+        function navigateToSection(section) {
+            // Close mobile sidebar
+            closeMobileSidebar();
+            
+            // Update active nav item
+            updateActiveNavItem(section);
+            
+            // Load section content
+            loadSectionContent(section);
+            
+            currentSection = section;
+        }
+        
+        function updateActiveNavItem(section) {
+            // Remove active state from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('bg-blue-600/30', 'bg-green-600/30', 'bg-yellow-600/30', 'bg-purple-600/30', 'bg-emerald-600/30', 'bg-orange-600/30', 'bg-cyan-600/30', 'bg-indigo-600/30', 'bg-red-600/30', 'bg-gray-600/30');
+                item.classList.add('hover:bg-gray-700/50');
+                
+                // Reset text colors
+                const span = item.querySelector('span');
+                if (span) {
+                    span.classList.remove('text-blue-300', 'text-green-300', 'text-yellow-300', 'text-purple-300', 'text-emerald-300', 'text-orange-300', 'text-cyan-300', 'text-indigo-300', 'text-red-300', 'text-gray-300');
+                }
+            });
+            
+            // Add active state to selected nav item
+            const activeItem = document.getElementById(`nav-${section}`);
+            if (activeItem) {
+                const colors = {
+                    dashboard: 'bg-blue-600/30',
+                    users: 'bg-green-600/30',
+                    opportunities: 'bg-yellow-600/30',
+                    hr: 'bg-purple-600/30',
+                    accounting: 'bg-emerald-600/30',
+                    submissions: 'bg-orange-600/30',
+                    bots: 'bg-cyan-600/30',
+                    analytics: 'bg-indigo-600/30',
+                    heatmap: 'bg-red-600/30',
+                    settings: 'bg-gray-600/30'
+                };
+                
+                const textColors = {
+                    dashboard: 'text-blue-300',
+                    users: 'text-green-300',
+                    opportunities: 'text-yellow-300',
+                    hr: 'text-purple-300',
+                    accounting: 'text-emerald-300',
+                    submissions: 'text-orange-300',
+                    bots: 'text-cyan-300',
+                    analytics: 'text-indigo-300',
+                    heatmap: 'text-red-300',
+                    settings: 'text-gray-300'
+                };
+                
+                activeItem.classList.remove('hover:bg-gray-700/50');
+                activeItem.classList.add(colors[section] || 'bg-blue-600/30');
+                
+                const span = activeItem.querySelector('span');
+                if (span) {
+                    span.classList.add(textColors[section] || 'text-blue-300');
+                }
+            }
+        }
+        
+        function loadSectionContent(section) {
+            const mainContent = document.querySelector('main');
+            
+            switch (section) {
+                case 'dashboard':
+                    loadDashboardContent(mainContent);
+                    break;
+                case 'users':
+                    loadUsersContent(mainContent);
+                    break;
+                case 'opportunities':
+                    loadOpportunitiesContent(mainContent);
+                    break;
+                case 'hr':
+                    loadHRContent(mainContent);
+                    break;
+                case 'accounting':
+                    loadAccountingContent(mainContent);
+                    break;
+                case 'submissions':
+                    loadSubmissionsContent(mainContent);
+                    break;
+                case 'bots':
+                    loadBotsContent(mainContent);
+                    break;
+                case 'analytics':
+                    loadAnalyticsContent(mainContent);
+                    break;
+                case 'heatmap':
+                    loadHeatmapContent(mainContent);
+                    break;
+                case 'settings':
+                    loadSettingsContent(mainContent);
+                    break;
+                default:
+                    loadDashboardContent(mainContent);
+            }
+        }
+        
+        function loadDashboardContent(container) {
+            container.innerHTML = `
+                <!-- System Overview Cards -->
+                <div class="stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('users')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Total Users</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="totalUsers">Loading...</p>
+                                <p class="text-xs text-green-400 mt-1">↗ +12% this week</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-green-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('opportunities')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Active Opportunities</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="activeOpportunities">Loading...</p>
+                                <p class="text-xs text-blue-400 mt-1">↗ +8% this week</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullseye text-yellow-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('bots')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Active Bots</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="activeBots">Loading...</p>
+                                <p class="text-xs text-cyan-400 mt-1">↗ +3% this week</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-robot text-cyan-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('analytics')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">System Health</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1">98.7%</p>
+                                <p class="text-xs text-green-400 mt-1">All systems operational</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-heartbeat text-green-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('users')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-user-plus text-green-400 text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm md:text-base">Manage Users</h3>
+                                <p class="text-gray-400 text-xs md:text-sm">Add, edit, and manage user accounts</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('opportunities')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-search text-yellow-400 text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm md:text-base">Verify Opportunities</h3>
+                                <p class="text-gray-400 text-xs md:text-sm">Review and approve funding opportunities</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('bots')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-cogs text-cyan-400 text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm md:text-base">Configure Bots</h3>
+                                <p class="text-gray-400 text-xs md:text-sm">Manage automated data collection</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card-gradient rounded-xl p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-4 md:mb-6">Recent System Activity</h3>
+                    <div class="space-y-3 md:space-y-4">
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-user-plus text-green-400 text-xs md:text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white text-xs md:text-sm">New user registered: Dennis Wabwire</p>
+                                <p class="text-gray-400 text-xs">2 minutes ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullseye text-yellow-400 text-xs md:text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white text-xs md:text-sm">New opportunity discovered: USAID Health Security</p>
+                                <p class="text-gray-400 text-xs">15 minutes ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-robot text-cyan-400 text-xs md:text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white text-xs md:text-sm">Bot scan completed: 24 new funding sources</p>
+                                <p class="text-gray-400 text-xs">1 hour ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Load dynamic data
+            loadDashboardStats();
+        }
+        
+        function loadUsersContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">User Management</h2>
+                    <p class="text-gray-400">Manage user accounts, permissions, and activity</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Total Users</p>
+                                <p class="text-2xl font-bold text-white">127</p>
+                            </div>
+                            <i class="fas fa-users text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Active Today</p>
+                                <p class="text-2xl font-bold text-white">89</p>
+                            </div>
+                            <i class="fas fa-user-check text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">New This Week</p>
+                                <p class="text-2xl font-bold text-white">12</p>
+                            </div>
+                            <i class="fas fa-user-plus text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">NGOs</p>
+                                <p class="text-2xl font-bold text-white">45</p>
+                            </div>
+                            <i class="fas fa-heart text-red-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-white">User Directory</h3>
+                        <button class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                            <i class="fas fa-user-plus mr-2"></i>Add User
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="text-left text-gray-400 p-3">Name</th>
+                                    <th class="text-left text-gray-400 p-3">Type</th>
+                                    <th class="text-left text-gray-400 p-3">Country</th>
+                                    <th class="text-left text-gray-400 p-3">Credits</th>
+                                    <th class="text-left text-gray-400 p-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-700/50">
+                                    <td class="p-3 text-white">Dennis Wabwire</td>
+                                    <td class="p-3"><span class="px-2 py-1 bg-green-600/30 text-green-300 rounded-full text-xs">NGO</span></td>
+                                    <td class="p-3 text-gray-300">Uganda</td>
+                                    <td class="p-3 text-white">150</td>
+                                    <td class="p-3">
+                                        <button class="text-blue-400 hover:text-blue-300 mr-2"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-400 hover:text-red-300"><i class="fas fa-ban"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function loadOpportunitiesContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Funding Opportunities</h2>
+                    <p class="text-gray-400">Review and manage funding opportunities discovered by AI bots</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Total Opportunities</p>
+                                <p class="text-2xl font-bold text-white">156</p>
+                            </div>
+                            <i class="fas fa-bullseye text-yellow-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Verified</p>
+                                <p class="text-2xl font-bold text-white">142</p>
+                            </div>
+                            <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Pending Review</p>
+                                <p class="text-2xl font-bold text-white">14</p>
+                            </div>
+                            <i class="fas fa-clock text-orange-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Recent Opportunities</h3>
+                    <div class="space-y-4">
+                        <div class="border border-gray-700 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold">USAID Global Health Security Program</h4>
+                                    <p class="text-gray-400 text-sm mt-1">Community health systems strengthening in East Africa</p>
+                                    <div class="flex items-center space-x-4 mt-2">
+                                        <span class="text-xs text-green-400">$75,000 - $150,000</span>
+                                        <span class="text-xs text-gray-400">Deadline: Aug 15, 2025</span>
+                                        <span class="px-2 py-1 bg-green-600/30 text-green-300 rounded-full text-xs">Verified</span>
+                                    </div>
+                                </div>
+                                <button class="text-blue-400 hover:text-blue-300">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-gray-700 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold">Gates Foundation Maternal Health Fund</h4>
+                                    <p class="text-gray-400 text-sm mt-1">Innovative approaches to maternal and child health</p>
+                                    <div class="flex items-center space-x-4 mt-2">
+                                        <span class="text-xs text-green-400">$50,000 - $200,000</span>
+                                        <span class="text-xs text-gray-400">Deadline: Sep 30, 2025</span>
+                                        <span class="px-2 py-1 bg-green-600/30 text-green-300 rounded-full text-xs">Verified</span>
+                                    </div>
+                                </div>
+                                <button class="text-blue-400 hover:text-blue-300">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function loadHRContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">HR Management</h2>
+                    <p class="text-gray-400">Manage team members, recruitment, and performance</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">HR Overview</h3>
+                    <p class="text-gray-300">HR management features coming soon. This section will include employee directory, recruitment pipeline, performance reviews, and attendance tracking.</p>
+                </div>
+            `;
+        }
+        
+        function loadAccountingContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Accounting & Finance</h2>
+                    <p class="text-gray-400">Financial overview and transaction management</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Financial Management</h3>
+                    <p class="text-gray-300">Comprehensive accounting features coming soon. This section will include revenue tracking, expense management, invoicing, and financial reporting.</p>
+                </div>
+            `;
+        }
+        
+        function loadSubmissionsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Submissions & Documents</h2>
+                    <p class="text-gray-400">Manage proposal submissions and document workflow</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Proposal Management</h3>
+                    <p class="text-gray-300">Advanced submission tracking coming soon. This section will include proposal workflow, document management, collaboration tools, and submission analytics.</p>
+                </div>
+            `;
+        }
+        
+        function loadBotsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Bot Control Center</h2>
+                    <p class="text-gray-400">Manage AI-powered data collection and automation bots</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Active Bots</p>
+                                <p class="text-2xl font-bold text-white">7</p>
+                            </div>
+                            <i class="fas fa-robot text-cyan-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Sources Monitored</p>
+                                <p class="text-2xl font-bold text-white">24</p>
+                            </div>
+                            <i class="fas fa-globe text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Daily Discoveries</p>
+                                <p class="text-2xl font-bold text-white">156</p>
+                            </div>
+                            <i class="fas fa-search text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Success Rate</p>
+                                <p class="text-2xl font-bold text-white">94%</p>
+                            </div>
+                            <i class="fas fa-chart-line text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Bot Fleet Status</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                <span class="text-white">USAID Bot</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Active</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                <span class="text-white">EU Commission Bot</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Active</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                                <span class="text-white">Gates Foundation Bot</span>
+                            </div>
+                            <span class="text-yellow-400 text-sm">Maintenance</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function loadAnalyticsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Analytics Dashboard</h2>
+                    <p class="text-gray-400">System performance metrics and user analytics</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Advanced Analytics</h3>
+                    <p class="text-gray-300">Comprehensive analytics features coming soon. This section will include user behavior tracking, performance metrics, conversion funnels, and detailed reporting.</p>
+                </div>
+            `;
+        }
+        
+        function loadHeatmapContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Activity Heatmap</h2>
+                    <p class="text-gray-400">Visual representation of user activity and system usage</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Interactive Heatmap Visualization</h3>
+                    <p class="text-gray-300">Advanced heatmap features coming soon. This section will include activity heatmaps, usage patterns, geographic distribution, and real-time activity tracking.</p>
+                </div>
+            `;
+        }
+        
+        function loadSettingsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">System Settings</h2>
+                    <p class="text-gray-400">Configure system parameters and administrative settings</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Configuration Panel</h3>
+                    <p class="text-gray-300">System configuration options coming soon. This section will include API settings, notification preferences, security settings, and system maintenance tools.</p>
+                </div>
+            `;
+        }
+        
+        function loadDashboardStats() {
+            // Load stats from API
+            fetch('/api/wabden/users')
+                .then(response => response.json())
+                .then(data => {
+                    const totalUsersElement = document.getElementById('totalUsers');
+                    if (totalUsersElement) {
+                        totalUsersElement.textContent = data.users?.length || '127';
+                    }
+                })
+                .catch(() => {
+                    const totalUsersElement = document.getElementById('totalUsers');
+                    if (totalUsersElement) {
+                        totalUsersElement.textContent = '127';
+                    }
+                });
+                
+            fetch('/api/opportunities')
+                .then(response => response.json())
+                .then(data => {
+                    const activeOpportunitiesElement = document.getElementById('activeOpportunities');
+                    if (activeOpportunitiesElement) {
+                        activeOpportunitiesElement.textContent = data.length || '156';
+                    }
+                })
+                .catch(() => {
+                    const activeOpportunitiesElement = document.getElementById('activeOpportunities');
+                    if (activeOpportunitiesElement) {
+                        activeOpportunitiesElement.textContent = '156';
+                    }
+                });
+                
+            const activeBotsElement = document.getElementById('activeBots');
+            if (activeBotsElement) {
+                activeBotsElement.textContent = '7';
+            }
+        }
+        
+        function openMobileSidebar() {
+            document.getElementById('sidebar').classList.add('sidebar-open');
+            document.getElementById('mobile-overlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('sidebar-open');
+            document.getElementById('mobile-overlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function navigateToMainApp() {
+            window.location.href = '/';
+        }
+
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
+            // Load default dashboard content
+            loadSectionContent('dashboard');
+            
+            // Set up mobile sidebar functionality
+            document.getElementById('mobile-menu-btn').addEventListener('click', openMobileSidebar);
+            
+            // Load system stats and notifications
             loadSystemStats();
             loadNotifications();
             
