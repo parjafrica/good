@@ -5,6 +5,7 @@ import { spawn } from "child_process";
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { storage } from "./storage";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 // ES modules compatibility
@@ -663,11 +664,8 @@ startFastAPIServices();
 
 // Wabden admin dashboard route (MUST BE BEFORE PROXY MIDDLEWARE)
 app.get('/wabden*', (req, res) => {
-  const fs = require('fs');
-  const path = require('path');
-  const dashboardPath = path.join(__dirname, 'mobile_admin_dashboard.html');
-  
   try {
+    const dashboardPath = path.join(__dirname, 'mobile_admin_dashboard.html');
     const html = fs.readFileSync(dashboardPath, 'utf8');
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
