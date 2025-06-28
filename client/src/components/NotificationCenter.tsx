@@ -31,65 +31,49 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 }) => {
   const [location, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 'notif-1',
-      title: 'New Funding Opportunity',
-      message: 'Gates Foundation $2M health initiative matches your organization profile',
-      type: 'success',
-      priority: 'high',
-      isRead: false,
-      isClicked: false,
-      clickCount: 0,
-      messageUrl: '/donor-discovery',
-      relatedType: 'opportunity',
-      timestamp: new Date(Date.now() - 1000 * 60 * 10) // 10 minutes ago
-    },
-    {
-      id: 'notif-2', 
-      title: 'Proposal Review Complete',
-      message: 'Your education project proposal has been reviewed and optimized',
-      type: 'info',
-      priority: 'medium',
-      isRead: false,
-      isClicked: false,
-      clickCount: 0,
-      messageUrl: '/proposals',
-      relatedType: 'proposal',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
-    },
-    {
-      id: 'notif-3',
-      title: 'Application Deadline Approaching',
-      message: 'USAID Digital Literacy Grant deadline in 3 days',
-      type: 'warning',
-      priority: 'high',
-      isRead: false,
-      isClicked: false,
-      clickCount: 0,
-      messageUrl: '/donor-discovery',
-      relatedType: 'deadline',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
-    },
-    {
-      id: 'notif-4',
-      title: 'Expert Review Available',
-      message: 'Professional grant writer has reviewed your climate action proposal',
-      type: 'success',
-      priority: 'medium',
-      isRead: true,
-      isClicked: false,
-      clickCount: 0,
-      messageUrl: '/proposals',
-      relatedType: 'review',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch notifications from API
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/notifications/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Transform API data to match our interface
+          const transformedNotifications = data.map((notif: any) => ({
+            id: notif.id,
+            title: notif.title,
+            message: notif.message,
+            type: notif.type,
+            priority: notif.priority,
+            isRead: notif.is_read,
+            isClicked: notif.is_clicked,
+            clickCount: notif.click_count,
+            messageUrl: notif.message_url,
+            relatedId: notif.related_id,
+            relatedType: notif.related_type,
+            timestamp: new Date(notif.created_at)
+          }));
+          setNotifications(transformedNotifications);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        // Keep empty array on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [userId]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const handleNotificationClick = async (notification: Notification) => {
-    // Mark as clicked and read
+    // Mark as clicked and read in local state immediately for responsive UI
     const updatedNotifications = notifications.map(n => 
       n.id === notification.id 
         ? { ...n, isClicked: true, isRead: true, clickCount: n.clickCount + 1 }
@@ -99,10 +83,16 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
     // Track click in database
     try {
-      await fetch(`/api/notifications/${notification.id}/clicked`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      await Promise.all([
+        fetch(`/api/notifications/${notification.id}/clicked`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' }
+        }),
+        fetch(`/api/notifications/${notification.id}/read`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' }
+        })
+      ]);
     } catch (error) {
       console.error('Error tracking notification click:', error);
     }
@@ -219,7 +209,12 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
               {/* Notifications List */}
               <div className="max-h-96 overflow-y-auto">
-                {notifications.length === 0 ? (
+                {loading ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div>
+                    <p>Loading notifications...</p>
+                  </div>
+                ) : notifications.length === 0 ? (
                   <div className="p-8 text-center text-gray-500">
                     <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p>No notifications yet</p>

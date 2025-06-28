@@ -750,6 +750,17 @@ app.get('/api/notifications/:userId', async (req, res) => {
   }
 });
 
+app.get('/api/notifications/:userId', async (req, res) => {
+  try {
+    const unreadOnly = req.query.unreadOnly === 'true';
+    const notifications = await storage.getUserNotifications(req.params.userId, unreadOnly);
+    res.json(notifications);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
 app.post('/api/notifications', async (req, res) => {
   try {
     const notification = await storage.createNotification(req.body);
