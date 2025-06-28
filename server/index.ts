@@ -976,6 +976,22 @@ app.use((req, res, next) => {
     res.status(404).json({ error: 'Not found' });
   });
 
+  // Wabden admin dashboard route
+  app.get('/wabden*', (req, res) => {
+    const fs = require('fs');
+    const path = require('path');
+    const dashboardPath = path.join(__dirname, 'mobile_admin_dashboard.html');
+    
+    try {
+      const html = fs.readFileSync(dashboardPath, 'utf8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Error serving admin dashboard:', error);
+      res.status(500).json({ error: 'Admin dashboard not available' });
+    }
+  });
+
   // Wabden admin API routes - use storage directly with fallback data
   app.get('/api/wabden/users', async (req, res) => {
     try {
