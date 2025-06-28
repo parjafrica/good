@@ -715,7 +715,7 @@ app.use('/api/wabden', createProxyMiddleware({
 }));
 
 // Personalization endpoint with fallback
-app.post('/api/personalization/dashboard', async (req, res) => {
+app.post('/api/personalization/personalize-dashboard', async (req, res) => {
   try {
     // Try to get data from personalization service
     const response = await fetch('http://localhost:8006/dashboard', {
