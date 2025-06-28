@@ -355,6 +355,25 @@ export const systemSettings = pgTable("system_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull(), // info, warning, success, error, message, alert
+  priority: text("priority").default("medium"), // low, medium, high, urgent
+  isRead: boolean("is_read").default(false),
+  isClicked: boolean("is_clicked").default(false),
+  clickCount: integer("click_count").default(0),
+  messageUrl: text("message_url"), // URL to navigate to when clicked
+  relatedId: uuid("related_id"), // ID of related entity (opportunity, proposal, etc.)
+  relatedType: text("related_type"), // type of related entity
+  expiresAt: timestamp("expires_at"),
+  readAt: timestamp("read_at"),
+  clickedAt: timestamp("clicked_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const savedPaymentMethods = pgTable("saved_payment_methods", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").references(() => users.id).notNull(),
@@ -469,3 +488,5 @@ export type UserPersonalization = typeof userPersonalization.$inferSelect;
 export type InsertUserPersonalization = typeof userPersonalization.$inferInsert;
 export type PersonalAIBot = typeof personalAIBots.$inferSelect;
 export type InsertPersonalAIBot = typeof personalAIBots.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;

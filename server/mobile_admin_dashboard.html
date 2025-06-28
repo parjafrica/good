@@ -233,6 +233,17 @@
                     </div>
                 </div>
 
+                <!-- Interactive Notifications -->
+                <div class="mb-6 md:mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg md:text-xl font-bold text-white">Recent Notifications</h3>
+                        <button onclick="markAllNotificationsAsRead()" class="text-blue-400 hover:text-blue-300 text-sm">Mark all read</button>
+                    </div>
+                    <div id="notificationsList" class="space-y-3">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                </div>
+
                 <!-- Quick Actions -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                     <button onclick="window.location.href='/wabden/users'" class="card-gradient rounded-lg p-3 md:p-4 hover-scale transition-all duration-300 group">
@@ -532,12 +543,194 @@
             window.location.href = '/';
         }
 
+        // Interactive Notification System
+        let notifications = [
+            {
+                id: 'notif-1',
+                title: 'New User Registration',
+                message: 'Sarah Johnson from Uganda just registered and needs profile verification',
+                type: 'info',
+                priority: 'medium',
+                isRead: false,
+                isClicked: false,
+                messageUrl: '/wabden/users',
+                timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+                relatedType: 'user'
+            },
+            {
+                id: 'notif-2',
+                title: 'High-Value Opportunity Added',
+                message: 'Gates Foundation $2M funding opportunity requires immediate review',
+                type: 'success',
+                priority: 'high',
+                isRead: false,
+                isClicked: false,
+                messageUrl: '/wabden/opportunities',
+                timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
+                relatedType: 'opportunity'
+            },
+            {
+                id: 'notif-3',
+                title: 'System Performance Alert',
+                message: 'Database query response time increased by 12%. Consider optimization.',
+                type: 'warning',
+                priority: 'medium',
+                isRead: false,
+                isClicked: false,
+                messageUrl: '/wabden/analytics',
+                timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+                relatedType: 'system'
+            },
+            {
+                id: 'notif-4',
+                title: 'Bot Discovery Success',
+                message: 'Web scraping bot found 8 new funding opportunities from EU sources',
+                type: 'success',
+                priority: 'low',
+                isRead: true,
+                isClicked: false,
+                messageUrl: '/wabden/bots',
+                timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
+                relatedType: 'bot'
+            }
+        ];
+
+        function loadNotifications() {
+            const container = document.getElementById('notificationsList');
+            if (!container) return;
+
+            container.innerHTML = notifications.map(notification => {
+                const timeAgo = getTimeAgo(notification.timestamp);
+                const typeIcon = getNotificationIcon(notification.type);
+                const priorityColor = getPriorityColor(notification.priority);
+                const readClass = notification.isRead ? 'opacity-60' : '';
+                const clickedIndicator = notification.isClicked ? 
+                    '<span class="text-xs text-green-400 ml-2">✓ Viewed</span>' : '';
+
+                return `
+                    <div class="notification-item card-gradient rounded-lg p-4 cursor-pointer hover-scale transition-all duration-300 ${readClass}"
+                         onclick="handleNotificationClick('${notification.id}')">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-3 flex-1">
+                                <div class="w-8 h-8 ${priorityColor} rounded-lg flex items-center justify-center">
+                                    <i class="${typeIcon} text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <h4 class="text-white font-medium text-sm">${notification.title}</h4>
+                                        ${clickedIndicator}
+                                    </div>
+                                    <p class="text-gray-400 text-xs mt-1 line-clamp-2">${notification.message}</p>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <span class="text-xs text-gray-500">${timeAgo}</span>
+                                        <span class="text-xs ${getPriorityTextColor(notification.priority)} font-medium">
+                                            ${notification.priority.toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${!notification.isRead ? '<div class="w-2 h-2 bg-blue-400 rounded-full ml-2"></div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleNotificationClick(notificationId) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (!notification) return;
+
+            // Mark as clicked and read
+            notification.isClicked = true;
+            notification.isRead = true;
+            notification.clickCount = (notification.clickCount || 0) + 1;
+
+            // Track click in database (API call)
+            trackNotificationClick(notificationId);
+
+            // Show feedback
+            showNotification('Navigating to message...', 'info');
+
+            // Navigate to message URL
+            setTimeout(() => {
+                window.location.href = notification.messageUrl;
+            }, 500);
+
+            // Update UI immediately
+            loadNotifications();
+        }
+
+        async function trackNotificationClick(notificationId) {
+            try {
+                await fetch(`/api/notifications/${notificationId}/clicked`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log(`Notification ${notificationId} click tracked in database`);
+            } catch (error) {
+                console.error('Error tracking notification click:', error);
+            }
+        }
+
+        function markAllNotificationsAsRead() {
+            notifications.forEach(n => n.isRead = true);
+            loadNotifications();
+            showNotification('All notifications marked as read', 'success');
+        }
+
+        function getNotificationIcon(type) {
+            switch (type) {
+                case 'success': return 'fas fa-check-circle';
+                case 'warning': return 'fas fa-exclamation-triangle';
+                case 'error': return 'fas fa-times-circle';
+                case 'info': return 'fas fa-info-circle';
+                default: return 'fas fa-bell';
+            }
+        }
+
+        function getPriorityColor(priority) {
+            switch (priority) {
+                case 'high': return 'bg-red-500/20';
+                case 'medium': return 'bg-yellow-500/20';
+                case 'low': return 'bg-green-500/20';
+                default: return 'bg-blue-500/20';
+            }
+        }
+
+        function getPriorityTextColor(priority) {
+            switch (priority) {
+                case 'high': return 'text-red-400';
+                case 'medium': return 'text-yellow-400';
+                case 'low': return 'text-green-400';
+                default: return 'text-blue-400';
+            }
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        }
+
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             loadSystemStats();
+            loadNotifications();
             
             // Auto-refresh stats every 30 seconds
             setInterval(loadSystemStats, 30000);
+            
+            // Auto-refresh notifications every 2 minutes
+            setInterval(loadNotifications, 120000);
         });
     </script>
 </body>

@@ -737,6 +737,69 @@ app.post('/api/ai/admin-insights', async (req, res) => {
   }
 });
 
+// Notification API endpoints
+app.get('/api/notifications/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { unreadOnly } = req.query;
+    const notifications = await storage.getUserNotifications(userId, unreadOnly === 'true');
+    res.json(notifications);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+app.post('/api/notifications', async (req, res) => {
+  try {
+    const notification = await storage.createNotification(req.body);
+    res.json(notification);
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    res.status(500).json({ error: 'Failed to create notification' });
+  }
+});
+
+app.patch('/api/notifications/:id/read', async (req, res) => {
+  try {
+    await storage.markNotificationAsRead(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ error: 'Failed to mark notification as read' });
+  }
+});
+
+app.patch('/api/notifications/:id/clicked', async (req, res) => {
+  try {
+    await storage.markNotificationAsClicked(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking notification as clicked:', error);
+    res.status(500).json({ error: 'Failed to mark notification as clicked' });
+  }
+});
+
+app.delete('/api/notifications/:id', async (req, res) => {
+  try {
+    await storage.deleteNotification(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ error: 'Failed to delete notification' });
+  }
+});
+
+app.get('/api/notifications/:userId/count', async (req, res) => {
+  try {
+    const count = await storage.getUnreadNotificationCount(req.params.userId);
+    res.json({ count });
+  } catch (error) {
+    console.error('Error getting notification count:', error);
+    res.status(500).json({ error: 'Failed to get notification count' });
+  }
+});
+
 // System stats endpoint for mobile dashboard
 app.get('/api/system/stats', async (req, res) => {
   try {

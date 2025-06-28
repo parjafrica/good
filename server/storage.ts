@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, desc } from "drizzle-orm";
-import { users, organizations, donors, donorCalls, proposals, projects, aiInteractions, donorOpportunities, searchBots, botRewards, searchTargets, opportunityVerifications, searchStatistics, userInteractions, creditTransactions, systemSettings, userBehaviorTracking, userPersonalization, personalAIBots, type User, type InsertUser } from "@shared/schema";
+import { eq, desc, and } from "drizzle-orm";
+import { users, organizations, donors, donorCalls, proposals, projects, aiInteractions, donorOpportunities, searchBots, botRewards, searchTargets, opportunityVerifications, searchStatistics, userInteractions, creditTransactions, systemSettings, userBehaviorTracking, userPersonalization, personalAIBots, notifications, type User, type InsertUser, type Notification, type InsertNotification } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
 
 if (!process.env.DATABASE_URL) {
@@ -41,6 +41,14 @@ export interface IStorage {
   createPersonalAIBot(botData: any): Promise<void>;
   getUserPersonalBot(userId: string): Promise<any>;
   updateBotTrainingData(userId: string, newData: any): Promise<void>;
+  
+  // Notification system
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getUserNotifications(userId: string, unreadOnly?: boolean): Promise<Notification[]>;
+  markNotificationAsRead(notificationId: string): Promise<void>;
+  markNotificationAsClicked(notificationId: string): Promise<void>;
+  deleteNotification(notificationId: string): Promise<void>;
+  getUnreadNotificationCount(userId: string): Promise<number>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -588,6 +596,64 @@ export class PostgresStorage implements IStorage {
     } catch (error) {
       console.error('Error updating bot training data:', error);
     }
+  }
+
+  // Notification system implementation
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const result = await db.insert(notifications).values(notification).returning();
+    return result[0];
+  }
+
+  async getUserNotifications(userId: string, unreadOnly: boolean = false): Promise<Notification[]> {
+    if (unreadOnly) {
+      return await db.select().from(notifications)
+        .where(and(
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
+        ))
+        .orderBy(desc(notifications.createdAt));
+    } else {
+      return await db.select().from(notifications)
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt));
+    }
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ 
+        isRead: true, 
+        readAt: new Date() 
+      })
+      .where(eq(notifications.id, notificationId));
+  }
+
+  async markNotificationAsClicked(notificationId: string): Promise<void> {
+    // Get current click count
+    const [current] = await db.select().from(notifications).where(eq(notifications.id, notificationId));
+    
+    await db.update(notifications)
+      .set({ 
+        isClicked: true, 
+        clickedAt: new Date(),
+        clickCount: (current?.clickCount || 0) + 1,
+        isRead: true,
+        readAt: current?.readAt || new Date()
+      })
+      .where(eq(notifications.id, notificationId));
+  }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, notificationId));
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const result = await db.select().from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      ));
+    return result.length;
   }
 
   // Helper method for memory storage when DB fails

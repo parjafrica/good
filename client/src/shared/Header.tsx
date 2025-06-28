@@ -22,16 +22,13 @@ import {
   Menu
 } from 'lucide-react';
 import { useAuth } from '.././contexts/AuthContext';
-import { notificationService } from '.././services/notificationService';
-import { Notification } from '.././types';
 import { realDonorSearchEngine } from '.././services/realDonorSearchEngine';
+import NotificationCenter from '../components/NotificationCenter';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+
   const [userCountry, setUserCountry] = useState<string>('');
   const [countryFlag, setCountryFlag] = useState<string>('');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -114,19 +111,8 @@ const Header: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
     
-    // Load notifications
-    loadNotifications();
-    
-    // Subscribe to notification updates
-    const unsubscribe = notificationService.subscribe(updatedNotifications => {
-      setNotifications(updatedNotifications);
-      setUnreadCount(updatedNotifications.filter(n => !n.read).length);
-    });
-    
     // Detect user's country
     detectUserCountry();
-    
-    return () => unsubscribe();
   }, [isAuthenticated]);
 
   const getFlagEmoji = (countryCode: string) => {
@@ -142,66 +128,7 @@ const Header: React.FC = () => {
     }
   };
 
-  const loadNotifications = async () => {
-    try {
-      const notifications = await notificationService.getNotifications();
-      setNotifications(notifications);
-      setUnreadCount(notifications.filter(n => !n.read).length);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    }
-  };
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'alert':
-        return <AlertTriangle className="w-4 h-4 text-red-400" />;
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-400" />;
-      case 'deadline':
-        return <Calendar className="w-4 h-4 text-orange-400" />;
-      case 'info':
-        return <TrendingUp className="w-4 h-4 text-blue-400" />;
-      default:
-        return <Bell className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    await notificationService.markAsRead(notificationId);
-    // No need to update state manually as we're subscribed to changes
-  };
-
-  const markAllAsRead = async () => {
-    await notificationService.markAllAsRead();
-  };
-
-  const deleteNotification = async (notificationId: string) => {
-    await notificationService.deleteNotification(notificationId);
-  };
-
-  const handleNotificationClick = async (notification: Notification) => {
-    await markAsRead(notification.id);
-    if (notification.actionUrl) {
-      navigate(notification.actionUrl);
-      setShowNotifications(false);
-    }
-  };
-
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMins / 60);
-
-    if (diffMins < 60) {
-      return `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else {
-      return timestamp.toLocaleDateString();
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -238,19 +165,7 @@ const Header: React.FC = () => {
           )}
           
           {/* Mobile Notifications */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg touch-target"
-          >
-            <Bell className="w-5 h-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </motion.button>
+          <NotificationCenter userId={user?.id} showCount={true} className="md:hidden" />
           
           {/* Mobile User Menu */}
           <motion.button
@@ -327,139 +242,7 @@ const Header: React.FC = () => {
           </motion.button>
 
           {/* Notifications */}
-          <div className="relative">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
-                >
-                  {unreadCount}
-                </motion.span>
-              )}
-            </motion.button>
-
-            {/* Notifications Dropdown */}
-            {showNotifications && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  onClick={() => setShowNotifications(false)}
-                  className="fixed inset-0 z-40"
-                />
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="absolute top-full right-0 mt-2 w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 max-w-[90vw]"
-                >
-                  <div className="p-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-gray-900">Notifications</h3>
-                      <div className="flex items-center space-x-2">
-                        {unreadCount > 0 && (
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            onClick={markAllAsRead}
-                            className="text-blue-600 hover:text-blue-500 text-sm font-medium"
-                          >
-                            Mark all read
-                          </motion.button>
-                        )}
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          onClick={() => setShowNotifications(false)}
-                          className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="max-h-96 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">No notifications</p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200">
-                        {notifications.map((notification) => (
-                          <motion.div
-                            key={notification.id}
-                            whileHover={{ backgroundColor: 'rgba(243, 244, 246, 1)' }}
-                            onClick={() => handleNotificationClick(notification)}
-                            className={`p-4 cursor-pointer transition-colors relative group ${
-                              !notification.read ? 'bg-blue-50' : ''
-                            }`}
-                          >
-                            <div className="flex items-start space-x-3">
-                              <div className="mt-1">
-                                {getNotificationIcon(notification.type)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h4 className={`font-medium ${
-                                    notification.read ? 'text-gray-700' : 'text-gray-900'
-                                  }`}>
-                                    {notification.title}
-                                  </h4>
-                                  <span className="text-xs text-gray-500">
-                                    {formatTimestamp(notification.timestamp)}
-                                  </span>
-                                </div>
-                                <p className={`text-sm ${
-                                  notification.read ? 'text-gray-500' : 'text-gray-700'
-                                }`}>
-                                  {notification.message}
-                                </p>
-                                {!notification.read && (
-                                  <div className="w-2 h-2 bg-blue-500 rounded-full absolute top-4 right-4" />
-                                )}
-                              </div>
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteNotification(notification.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </motion.button>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {notifications.length > 0 && (
-                    <div className="p-4 border-t border-gray-200">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        onClick={() => {
-                          navigate('/notifications');
-                          setShowNotifications(false);
-                        }}
-                        className="w-full py-2 text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors"
-                      >
-                        View All Notifications
-                      </motion.button>
-                    </div>
-                  )}
-                </motion.div>
-              </>
-            )}
-          </div>
+          <NotificationCenter userId={user?.id} showCount={true} className="hidden md:block" />
 
           {/* User Menu */}
           <div className="relative">
