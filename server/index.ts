@@ -618,7 +618,8 @@ const FASTAPI_SERVICES = {
   genesis: { port: 8002, script: 'server/genesis_engine.py' },
   career: { port: 8003, script: 'server/career_engine.py' },
   academic: { port: 8004, script: 'server/academic_engine.py' },
-  wabden: { port: 8005, script: 'server/wabden_api.py' }
+  wabden: { port: 8005, script: 'server/wabden_api.py' },
+  personalization: { port: 8006, script: 'server/personalization_engine.py' }
 };
 
 // Start FastAPI Services
@@ -710,6 +711,12 @@ app.use('/api/wabden', createProxyMiddleware({
   target: 'http://localhost:8005', 
   changeOrigin: true,
   pathRewrite: { '^/api/wabden': '' }
+}));
+
+app.use('/api/personalization', createProxyMiddleware({ 
+  target: 'http://localhost:8006', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/personalization': '' }
 }));
 
 // AI-powered admin insights endpoint

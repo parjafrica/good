@@ -6,6 +6,7 @@ import { intelligentAssistant } from './services/intelligentAssistant';
 import Header from './shared/Header';
 import Sidebar from './shared/Sidebar';
 import Dashboard from './Dashboard';
+import PersonalizedDashboard from './PersonalizedDashboard';
 import DonorDashboard from './DonorDashboard';
 import DonorDiscovery from './DonorDiscovery';
 import ProposalManager from './ProposalManager';
@@ -97,8 +98,8 @@ function App() {
               }`}>
                 <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
                   <Routes>
-                  <Route path="/" element={isStudent ? <StudentDashboard /> : <DonorDashboard />} />
-                  <Route path="/dashboard" element={<DonorDashboard />} />
+                  <Route path="/" element={isStudent ? <StudentDashboard /> : <PersonalizedDashboard />} />
+                  <Route path="/dashboard" element={<PersonalizedDashboard />} />
                   <Route path="/donor-dashboard" element={<DonorDashboard />} />
                   <Route path="/student" element={<StudentDashboard />} />
                   <Route path="/donor-discovery" element={<DonorDiscovery />} />
