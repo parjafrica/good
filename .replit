@@ -6,6 +6,9 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 channel = "stable-24_05"
 packages = ["chromedriver", "chromium", "freetype", "geckodriver", "gitFull", "glibcLocales", "libxcrypt", "playwright-driver", "python3"]
 
+[env]
+DATABASE_URL = "postgresql://user:password@localhost:5432/granada_os"
+
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
