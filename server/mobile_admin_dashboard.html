@@ -544,60 +544,139 @@
         }
 
         // Interactive Notification System
-        let notifications = [
-            {
-                id: 'notif-1',
-                title: 'New User Registration',
-                message: 'Sarah Johnson from Uganda just registered and needs profile verification',
-                type: 'info',
-                priority: 'medium',
-                isRead: false,
-                isClicked: false,
-                messageUrl: '/wabden/users',
-                timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-                relatedType: 'user'
-            },
-            {
-                id: 'notif-2',
-                title: 'High-Value Opportunity Added',
-                message: 'Gates Foundation $2M funding opportunity requires immediate review',
-                type: 'success',
-                priority: 'high',
-                isRead: false,
-                isClicked: false,
-                messageUrl: '/wabden/opportunities',
-                timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-                relatedType: 'opportunity'
-            },
-            {
-                id: 'notif-3',
-                title: 'System Performance Alert',
-                message: 'Database query response time increased by 12%. Consider optimization.',
-                type: 'warning',
-                priority: 'medium',
-                isRead: false,
-                isClicked: false,
-                messageUrl: '/wabden/analytics',
-                timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-                relatedType: 'system'
-            },
-            {
-                id: 'notif-4',
-                title: 'Bot Discovery Success',
-                message: 'Web scraping bot found 8 new funding opportunities from EU sources',
-                type: 'success',
-                priority: 'low',
-                isRead: true,
-                isClicked: false,
-                messageUrl: '/wabden/bots',
-                timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-                relatedType: 'bot'
-            }
-        ];
+        let notifications = [];
 
-        function loadNotifications() {
+        // Fetch notifications from database via API
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/api/notifications/demo-user');
+                if (response.ok) {
+                    const data = await response.json();
+                    // Transform API data to match admin interface structure
+                    notifications = data.map(notif => ({
+                        id: notif.id,
+                        title: notif.title,
+                        message: notif.message,
+                        type: notif.type,
+                        priority: notif.priority,
+                        isRead: notif.isRead,
+                        isClicked: notif.isClicked,
+                        messageUrl: notif.messageUrl,
+                        timestamp: new Date(notif.createdAt),
+                        relatedType: notif.relatedType
+                    }));
+                } else {
+                    console.error('Failed to fetch notifications:', response.status);
+                    // Generate AI-powered system notifications as fallback
+                    await generateAISystemNotifications();
+                }
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+                // Generate AI-powered system notifications as fallback
+                await generateAISystemNotifications();
+            }
+        }
+
+        // AI-powered notification generation system
+        async function generateAISystemNotifications() {
+            try {
+                const systemStatsResponse = await fetch('/api/wabden/analytics/overview');
+                const systemStats = await systemStatsResponse.json();
+                
+                // Create intelligent notifications based on system data
+                const aiNotifications = [];
+                
+                // High user activity notification
+                if (systemStats.totalUsers > 50) {
+                    aiNotifications.push({
+                        title: 'High User Activity Detected',
+                        message: `${systemStats.totalUsers} active users - system performing optimally`,
+                        type: 'success',
+                        priority: 'medium',
+                        messageUrl: '/wabden/users'
+                    });
+                }
+                
+                // Opportunity milestone notification
+                if (systemStats.totalOpportunities > 20) {
+                    aiNotifications.push({
+                        title: 'Funding Opportunities Milestone',
+                        message: `${systemStats.totalOpportunities} opportunities available - AI matching engine active`,
+                        type: 'info',
+                        priority: 'low',
+                        messageUrl: '/wabden/opportunities'
+                    });
+                }
+                
+                // Bot performance notification
+                if (systemStats.activeBots > 3) {
+                    aiNotifications.push({
+                        title: 'AI Bot Fleet Status',
+                        message: `${systemStats.activeBots} bots actively discovering funding opportunities`,
+                        type: 'success',
+                        priority: 'medium',
+                        messageUrl: '/wabden/bots'
+                    });
+                }
+                
+                // Store AI-generated notifications in database
+                for (const notif of aiNotifications) {
+                    await fetch('/api/notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: 'demo-user',
+                            ...notif,
+                            relatedType: 'ai-generated'
+                        })
+                    });
+                }
+                
+                console.log(`Generated ${aiNotifications.length} AI-powered notifications`);
+            } catch (error) {
+                console.error('Error generating AI notifications:', error);
+            }
+        }
+
+        // AI notification generation using backend endpoint
+        async function generateAINotifications() {
+            try {
+                const response = await fetch('/api/notifications/generate-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: 'demo-user' })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log(`AI Engine generated ${result.generated} new notifications based on database analysis`);
+                    if (result.generated > 0) {
+                        showNotification(`AI generated ${result.generated} new insights`, 'success');
+                    }
+                } else {
+                    console.error('Failed to generate AI notifications:', response.status);
+                }
+            } catch (error) {
+                console.error('Error calling AI notification generation:', error);
+            }
+        }
+
+        async function loadNotifications() {
+            // Fetch latest notifications from API
+            await fetchNotifications();
+            
             const container = document.getElementById('notificationsList');
             if (!container) return;
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-bell text-3xl mb-3"></i>
+                        <p>No notifications yet</p>
+                    </div>
+                `;
+                return;
+            }
 
             container.innerHTML = notifications.map(notification => {
                 const timeAgo = getTimeAgo(notification.timestamp);
@@ -674,10 +753,29 @@
             }
         }
 
-        function markAllNotificationsAsRead() {
-            notifications.forEach(n => n.isRead = true);
-            loadNotifications();
-            showNotification('All notifications marked as read', 'success');
+        async function markAllNotificationsAsRead() {
+            try {
+                // Mark all notifications as read in database
+                const markAsReadPromises = notifications
+                    .filter(n => !n.isRead)
+                    .map(n => fetch(`/api/notifications/${n.id}/read`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' }
+                    }));
+                
+                await Promise.all(markAsReadPromises);
+                
+                // Update local state
+                notifications.forEach(n => n.isRead = true);
+                
+                // Reload from database to ensure sync
+                await loadNotifications();
+                
+                showNotification('All notifications marked as read', 'success');
+            } catch (error) {
+                console.error('Error marking notifications as read:', error);
+                showNotification('Failed to mark notifications as read', 'error');
+            }
         }
 
         function getNotificationIcon(type) {
@@ -729,8 +827,14 @@
             // Auto-refresh stats every 30 seconds
             setInterval(loadSystemStats, 30000);
             
-            // Auto-refresh notifications every 2 minutes
-            setInterval(loadNotifications, 120000);
+            // Auto-refresh notifications every 2 minutes and generate AI notifications
+            setInterval(async () => {
+                await generateAINotifications();
+                await loadNotifications();
+            }, 120000);
+            
+            // Generate initial AI notifications
+            generateAINotifications();
         });
     </script>
 </body>
