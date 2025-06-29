@@ -1158,7 +1158,7 @@ app.post('/api/notifications/generate-ai', async (req, res) => {
         message: `${opportunities.length} funding opportunities discovered by AI bots - smart matching active`,
         type: 'info',
         priority: 'high',
-        messageUrl: '/donor-discovery',
+        messageUrl: '/opportunities',
         relatedType: 'ai-discovery'
       });
     }
@@ -1176,7 +1176,7 @@ app.post('/api/notifications/generate-ai', async (req, res) => {
         message: `AI detected ${highValueOpps.length} opportunities over $100K - immediate review recommended`,
         type: 'warning',
         priority: 'urgent',
-        messageUrl: '/donor-discovery',
+        messageUrl: '/opportunities?funding=high&amount_min=100000',
         relatedType: 'ai-analysis'
       });
     }

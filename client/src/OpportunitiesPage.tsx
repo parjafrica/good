@@ -31,14 +31,18 @@ const OpportunitiesPage = () => {
   // Get filter from URL parameters
   const filterParam = searchParams.get('filter');
   const sectorParam = searchParams.get('sector');
+  const fundingParam = searchParams.get('funding');
+  const amountMinParam = searchParams.get('amount_min');
 
   // Fetch real opportunities from database
   const { data: opportunities = [], isLoading } = useQuery({
-    queryKey: ['/api/opportunities', filterParam, sectorParam, searchQuery, selectedSector, selectedDifficulty],
+    queryKey: ['/api/opportunities', filterParam, sectorParam, fundingParam, amountMinParam, searchQuery, selectedSector, selectedDifficulty],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filterParam) params.append('filter', filterParam);
       if (sectorParam) params.append('sector', sectorParam);
+      if (fundingParam) params.append('funding', fundingParam);
+      if (amountMinParam) params.append('amount_min', amountMinParam);
       if (searchQuery) params.append('search', searchQuery);
       if (selectedSector) params.append('sector', selectedSector);
       if (selectedDifficulty) params.append('difficulty', selectedDifficulty);
@@ -131,6 +135,13 @@ const OpportunitiesPage = () => {
             <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
               <p className="text-blue-800 dark:text-blue-200">
                 Showing opportunities filtered by: <span className="font-semibold capitalize">{filterParam}</span>
+              </p>
+            </div>
+          )}
+          {fundingParam === 'high' && amountMinParam && (
+            <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+              <p className="text-amber-800 dark:text-amber-200">
+                🚨 <span className="font-semibold">High-Value Alert:</span> Showing opportunities with funding over ${parseInt(amountMinParam).toLocaleString()}
               </p>
             </div>
           )}

@@ -1646,7 +1646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced Opportunities API with filtering and search
   app.get('/api/opportunities', async (req, res) => {
     try {
-      const { filter, sector, search, difficulty } = req.query;
+      const { filter, sector, search, difficulty, funding, amount_min } = req.query;
       let opportunities = await storage.getDonorOpportunities({});
       
       // Apply filters
@@ -1673,6 +1673,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           opp.description?.toLowerCase().includes(searchTerm) ||
           opp.sourceName?.toLowerCase().includes(searchTerm)
         );
+      }
+      
+      // High-value opportunity filtering
+      if (funding === 'high' && amount_min) {
+        const minAmount = parseInt(amount_min as string);
+        opportunities = opportunities.filter(opp => {
+          // Check if fundingAmount contains a high value
+          if (opp.fundingAmount) {
+            const amount = parseInt(opp.fundingAmount.replace(/[^0-9]/g, ''));
+            if (amount >= minAmount) return true;
+          }
+          
+          // Check if title/description indicates high value
+          const text = `${opp.title} ${opp.description}`.toLowerCase();
+          const highValueTerms = ['million', '$1m', '$2m', '$3m', '$4m', '$5m', '100k', '200k', '300k', '400k', '500k'];
+          return highValueTerms.some(term => text.includes(term));
+        });
       }
       
       // Add computed fields for frontend
