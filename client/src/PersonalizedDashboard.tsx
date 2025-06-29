@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './contexts/AuthContext';
 import { MoodSelector } from './components/MoodSelector';
+import { useLocation } from 'wouter';
 import { 
   TrendingUp, 
   Target, 
@@ -61,6 +62,17 @@ interface PersonalizedDashboard {
 const PersonalizedDashboard: React.FC = () => {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<PersonalizedDashboard | null>(null);
+  const [, setLocation] = useLocation();
+
+  // Navigation functions
+  const navigateToOpportunities = () => setLocation('/opportunities');
+  const navigateToOpportunitiesFiltered = (filter: string) => setLocation(`/opportunities?filter=${filter}`);
+  const navigateToAnalytics = () => setLocation('/analytics');
+  const navigateToMatching = () => setLocation('/ai-matching');
+  const navigateToProcessing = () => setLocation('/processing-status');
+  const navigateToGrowth = () => setLocation('/growth-analytics');
+  const navigateToNetwork = () => setLocation('/network');
+  const navigateToSettings = () => setLocation('/settings');
 
   // Fetch user profile for personalization
   const { data: userProfile } = useQuery({
@@ -277,21 +289,30 @@ const PersonalizedDashboard: React.FC = () => {
                   {dashboardData.personalizedGreeting}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-1">
+                  <div 
+                    onClick={navigateToOpportunities}
+                    className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 transition-colors p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                  >
                     <Target className="w-4 h-4" />
                     <span>{dashboardData.relevantOpportunities} opportunities</span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div 
+                    onClick={navigateToMatching}
+                    className="flex items-center gap-1 cursor-pointer hover:text-purple-600 transition-colors p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                  >
                     <Brain className="w-4 h-4" />
                     <span>{dashboardData.aiMatchScore}% AI match</span>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              <div 
+                onClick={navigateToOpportunities}
+                className="text-right cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 p-3 rounded-lg transition-all duration-200"
+              >
+                <div className="text-2xl font-bold text-gray-900 dark:text-white hover:text-green-600 transition-colors">
                   {dashboardData.personalizedStats.availableFunding}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Available Funding</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors">Available Funding</div>
               </div>
             </div>
           </div>
@@ -314,61 +335,79 @@ const PersonalizedDashboard: React.FC = () => {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8"
         >
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg">
+          <div 
+            onClick={navigateToOpportunities}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Relevant for You</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardData.relevantOpportunities}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white hover:text-indigo-600 transition-colors">{dashboardData.relevantOpportunities}</p>
               </div>
               <Target className="w-8 h-8 text-indigo-500" />
             </div>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg">
+          <div 
+            onClick={navigateToMatching}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">AI Match Score</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardData.aiMatchScore}%</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-600 transition-colors">{dashboardData.aiMatchScore}%</p>
               </div>
               <Brain className="w-8 h-8 text-purple-500" />
             </div>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg">
+          <div 
+            onClick={navigateToOpportunities}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Total Opportunities</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardData.personalizedStats.totalOpportunities}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 transition-colors">{dashboardData.personalizedStats.totalOpportunities}</p>
               </div>
               <Award className="w-8 h-8 text-blue-500" />
             </div>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg">
+          <div 
+            onClick={navigateToAnalytics}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Success Rate</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardData.personalizedStats.successRate}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white hover:text-green-600 transition-colors">{dashboardData.personalizedStats.successRate}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg">
+          <div 
+            onClick={navigateToProcessing}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Processing Time</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardData.personalizedStats.processingTime}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white hover:text-orange-600 transition-colors">{dashboardData.personalizedStats.processingTime}</p>
               </div>
               <Clock className="w-8 h-8 text-orange-500" />
             </div>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg">
+          <div 
+            onClick={navigateToGrowth}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Weekly Growth</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardData.personalizedStats.weeklyGrowth}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white hover:text-cyan-600 transition-colors">{dashboardData.personalizedStats.weeklyGrowth}</p>
               </div>
               <ArrowRight className="w-8 h-8 text-cyan-500" />
             </div>
@@ -390,7 +429,11 @@ const PersonalizedDashboard: React.FC = () => {
               </h3>
               <div className="space-y-4">
                 {dashboardData.sectorFocus.map((sector, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <div 
+                    key={index} 
+                    onClick={() => navigateToOpportunitiesFiltered(sector.name.toLowerCase())}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-all duration-200 hover:scale-102"
+                  >
                     <div className="flex items-center gap-3">
                       <div 
                         className="p-2 rounded-lg"
@@ -399,15 +442,15 @@ const PersonalizedDashboard: React.FC = () => {
                         {getIconComponent(sector.icon)}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">{sector.name}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{sector.amount}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 transition-colors">{sector.name}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 font-medium hover:text-green-600 transition-colors">{sector.amount}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900 dark:text-white">{sector.percentage}%</p>
+                      <p className="font-semibold text-gray-900 dark:text-white hover:text-purple-600 transition-colors">{sector.percentage}%</p>
                       <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
                         <div 
-                          className="h-2 rounded-full"
+                          className="h-2 rounded-full transition-all duration-300"
                           style={{ 
                             backgroundColor: sector.color,
                             width: `${sector.percentage}%`
@@ -415,6 +458,7 @@ const PersonalizedDashboard: React.FC = () => {
                         ></div>
                       </div>
                     </div>
+                    <ChevronRight className="w-4 h-4 text-gray-400 ml-2" />
                   </div>
                 ))}
               </div>
