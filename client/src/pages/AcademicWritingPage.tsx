@@ -213,17 +213,17 @@ export default function AcademicWritingPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white">
       {/* Header */}
       <div className="bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-              <PenTool className="w-8 h-8 text-white" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <PenTool className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
                 Academic Writing Suite
               </h1>
-              <p className="text-gray-300 mt-1">
-                AI-powered research paper writing, editing, and academic tools
+              <p className="text-gray-300 mt-1 text-sm sm:text-base">
+                Expert research paper writing, editing, and academic tools
               </p>
             </div>
           </div>
@@ -231,31 +231,34 @@ export default function AcademicWritingPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Navigation Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Navigation Tabs - Mobile Responsive */}
         <div className="mb-8">
-          <div className="flex space-x-1 bg-black/20 rounded-xl p-1">
+          <div className="flex flex-wrap gap-2 md:flex-nowrap md:space-x-1 bg-black/20 rounded-xl p-1">
             {[
-              { id: 'overview', label: 'Overview', icon: BookOpen },
-              { id: 'papers', label: 'My Papers', icon: FileText },
-              { id: 'outline', label: 'Paper Outline', icon: Edit3 },
-              { id: 'editing', label: 'Expert Editing', icon: Bot },
-              { id: 'ai-removal', label: 'AI Humanizer', icon: Shield },
-              { id: 'research', label: 'Research Assistant', icon: Search }
+              { id: 'overview', label: 'Overview', icon: BookOpen, shortLabel: 'Home' },
+              { id: 'papers', label: 'My Papers', icon: FileText, shortLabel: 'Papers' },
+              { id: 'outline', label: 'Paper Outline', icon: Edit3, shortLabel: 'Outline' },
+              { id: 'editing', label: 'Expert Editing', icon: Bot, shortLabel: 'Edit' },
+              { id: 'ai-removal', label: 'AI Humanizer', icon: Shield, shortLabel: 'AI Fix' },
+              { id: 'research', label: 'Research Assistant', icon: Search, shortLabel: 'Research' }
             ].map((tab) => {
               const IconComponent = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center justify-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 md:py-3 rounded-lg transition-all duration-200 flex-1 md:flex-none min-w-0 ${
                     activeTab === tab.id
                       ? 'bg-purple-600 text-white shadow-lg'
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
-                  <span className="font-medium">{tab.label}</span>
+                  <IconComponent className="w-4 h-4 flex-shrink-0" />
+                  <span className="font-medium text-xs md:text-sm truncate">
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.shortLabel}</span>
+                  </span>
                 </button>
               );
             })}
@@ -440,12 +443,12 @@ export default function AcademicWritingPage() {
 
         {/* Paper Outline Tab */}
         {activeTab === 'outline' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Form */}
-            <div className="bg-black/20 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <h2 className="text-2xl font-bold text-white mb-6">Generate Paper Outline</h2>
+            <div className="bg-black/20 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Generate Paper Outline</h2>
               
-              <form onSubmit={generateOutline} className="space-y-6">
+              <form onSubmit={generateOutline} className="space-y-4 sm:space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Research Topic</label>
                   <input
@@ -453,18 +456,18 @@ export default function AcademicWritingPage() {
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="Enter your research topic..."
-                    className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-4 bg-black/30 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 text-base"
                     required
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Paper Type</label>
                     <select
                       value={paperType}
                       onChange={(e) => setPaperType(e.target.value)}
-                      className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      className="w-full px-4 py-4 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-base appearance-none"
                     >
                       <option value="research">Research Paper</option>
                       <option value="review">Literature Review</option>
@@ -479,7 +482,7 @@ export default function AcademicWritingPage() {
                     <select
                       value={academicLevel}
                       onChange={(e) => setAcademicLevel(e.target.value)}
-                      className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      className="w-full px-4 py-4 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-base appearance-none"
                     >
                       <option value="undergraduate">Undergraduate</option>
                       <option value="graduate">Graduate</option>
@@ -488,7 +491,7 @@ export default function AcademicWritingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Word Count</label>
                     <input
@@ -498,7 +501,7 @@ export default function AcademicWritingPage() {
                       min="1000"
                       max="50000"
                       step="500"
-                      className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      className="w-full px-4 py-4 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-base"
                     />
                   </div>
 
@@ -507,7 +510,7 @@ export default function AcademicWritingPage() {
                     <select
                       value={citationStyle}
                       onChange={(e) => setCitationStyle(e.target.value)}
-                      className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      className="w-full px-4 py-4 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-base appearance-none"
                     >
                       <option value="apa">APA</option>
                       <option value="mla">MLA</option>
@@ -524,23 +527,23 @@ export default function AcademicWritingPage() {
                     onChange={(e) => setRequirements(e.target.value)}
                     placeholder="Any specific requirements or guidelines..."
                     rows={3}
-                    className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-4 bg-black/30 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 text-base resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isGenerating}
-                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 text-base"
                 >
                   {isGenerating ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-5 h-5 animate-spin" />
                       <span>Generating Outline...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
+                      <Sparkles className="w-5 h-5" />
                       <span>Generate Expert Outline</span>
                     </>
                   )}
