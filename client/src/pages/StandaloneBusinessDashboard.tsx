@@ -87,9 +87,14 @@ interface Employee {
 }
 
 // Navigation Header Component
-const BusinessHeader: React.FC<{ onMobileMenuToggle: () => void; isMobileMenuOpen: boolean }> = ({ 
+const BusinessHeader: React.FC<{ 
+  onMobileMenuToggle: () => void; 
+  isMobileMenuOpen: boolean;
+  onNavigate: (section: string) => void;
+}> = ({ 
   onMobileMenuToggle, 
-  isMobileMenuOpen 
+  isMobileMenuOpen,
+  onNavigate 
 }) => {
   return (
     <motion.header 
@@ -146,6 +151,7 @@ const BusinessHeader: React.FC<{ onMobileMenuToggle: () => void; isMobileMenuOpe
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => onNavigate('settings')}
               className="p-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
             >
               <Settings className="h-5 w-5" />
@@ -179,17 +185,26 @@ const BusinessHeader: React.FC<{ onMobileMenuToggle: () => void; isMobileMenuOpe
 };
 
 // Mobile Navigation Menu
-const MobileNavigation: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+const MobileNavigation: React.FC<{ isOpen: boolean; onClose: () => void; onNavigate: (section: string) => void }> = ({ isOpen, onClose, onNavigate }) => {
   const navItems = [
-    { icon: Home, label: 'Dashboard', href: '#', active: true },
-    { icon: BarChart3, label: 'Analytics', href: '#' },
-    { icon: Briefcase, label: 'Projects', href: '#' },
-    { icon: Users, label: 'Team', href: '#' },
-    { icon: DollarSign, label: 'Finance', href: '#' },
-    { icon: FileText, label: 'Reports', href: '#' },
-    { icon: MessageSquare, label: 'Messages', href: '#' },
-    { icon: Settings, label: 'Settings', href: '#' },
+    { icon: Home, label: 'Dashboard', href: 'overview', active: true },
+    { icon: BarChart3, label: 'Analytics', href: 'analytics' },
+    { icon: Briefcase, label: 'Project Management', href: 'projects' },
+    { icon: Users, label: 'Human Resources', href: 'hr' },
+    { icon: DollarSign, label: 'Finance & Accounting', href: 'finance' },
+    { icon: FileText, label: 'Documents', href: 'documents' },
+    { icon: Target, label: 'CRM & Sales', href: 'crm' },
+    { icon: Calendar, label: 'Calendar & Tasks', href: 'calendar' },
+    { icon: Activity, label: 'Performance', href: 'performance' },
+    { icon: MessageSquare, label: 'Communication', href: 'communication' },
+    { icon: PieChart, label: 'Business Intelligence', href: 'intelligence' },
+    { icon: Settings, label: 'Settings', href: 'settings' },
   ];
+
+  const handleNavClick = (href: string) => {
+    onNavigate(href);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -238,13 +253,13 @@ const MobileNavigation: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
               {/* Navigation Items */}
               <nav className="space-y-2">
                 {navItems.map((item, index) => (
-                  <motion.a
+                  <motion.button
                     key={item.label}
-                    href={item.href}
+                    onClick={() => handleNavClick(item.href)}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                       item.active 
                         ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' 
                         : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
@@ -252,7 +267,7 @@ const MobileNavigation: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
                   >
                     <item.icon className="h-5 w-5" />
                     <span className="font-medium">{item.label}</span>
-                  </motion.a>
+                  </motion.button>
                 ))}
               </nav>
 
@@ -275,93 +290,7 @@ const MobileNavigation: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ 
   );
 };
 
-// Footer Component
-const BusinessFooter: React.FC = () => {
-  return (
-    <motion.footer 
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 border-t border-purple-500/20 mt-12"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <Building2 className="h-6 w-6 text-purple-400" />
-              <span className="text-lg font-semibold text-white">BusinessOS</span>
-            </div>
-            <p className="text-slate-400 text-sm">
-              Comprehensive business management suite for modern enterprises. 
-              Streamline operations, boost productivity, and drive growth.
-            </p>
-            <div className="flex space-x-4">
-              <motion.div whileHover={{ scale: 1.1 }} className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
-                <Globe className="h-4 w-4 text-purple-400" />
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.1 }} className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
-                <Mail className="h-4 w-4 text-purple-400" />
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.1 }} className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
-                <Phone className="h-4 w-4 text-purple-400" />
-              </motion.div>
-            </div>
-          </div>
 
-          {/* Product */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Product</h3>
-            <ul className="space-y-3 text-slate-400 text-sm">
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Dashboard</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Analytics</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Project Management</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Team Collaboration</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Financial Tracking</a></li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Support</h3>
-            <ul className="space-y-3 text-slate-400 text-sm">
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Documentation</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">API Reference</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Contact Support</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">System Status</a></li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Company</h3>
-            <ul className="space-y-3 text-slate-400 text-sm">
-              <li><a href="#" className="hover:text-purple-400 transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Press Kit</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-purple-400 transition-colors">Terms of Service</a></li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-slate-700 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-slate-400 text-sm">
-            © 2025 BusinessOS. All rights reserved. Built with 💜 for modern businesses.
-          </p>
-          <div className="flex items-center space-x-6 mt-4 sm:mt-0">
-            <span className="text-slate-400 text-sm">Powered by</span>
-            <div className="flex items-center space-x-2">
-              <Zap className="h-4 w-4 text-purple-400" />
-              <span className="text-purple-400 text-sm font-medium">Granada OS</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.footer>
-  );
-};
 
 // Main Standalone Business Dashboard Component
 const StandaloneBusinessDashboard: React.FC = () => {
@@ -371,6 +300,13 @@ const StandaloneBusinessDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Navigation handler
+  const handleNavigation = (section: string) => {
+    setActiveTab(section);
+    console.log(`Navigating to: ${section}`);
+    // TODO: Implement actual section switching logic
+  };
 
   // Fetch data
   useEffect(() => {
@@ -436,12 +372,14 @@ const StandaloneBusinessDashboard: React.FC = () => {
       <BusinessHeader 
         onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
+        onNavigate={handleNavigation}
       />
 
       {/* Mobile Navigation */}
       <MobileNavigation 
         isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)} 
+        onClose={() => setIsMobileMenuOpen(false)}
+        onNavigate={handleNavigation}
       />
 
       {/* Hero Section */}
@@ -481,16 +419,17 @@ const StandaloneBusinessDashboard: React.FC = () => {
             className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12"
           >
             {[
-              { icon: BarChart3, label: 'Analytics', color: 'from-purple-500 to-purple-600' },
-              { icon: Briefcase, label: 'Projects', color: 'from-blue-500 to-blue-600' },
-              { icon: Users, label: 'Team', color: 'from-green-500 to-green-600' },
-              { icon: DollarSign, label: 'Finance', color: 'from-yellow-500 to-yellow-600' },
-              { icon: FileText, label: 'Reports', color: 'from-pink-500 to-pink-600' },
+              { icon: BarChart3, label: 'Analytics', color: 'from-purple-500 to-purple-600', section: 'analytics' },
+              { icon: Briefcase, label: 'Projects', color: 'from-blue-500 to-blue-600', section: 'projects' },
+              { icon: Users, label: 'Team', color: 'from-green-500 to-green-600', section: 'hr' },
+              { icon: DollarSign, label: 'Finance', color: 'from-yellow-500 to-yellow-600', section: 'finance' },
+              { icon: FileText, label: 'Reports', color: 'from-pink-500 to-pink-600', section: 'documents' },
             ].map((item, index) => (
               <motion.div
                 key={item.label}
                 whileHover={{ scale: 1.05, y: -5 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleNavigation(item.section)}
                 className={`relative p-6 bg-gradient-to-br ${item.color} rounded-2xl border border-white/10 cursor-pointer group overflow-hidden`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -727,8 +666,6 @@ const StandaloneBusinessDashboard: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Footer */}
-      <BusinessFooter />
     </div>
   );
 };
