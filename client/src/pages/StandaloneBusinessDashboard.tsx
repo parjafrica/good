@@ -86,6 +86,49 @@ interface Employee {
   performance: number;
 }
 
+// Business Footer Navigation Component
+const BusinessFooter: React.FC<{
+  onNavigate: (section: string) => void;
+  activeTab: string;
+}> = ({ onNavigate, activeTab }) => {
+  const footerItems = [
+    { icon: Home, label: 'Home', section: 'dashboard' },
+    { icon: Users, label: 'Donors', section: 'donors' },
+    { icon: Zap, label: 'Genesis', section: 'genesis' },
+    { icon: FileText, label: 'Proposals', section: 'proposals' },
+    { icon: Menu, label: 'Menu', section: 'menu' },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-50">
+      <div className="flex justify-around items-center py-2 px-4">
+        {footerItems.map((item) => (
+          <motion.button
+            key={item.section}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => onNavigate(item.section)}
+            className={`flex flex-col items-center justify-center p-3 rounded-lg transition-colors ${
+              activeTab === item.section
+                ? 'text-purple-600'
+                : 'text-slate-600 hover:text-purple-600'
+            }`}
+          >
+            <item.icon className={`h-6 w-6 mb-1 ${
+              activeTab === item.section ? 'text-purple-600' : 'text-slate-600'
+            }`} />
+            <span className={`text-xs font-medium ${
+              activeTab === item.section ? 'text-purple-600' : 'text-slate-600'
+            }`}>
+              {item.label}
+            </span>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Navigation Header Component
 const BusinessHeader: React.FC<{ 
   onMobileMenuToggle: () => void; 
@@ -444,7 +487,7 @@ const StandaloneBusinessDashboard: React.FC = () => {
       </motion.div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         {/* Quick Stats */}
         {metrics && (
           <motion.div
@@ -666,6 +709,8 @@ const StandaloneBusinessDashboard: React.FC = () => {
         </motion.div>
       </div>
 
+      {/* Business Footer Navigation */}
+      <BusinessFooter onNavigate={handleNavigation} activeTab={activeTab} />
     </div>
   );
 };
