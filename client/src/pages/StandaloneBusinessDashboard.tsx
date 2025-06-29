@@ -35,7 +35,14 @@ import {
   Zap,
   Globe,
   Mail,
-  Phone
+  Phone,
+  UserPlus,
+  Package,
+  MessageCircle,
+  ArrowRight,
+  Shield,
+  Key,
+  TrendingDown
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 
@@ -85,6 +92,491 @@ interface Employee {
   status: 'active' | 'on-leave' | 'terminated';
   performance: number;
 }
+
+// HR Management Component
+const HRManagement: React.FC<{ employees: Employee[] }> = ({ employees }) => {
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Human Resources</h2>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowAddEmployee(true)}
+          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+        >
+          <UserPlus className="h-4 w-4" />
+          <span>Add Employee</span>
+        </motion.button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <div className="flex items-center space-x-3">
+            <Users className="h-8 w-8 text-blue-400" />
+            <div>
+              <p className="text-slate-400 text-sm">Total Employees</p>
+              <p className="text-2xl font-bold text-white">{employees.length}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <div className="flex items-center space-x-3">
+            <CheckCircle2 className="h-8 w-8 text-green-400" />
+            <div>
+              <p className="text-slate-400 text-sm">Active</p>
+              <p className="text-2xl font-bold text-white">
+                {employees.filter(emp => emp.status === 'active').length}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <div className="flex items-center space-x-3">
+            <DollarSign className="h-8 w-8 text-yellow-400" />
+            <div>
+              <p className="text-slate-400 text-sm">Avg Salary</p>
+              <p className="text-2xl font-bold text-white">
+                ${Math.round(employees.reduce((sum, emp) => sum + emp.salary, 0) / employees.length).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+        <h3 className="text-lg font-semibold text-white mb-4">Employee Directory</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="text-left py-3 text-slate-300">Name</th>
+                <th className="text-left py-3 text-slate-300">Position</th>
+                <th className="text-left py-3 text-slate-300">Department</th>
+                <th className="text-left py-3 text-slate-300">Status</th>
+                <th className="text-left py-3 text-slate-300">Performance</th>
+                <th className="text-left py-3 text-slate-300">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map((employee) => (
+                <tr key={employee.id} className="border-b border-white/5">
+                  <td className="py-4">
+                    <div>
+                      <p className="text-white font-medium">{employee.name}</p>
+                      <p className="text-slate-400 text-sm">Started {employee.startDate}</p>
+                    </div>
+                  </td>
+                  <td className="py-4 text-slate-300">{employee.position}</td>
+                  <td className="py-4 text-slate-300">{employee.department}</td>
+                  <td className="py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      employee.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                      employee.status === 'on-leave' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-red-500/20 text-red-400'
+                    }`}>
+                      {employee.status.charAt(0).toUpperCase() + employee.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-slate-700 rounded-full h-2 w-16">
+                        <div 
+                          className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full"
+                          style={{ width: `${employee.performance}%` }}
+                        />
+                      </div>
+                      <span className="text-slate-300 text-sm">{employee.performance}%</span>
+                    </div>
+                  </td>
+                  <td className="py-4">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setSelectedEmployee(employee)}
+                      className="p-2 text-slate-400 hover:text-blue-400 transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </motion.button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Finance Management Component
+const FinanceManagement: React.FC<{ metrics: BusinessMetrics }> = ({ metrics }) => {
+  const [transactions, setTransactions] = useState([
+    { id: '1', date: '2024-01-15', description: 'Client Payment - Website Development', amount: 15000, type: 'income', category: 'Services' },
+    { id: '2', date: '2024-01-14', description: 'Office Rent', amount: -3500, type: 'expense', category: 'Overhead' },
+    { id: '3', date: '2024-01-12', description: 'Software Licenses', amount: -1200, type: 'expense', category: 'Software' },
+    { id: '4', date: '2024-01-10', description: 'Marketing Campaign', amount: -2500, type: 'expense', category: 'Marketing' },
+  ]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Financial Management</h2>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add Transaction</span>
+        </motion.button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <div className="flex items-center space-x-3">
+            <TrendingUp className="h-8 w-8 text-green-400" />
+            <div>
+              <p className="text-slate-400 text-sm">Total Revenue</p>
+              <p className="text-2xl font-bold text-white">${metrics.revenue.total.toLocaleString()}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <div className="flex items-center space-x-3">
+            <DollarSign className="h-8 w-8 text-blue-400" />
+            <div>
+              <p className="text-slate-400 text-sm">Net Profit</p>
+              <p className="text-2xl font-bold text-white">${metrics.finances.profit.toLocaleString()}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <div className="flex items-center space-x-3">
+            <TrendingDown className="h-8 w-8 text-red-400" />
+            <div>
+              <p className="text-slate-400 text-sm">Total Expenses</p>
+              <p className="text-2xl font-bold text-white">${metrics.finances.expenses.toLocaleString()}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <div className="flex items-center space-x-3">
+            <Activity className="h-8 w-8 text-purple-400" />
+            <div>
+              <p className="text-slate-400 text-sm">Cash Flow</p>
+              <p className="text-2xl font-bold text-white">${metrics.finances.cashFlow.toLocaleString()}</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+        <h3 className="text-lg font-semibold text-white mb-4">Recent Transactions</h3>
+        <div className="space-y-4">
+          {transactions.map((transaction) => (
+            <div key={transaction.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className={`p-2 rounded-full ${
+                  transaction.type === 'income' ? 'bg-green-500/20' : 'bg-red-500/20'
+                }`}>
+                  {transaction.type === 'income' ? 
+                    <TrendingUp className="h-4 w-4 text-green-400" /> :
+                    <TrendingDown className="h-4 w-4 text-red-400" />
+                  }
+                </div>
+                <div>
+                  <p className="text-white font-medium">{transaction.description}</p>
+                  <p className="text-slate-400 text-sm">{transaction.date} • {transaction.category}</p>
+                </div>
+              </div>
+              <div className={`text-lg font-bold ${
+                transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount).toLocaleString()}
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Analytics Component
+const AnalyticsSection: React.FC<{ metrics: BusinessMetrics; projects: Project[] }> = ({ metrics, projects }) => {
+  const chartData = [
+    { month: 'Jan', revenue: 45000, expenses: 32000 },
+    { month: 'Feb', revenue: 52000, expenses: 35000 },
+    { month: 'Mar', revenue: 48000, expenses: 33000 },
+    { month: 'Apr', revenue: 61000, expenses: 38000 },
+    { month: 'May', revenue: 55000, expenses: 36000 },
+    { month: 'Jun', revenue: 67000, expenses: 42000 },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white">Business Analytics</h2>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-4">Revenue vs Expenses</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="month" stroke="#9CA3AF" />
+              <YAxis stroke="#9CA3AF" />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1F2937', 
+                  border: '1px solid #374151',
+                  borderRadius: '8px'
+                }} 
+              />
+              <Line type="monotone" dataKey="revenue" stroke="#10B981" strokeWidth={3} />
+              <Line type="monotone" dataKey="expenses" stroke="#EF4444" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-4">Project Status Distribution</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <RechartsPieChart>
+              <Pie
+                data={[
+                  { name: 'Active', value: projects.filter(p => p.status === 'active').length, fill: '#10B981' },
+                  { name: 'Completed', value: projects.filter(p => p.status === 'completed').length, fill: '#3B82F6' },
+                  { name: 'Pending', value: projects.filter(p => p.status === 'pending').length, fill: '#F59E0B' },
+                  { name: 'On Hold', value: projects.filter(p => p.status === 'on-hold').length, fill: '#EF4444' },
+                ]}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                dataKey="value"
+                label
+              >
+                {[
+                  { name: 'Active', value: projects.filter(p => p.status === 'active').length, fill: '#10B981' },
+                  { name: 'Completed', value: projects.filter(p => p.status === 'completed').length, fill: '#3B82F6' },
+                  { name: 'Pending', value: projects.filter(p => p.status === 'pending').length, fill: '#F59E0B' },
+                  { name: 'On Hold', value: projects.filter(p => p.status === 'on-hold').length, fill: '#EF4444' },
+                ].map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </RechartsPieChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
+
+      <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+        <h3 className="text-lg font-semibold text-white mb-4">Key Performance Indicators</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <p className="text-3xl font-bold text-green-400">{metrics.revenue.growth}%</p>
+            <p className="text-slate-400 text-sm">Revenue Growth</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl font-bold text-blue-400">
+              {Math.round((projects.filter(p => p.status === 'completed').length / projects.length) * 100)}%
+            </p>
+            <p className="text-slate-400 text-sm">Project Success Rate</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl font-bold text-purple-400">
+              {Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length)}%
+            </p>
+            <p className="text-slate-400 text-sm">Avg Project Progress</p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Settings Component
+const SettingsSection: React.FC = () => {
+  const [notifications, setNotifications] = useState(true);
+  const [darkMode, setDarkMode] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white">Business Settings</h2>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-4">General Settings</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white font-medium">Enable Notifications</p>
+                <p className="text-slate-400 text-sm">Receive updates about business activities</p>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setNotifications(!notifications)}
+                className={`w-12 h-6 rounded-full ${notifications ? 'bg-green-500' : 'bg-slate-600'} relative`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
+                  notifications ? 'translate-x-6' : 'translate-x-0.5'
+                }`} />
+              </motion.button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white font-medium">Dark Mode</p>
+                <p className="text-slate-400 text-sm">Use dark theme for better visibility</p>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setDarkMode(!darkMode)}
+                className={`w-12 h-6 rounded-full ${darkMode ? 'bg-green-500' : 'bg-slate-600'} relative`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
+                  darkMode ? 'translate-x-6' : 'translate-x-0.5'
+                }`} />
+              </motion.button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white font-medium">Auto-save</p>
+                <p className="text-slate-400 text-sm">Automatically save changes</p>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setAutoSave(!autoSave)}
+                className={`w-12 h-6 rounded-full ${autoSave ? 'bg-green-500' : 'bg-slate-600'} relative`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
+                  autoSave ? 'translate-x-6' : 'translate-x-0.5'
+                }`} />
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-4">Account Information</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">Company Name</label>
+              <input 
+                type="text" 
+                defaultValue="TechCorp Solutions"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">Business Email</label>
+              <input 
+                type="email" 
+                defaultValue="info@techcorp.com"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">Industry</label>
+              <select className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="technology">Technology</option>
+                <option value="finance">Finance</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="education">Education</option>
+              </select>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      <motion.div className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10">
+        <h3 className="text-lg font-semibold text-white mb-4">Security Settings</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2"
+          >
+            <Shield className="h-4 w-4" />
+            <span>Change Password</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2"
+          >
+            <Key className="h-4 w-4" />
+            <span>Enable 2FA</span>
+          </motion.button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Menu Component (All Business Modules)
+const MenuSection: React.FC<{ onNavigate: (section: string) => void }> = ({ onNavigate }) => {
+  const menuItems = [
+    { id: 'dashboard', name: 'Dashboard Overview', icon: Home, color: 'from-blue-500 to-purple-600', description: 'View business metrics and quick stats' },
+    { id: 'hr', name: 'Human Resources', icon: Users, color: 'from-green-500 to-blue-500', description: 'Manage employees and HR operations' },
+    { id: 'finance', name: 'Financial Management', icon: DollarSign, color: 'from-yellow-500 to-red-500', description: 'Track revenue, expenses, and transactions' },
+    { id: 'analytics', name: 'Business Analytics', icon: BarChart, color: 'from-purple-500 to-pink-500', description: 'Data insights and performance metrics' },
+    { id: 'projects', name: 'Project Management', icon: Briefcase, color: 'from-indigo-500 to-purple-500', description: 'Manage projects and timelines' },
+    { id: 'inventory', name: 'Inventory Control', icon: Package, color: 'from-teal-500 to-cyan-500', description: 'Track stock and inventory levels' },
+    { id: 'customers', name: 'Customer Relations', icon: Users, color: 'from-pink-500 to-rose-500', description: 'Manage customer relationships' },
+    { id: 'reports', name: 'Reports & Documents', icon: FileText, color: 'from-slate-500 to-gray-500', description: 'Generate business reports' },
+    { id: 'marketing', name: 'Marketing Hub', icon: TrendingUp, color: 'from-orange-500 to-yellow-500', description: 'Marketing campaigns and analytics' },
+    { id: 'support', name: 'Customer Support', icon: MessageCircle, color: 'from-blue-500 to-teal-500', description: 'Handle customer inquiries' },
+    { id: 'settings', name: 'Business Settings', icon: Settings, color: 'from-gray-500 to-slate-500', description: 'Configure business preferences' },
+    { id: 'integrations', name: 'Third-party Apps', icon: Zap, color: 'from-violet-500 to-purple-500', description: 'Connect external services' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-white mb-2">Business Management Suite</h2>
+        <p className="text-slate-400">Access all your business tools from one central hub</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {menuItems.map((item) => (
+          <motion.div
+            key={item.id}
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onNavigate(item.id)}
+            className="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10 cursor-pointer group hover:bg-white/10 transition-all duration-300"
+          >
+            <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+              <item.icon className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-purple-400 group-hover:to-pink-400 transition-all">
+              {item.name}
+            </h3>
+            <p className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">
+              {item.description}
+            </p>
+            <div className="mt-4 flex items-center text-purple-400 group-hover:text-pink-400 transition-colors">
+              <span className="text-sm font-medium">Open Module</span>
+              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 // Business Footer Navigation Component
 const BusinessFooter: React.FC<{
@@ -348,7 +840,7 @@ const StandaloneBusinessDashboard: React.FC = () => {
   const handleNavigation = (section: string) => {
     setActiveTab(section);
     console.log(`Navigating to: ${section}`);
-    // TODO: Implement actual section switching logic
+    setIsMobileMenuOpen(false); // Close mobile menu when navigating
   };
 
   // Fetch data
@@ -481,9 +973,12 @@ const StandaloneBusinessDashboard: React.FC = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        {/* Quick Stats */}
-        {metrics && (
-          <motion.div
+        {/* Render content based on active tab */}
+        {activeTab === 'overview' && (
+          <div>
+            {/* Quick Stats */}
+            {metrics && (
+              <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
@@ -538,7 +1033,7 @@ const StandaloneBusinessDashboard: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Charts Section */}
+            {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Revenue Chart */}
           <motion.div
@@ -700,6 +1195,51 @@ const StandaloneBusinessDashboard: React.FC = () => {
             </table>
           </div>
         </motion.div>
+        </div>
+      </div>
+    </div>
+  )}
+
+        {/* HR Management Section */}
+        {activeTab === 'hr' && metrics && employees && (
+          <HRManagement employees={employees} />
+        )}
+
+        {/* Finance Management Section */}
+        {activeTab === 'finance' && metrics && (
+          <FinanceManagement metrics={metrics} />
+        )}
+
+        {/* Analytics Section */}
+        {activeTab === 'analytics' && metrics && projects && (
+          <AnalyticsSection metrics={metrics} projects={projects} />
+        )}
+
+        {/* Settings Section */}
+        {activeTab === 'settings' && (
+          <SettingsSection />
+        )}
+
+        {/* Menu Section */}
+        {activeTab === 'menu' && (
+          <MenuSection onNavigate={handleNavigation} />
+        )}
+
+        {/* Default to overview if no matching tab */}
+        {!['overview', 'hr', 'finance', 'analytics', 'settings', 'menu'].includes(activeTab) && (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-white mb-4">Section Not Found</h2>
+            <p className="text-slate-400 mb-6">The requested section is not available.</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleNavigation('overview')}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg"
+            >
+              Return to Dashboard
+            </motion.button>
+          </div>
+        )}
       </div>
 
       {/* Business Footer Navigation */}
