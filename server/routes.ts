@@ -2,42 +2,27 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { registerPaymentRoutes } from "./paymentRoutes";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 import { proposals, donorOpportunities } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth
+  await setupAuth(app);
+  
   // Register payment processing routes
   registerPaymentRoutes(app);
   
-  // Admin routes disabled for testing
-  // app.get('/admin', (req, res) => {
-  //   res.redirect('http://localhost:9000/admin');
-  // });
-  // Legacy admin routes removed - new admin system on port 9000
-
-  // Authentication routes
-  app.post("/api/auth/login", async (req, res) => {
+  // Replit Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const { email, password } = req.body;
-      const user = await storage.validateUser(email, password);
-      if (user) {
-        res.json({ user: { id: user.id, email: user.email, fullName: user.fullName } });
-      } else {
-        res.status(401).json({ error: "Invalid credentials" });
-      }
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
     } catch (error) {
-      res.status(500).json({ error: "Authentication failed" });
-    }
-  });
-
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const { email, password, fullName } = req.body;
-      const user = await storage.createUser({ email, hashedPassword: password, fullName });
-      res.json({ user: { id: user.id, email: user.email, fullName: user.fullName } });
-    } catch (error) {
-      res.status(500).json({ error: "Registration failed" });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 

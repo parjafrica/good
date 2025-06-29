@@ -12,10 +12,9 @@ const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
 
 export interface IStorage {
+  // Replit Auth methods (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  validateUser(email: string, password: string): Promise<User | null>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Admin functions
   getAllUsers(): Promise<User[]>;
@@ -64,33 +63,25 @@ export class PostgresStorage implements IStorage {
     return result[0];
   }
 
-  async createUser(insertUser: any): Promise<User> {
-    const hashedPassword = await bcrypt.hash(insertUser.password || 'temp_password', 12);
-    const result = await db.insert(users).values({
-      email: insertUser.email,
-      hashedPassword,
-      fullName: insertUser.fullName,
-      firstName: insertUser.firstName,
-      lastName: insertUser.lastName,
-      userType: insertUser.userType || 'user',
-      country: insertUser.country,
-      sector: insertUser.sector,
-      organizationType: insertUser.organizationType,
-      credits: insertUser.credits || 100,
-      isActive: insertUser.isActive !== false,
-      isBanned: insertUser.isBanned || false,
-      isSuperuser: insertUser.isSuperuser || false,
-      organizationId: insertUser.organizationId,
-    }).returning();
-    return result[0];
-  }
-
-  async validateUser(email: string, password: string): Promise<User | null> {
-    const user = await this.getUserByEmail(email);
-    if (!user) return null;
-    
-    const isValid = await bcrypt.compare(password, user.hashedPassword);
-    return isValid ? user : null;
+  // Replit Auth methods (mandatory for Replit Auth)
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    try {
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            ...userData,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return user;
+    } catch (error) {
+      console.error('Error upserting user:', error);
+      throw error;
+    }
   }
 
   // Additional methods for the application

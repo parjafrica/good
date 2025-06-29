@@ -48,6 +48,7 @@ import AddictionProvider from './contexts/AddictionContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MoodThemeProvider } from './components/MoodThemeProvider';
+import { useAuth } from './hooks/useAuth';
 
 // Create a client outside of component to avoid recreation
 const queryClient = new QueryClient({
@@ -71,31 +72,55 @@ function App() {
     };
   }, []);
   
-  // For development, bypass auth and provide default user
-  const mockUser = { 
-    id: 'demo_user',
-    userType: 'organization', 
-    email: 'user@example.com',
-    firstName: 'John',
-    lastName: 'Doe',
-    country: 'UG',
-    organizationType: 'NGO',
-    organizationName: 'Granada Foundation',
-    sector: 'Education'
-  };
-  const isAuthenticated = true;
-
-  // Check if user is a student
-  const isStudent = mockUser?.userType === 'student';
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <MoodThemeProvider>
           <AddictionProvider>
-            <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
-              {/* Only show header for NGO users, not students */}
-              {!isStudent && <Header />}
+            <Router />
+          </AddictionProvider>
+        </MoodThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+function Router() {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+
+  // Initialize intelligent assistant
+  useEffect(() => {
+    intelligentAssistant.setActive(true);
+    return () => {
+      intelligentAssistant.setActive(false);
+    };
+  }, []);
+
+  // Check if user is a student
+  const isStudent = user?.userType === 'student';
+
+  // Show loading while authentication state is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show landing page for unauthenticated users
+  if (!isAuthenticated) {
+    return <LandingPage />;
+  }
+
+  return (
+    <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
+      {/* Only show header for NGO users, not students */}
+      {!isStudent && <Header />}
               
               <div className="flex">
                 {/* Only show sidebar for NGO users, not students */}
@@ -162,14 +187,10 @@ function App() {
               {/* Human Help Button */}
               <HumanHelpButton />
               
-              {/* Intelligent Assistant System */}
-              <IntelligentAssistantUI />
-              <AssistantFloatingButton />
-            </div>
-          </AddictionProvider>
-        </MoodThemeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+      {/* Intelligent Assistant System */}
+      <IntelligentAssistantUI />
+      <AssistantFloatingButton />
+    </div>
   );
 }
 

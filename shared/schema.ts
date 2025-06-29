@@ -1,20 +1,28 @@
-import { pgTable, text, integer, boolean, timestamp, uuid, jsonb, decimal, varchar, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, uuid, jsonb, decimal, varchar, numeric, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const sessions = pgTable("sessions", {
-  sid: text("sid").primaryKey(),
-  sess: jsonb("sess").notNull(),
-  expire: timestamp("expire").notNull(),
-});
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
 
+// User storage table for Replit Auth
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").unique().notNull(),
-  hashedPassword: text("hashed_password").notNull(),
-  fullName: text("full_name").notNull(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
+  id: varchar("id").primaryKey().notNull(), // Replit user ID (string, not UUID)
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  
+  // Additional profile fields from original schema
+  fullName: text("full_name"),
   userType: text("user_type").notNull().default("user"),
 
   // Contact Information - Comprehensive Collection
@@ -407,19 +415,17 @@ export const paymentTransactions = pgTable("payment_transactions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Zod schemas for validation
+// Replit Auth types
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+
+// Zod schemas for validation (updated for Replit Auth)
 export const insertUserSchema = createInsertSchema(users).pick({
+  id: true,
   email: true,
-  hashedPassword: true,
-  fullName: true,
   firstName: true,
   lastName: true,
-  userType: true,
-  organizationType: true,
-  country: true,
-  sector: true,
-}).extend({
-  password: z.string().min(6),
+  profileImageUrl: true,
 });
 
 // User Behavior Tracking for AI bot training
@@ -477,7 +483,6 @@ export const personalAIBots = pgTable("personal_ai_bots", {
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 export type SavedPaymentMethod = typeof savedPaymentMethods.$inferSelect;
 export type InsertSavedPaymentMethod = typeof savedPaymentMethods.$inferInsert;
 export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
