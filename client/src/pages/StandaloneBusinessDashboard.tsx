@@ -411,13 +411,6 @@ const StandaloneBusinessDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
-      <BusinessHeader 
-        onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        isMobileMenuOpen={isMobileMenuOpen}
-        onNavigate={handleNavigation}
-      />
-
       {/* Mobile Navigation */}
       <MobileNavigation 
         isOpen={isMobileMenuOpen} 
