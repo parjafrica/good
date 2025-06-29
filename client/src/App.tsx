@@ -26,7 +26,7 @@ import StudentNavigation from './StudentNavigation';
 
 import LandingPage from './LandingPage';
 import StudentDashboard from './StudentDashboard';
-import BusinessDashboard from './pages/BusinessDashboard';
+import StandaloneBusinessDashboard from './pages/StandaloneBusinessDashboard';
 import HumanHelpPage from './HumanHelpPage';
 import CreditsPage from './CreditsPage';
 import PurchasePage from './PurchasePage';
@@ -136,7 +136,7 @@ function App() {
                     <Route path="/career" element={<CareerSuite />} />
                     <Route path="/academic" element={<AcademicSuite />} />
                     <Route path="/academic-writing" element={<AcademicWritingPage />} />
-                    <Route path="/business" element={<BusinessDashboard />} />
+                    <Route path="/business" element={<StandaloneBusinessDashboard />} />
                     
                     {/* New Dynamic Pages */}
                     <Route path="/opportunities" element={<OpportunitiesPage />} />
