@@ -305,12 +305,28 @@ export default function HelpDemoPage() {
           </div>
         </div>
 
-        {/* Global Help Bubble */}
+        {/* Global Help Bubble - Auto shows welcome message */}
         <SmartHelpBubble
           tips={demoTips.dashboard}
           context="dashboard"
           userProgress={progressPercentage}
         />
+
+        {/* Floating Help Button for Testing */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 3 }}
+          className="fixed bottom-6 right-6 z-50"
+        >
+          <Button
+            onClick={() => window.location.reload()}
+            className="rounded-full w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg hover:shadow-xl"
+            title="Reload to see welcome bubble again"
+          >
+            <FaSearch className="w-5 h-5" />
+          </Button>
+        </motion.div>
 
         {/* Instructions */}
         <motion.div
