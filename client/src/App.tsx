@@ -40,6 +40,7 @@ import HumanHelpButton from './shared/HumanHelpButton';
 import OpportunitiesPage from './OpportunitiesPage';
 import AnalyticsPage from './AnalyticsPage';
 import MatchingPage from './MatchingPage';
+import AcademicWritingPage from './pages/AcademicWritingPage';
 
 import AddictionProvider from './contexts/AddictionContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -127,6 +128,7 @@ function App() {
                     <Route path="/genesis" element={<GenesisEngine />} />
                     <Route path="/career" element={<CareerSuite />} />
                     <Route path="/academic" element={<AcademicSuite />} />
+                    <Route path="/academic-writing" element={<AcademicWritingPage />} />
                     
                     {/* New Dynamic Pages */}
                     <Route path="/opportunities" element={<OpportunitiesPage />} />

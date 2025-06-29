@@ -620,7 +620,8 @@ const FASTAPI_SERVICES = {
   academic: { port: 8004, script: 'server/academic_engine.py' },
   wabden: { port: 8005, script: 'server/wabden_api.py' },
   personalization: { port: 8006, script: 'server/personalization_engine.py' },
-  mood: { port: 8007, script: 'server/mood_theme_engine.py' }
+  mood: { port: 8007, script: 'server/mood_theme_engine.py' },
+  academic_writing: { port: 8008, script: 'server/academic_writing_engine.py' }
 };
 
 // Start FastAPI Services
@@ -796,6 +797,13 @@ const generateDatabaseCustomActions = (opportunities: any[], userSector: string,
   if (orgType === 'student') {
     return [
       {
+        title: "Academic Writing Suite",
+        description: "Research paper writing, AI editing, and citation tools",
+        icon: "fas fa-pen-fancy",
+        color: "purple",
+        url: "/academic-writing"
+      },
+      {
         title: "Browse Academic Scholarships",
         description: `${Math.floor(15 + Math.random() * 25)} scholarships available for ${userSector.toLowerCase()} students`,
         icon: "fas fa-graduation-cap",
@@ -810,17 +818,10 @@ const generateDatabaseCustomActions = (opportunities: any[], userSector: string,
         url: "/opportunities?type=research"
       },
       {
-        title: "Student Innovation Awards",
-        description: `${Math.floor(5 + Math.random() * 10)} innovation competitions and startup grants`,
-        icon: "fas fa-lightbulb",
-        color: "orange",
-        url: "/opportunities?type=innovation"
-      },
-      {
         title: "Academic Mentor Network",
         description: `Connect with ${Math.floor(25 + Math.random() * 15)} academic advisors in ${userCountry}`,
         icon: "fas fa-chalkboard-teacher",
-        color: "purple",
+        color: "orange",
         url: "/academic-network"
       }
     ];
@@ -1012,6 +1013,12 @@ app.use('/api/mood', createProxyMiddleware({
   target: 'http://localhost:8007', 
   changeOrigin: true,
   pathRewrite: { '^/api/mood': '' }
+}));
+
+app.use('/api/academic-writing', createProxyMiddleware({ 
+  target: 'http://localhost:8008', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/academic-writing': '' }
 }));
 
 // AI-powered admin insights endpoint
