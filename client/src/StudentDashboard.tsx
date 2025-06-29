@@ -1,736 +1,320 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { Book, Users, Trophy, Target, Calendar, Star, BookOpen, PenTool, Download, GraduationCap, Award, Search, ChevronRight, Plus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { 
-  GraduationCap, 
-  BookOpen, 
-  Award, 
-  Calendar, 
-  Search,
-  ArrowUp,
-  CheckCircle,
-  Clock,
-  Star,
-  Eye,
-  Edit,
-  Plus,
-  Gem,
-  Bell,
-  Settings,
-  RefreshCw,
-  FileText,
-  Users,
-  Target
-} from 'lucide-react';
-import { useAuth } from './contexts/AuthContext';
+import StudentNavigation from './StudentNavigation';
 
-const StudentDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Mock data for student dashboard
-  const [stats, setStats] = useState({
-    totalScholarships: 12,
-    scholarshipsGrowth: 5,
-    activeCourses: 3,
-    coursesGrowth: 2,
-    researchOpportunities: 8,
-    researchGrowth: 3,
-    completionRate: 92
+interface StudentUser {
+  id: string;
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  userType: string;
+  educationLevel: string;
+  fieldOfStudy: string;
+  currentInstitution: string;
+  country: string;
+  credits: number;
+  researchInterests: string[];
+  academicAchievements: string[];
+  careerGoals: string[];
+}
+
+interface StudentDashboardData {
+  user: StudentUser;
+  scholarships: any[];
+  researchGrants: any[];
+  academicProgress: any;
+  personalizedInsights: any;
+  customActions: any[];
+}
+
+export default function StudentDashboard() {
+  const [selectedCategory, setSelectedCategory] = useState('study');
+
+  // Fetch student-specific dashboard data
+  const { data: dashboardData, isLoading } = useQuery<StudentDashboardData>({
+    queryKey: ['/api/student-dashboard'],
+    retry: false,
   });
-
-  const [recentActivity] = useState([
-    {
-      id: '1',
-      type: 'scholarship_match',
-      title: 'New Scholarship Match',
-      description: 'STEM Excellence Scholarship - $10,000',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      icon: 'award'
-    },
-    {
-      id: '2',
-      type: 'course_completed',
-      title: 'Course Completed',
-      description: 'Introduction to Data Science',
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      icon: 'book'
-    },
-    {
-      id: '3',
-      type: 'research_opportunity',
-      title: 'Research Opportunity',
-      description: 'Summer Research Program at MIT',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      icon: 'search'
-    },
-    {
-      id: '4',
-      type: 'application_submitted',
-      title: 'Application Submitted',
-      description: 'Global Leaders Fellowship',
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      icon: 'file'
-    }
-  ]);
-
-  const [bookmarkedScholarships, setBookmarkedScholarships] = useState([
-    { id: '1', title: 'Global Leaders Scholarship', provider: 'International Education Fund', deadline: '15 days', amount: '$10,000' },
-    { id: '2', title: 'Women in STEM Grant', provider: 'Tech Future Foundation', deadline: '8 days', amount: '$5,000' },
-    { id: '3', title: 'Graduate Research Fellowship', provider: 'National Science Foundation', deadline: '22 days', amount: '$25,000' }
-  ]);
-
-  useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'scholarship_match': return <Award className="w-5 h-5 text-purple-500" />;
-      case 'course_completed': return <BookOpen className="w-5 h-5 text-green-500" />;
-      case 'research_opportunity': return <Search className="w-5 h-5 text-blue-500" />;
-      case 'application_submitted': return <FileText className="w-5 h-5 text-orange-500" />;
-      default: return <Clock className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const formatTimeAgo = (timestamp: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 24) {
-      return `${diffHours} hours ago`;
-    } else {
-      return `${diffDays} days ago`;
-    }
-  };
-
-  const handleStatClick = (statType: string) => {
-    switch (statType) {
-      case 'scholarships':
-        navigate('/scholarships');
-        break;
-      case 'courses':
-        navigate('/courses');
-        break;
-      case 'research':
-        navigate('/research');
-        break;
-      case 'analytics':
-        navigate('/analytics');
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleActivityClick = (activity: any) => {
-    switch (activity.type) {
-      case 'scholarship_match':
-        navigate('/scholarships');
-        break;
-      case 'course_completed':
-        navigate('/courses');
-        break;
-      case 'research_opportunity':
-        navigate('/research');
-        break;
-      case 'application_submitted':
-        navigate('/scholarships');
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case 'find-scholarships':
-        navigate('/scholarships');
-        break;
-      case 'manage-courses':
-        navigate('/courses');
-        break;
-      case 'research-opportunities':
-        navigate('/research');
-        break;
-      case 'get-help':
-        navigate('/human-help');
-        break;
-      default:
-        break;
-    }
-  };
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[80vh]">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Loading Student Dashboard</h3>
-          <p className="text-gray-600">Please wait while we fetch your data...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading your academic dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const categories = [
+    { id: 'study', label: 'For Study', icon: BookOpen, color: 'from-blue-500 to-blue-600' },
+    { id: 'research', label: 'Research', icon: Search, color: 'from-purple-500 to-purple-600' },
+    { id: 'career', label: 'Career', icon: Target, color: 'from-green-500 to-green-600' },
+    { id: 'funding', label: 'Funding', icon: Award, color: 'from-yellow-500 to-yellow-600' },
+    { id: 'network', label: 'Network', icon: Users, color: 'from-pink-500 to-pink-600' }
+  ];
+
+  const quickStartItems = [
+    {
+      id: 'academic-writing',
+      title: 'Academic Writing Suite',
+      description: 'AI-powered writing tools with plagiarism checker',
+      icon: PenTool,
+      color: 'from-emerald-500 to-emerald-600',
+      glowColor: 'shadow-emerald-500/50',
+      category: 'study',
+      href: '/academic-writing',
+      isNew: true
+    },
+    {
+      id: 'scholarships',
+      title: 'Scholarship Finder',
+      description: 'Find scholarships matching your profile',
+      icon: Award,
+      color: 'from-blue-500 to-blue-600',
+      glowColor: 'shadow-blue-500/50',
+      category: 'funding',
+      href: '/scholarships'
+    },
+    {
+      id: 'research-grants',
+      title: 'Research Grants',
+      description: 'Discover undergraduate research opportunities',
+      icon: Search,
+      color: 'from-purple-500 to-purple-600',
+      glowColor: 'shadow-purple-500/50',
+      category: 'research',
+      href: '/research-grants'
+    },
+    {
+      id: 'study-planner',
+      title: 'Study Planner',
+      description: 'Organize your academic schedule',
+      icon: Calendar,
+      color: 'from-indigo-500 to-indigo-600',
+      glowColor: 'shadow-indigo-500/50',
+      category: 'study',
+      href: '/study-planner'
+    },
+    {
+      id: 'career-center',
+      title: 'Career Center',
+      description: 'CV builder and interview preparation',
+      icon: Target,
+      color: 'from-green-500 to-green-600',
+      glowColor: 'shadow-green-500/50',
+      category: 'career',
+      href: '/career-center'
+    },
+    {
+      id: 'peer-network',
+      title: 'Peer Network',
+      description: 'Connect with fellow students',
+      icon: Users,
+      color: 'from-pink-500 to-pink-600',
+      glowColor: 'shadow-pink-500/50',
+      category: 'network',
+      href: '/peer-network'
+    }
+  ];
+
+  const filteredItems = selectedCategory === 'all' 
+    ? quickStartItems 
+    : quickStartItems.filter(item => item.category === selectedCategory);
+
+  const user = dashboardData?.user;
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Welcome to Student Dashboard! 👋
-            </h1>
-            <p className="text-gray-700 text-lg">
-              Here's what's happening with your academic journey today.
-            </p>
-          </div>
-          
-          {/* Credits Display - Clickable */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/credits')}
-            className="flex items-center space-x-3 px-6 py-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all group"
-          >
-            <Gem className="w-8 h-8 text-emerald-500 group-hover:animate-pulse" />
-            <div className="text-right">
-              <div className="text-2xl font-bold text-emerald-600">{user?.credits.toLocaleString()}</div>
-              <div className="text-gray-600 text-sm">Credits</div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Header Section - EdrawAI Style */}
+        <div className="mb-12">
+          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-2xl p-8 mb-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-indigo-700/20 backdrop-blur-lg"></div>
+            <div className="relative z-10">
+              <h1 className="text-3xl font-bold text-white mb-2">
+                Hey, What do you want to do today?
+              </h1>
+              <p className="text-purple-200">
+                Welcome back, {user?.firstName || 'Student'}! Let's continue your academic journey.
+              </p>
             </div>
-          </motion.button>
+          </div>
+
+          {/* Category Selector - EdrawAI Style */}
+          <div className="flex flex-wrap gap-4 justify-center mb-8">
+            {categories.map((category) => {
+              const IconComponent = category.icon;
+              const isSelected = selectedCategory === category.id;
+              return (
+                <motion.button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex flex-col items-center p-6 rounded-xl transition-all duration-300 min-w-[120px] ${
+                    isSelected 
+                      ? `bg-gradient-to-br ${category.color} shadow-lg shadow-current/25` 
+                      : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'
+                  }`}
+                >
+                  <IconComponent className={`w-8 h-8 mb-3 ${isSelected ? 'text-white' : 'text-gray-400'}`} />
+                  <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                    {category.label}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* User Profile Card - Clickable */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          onClick={() => navigate('/settings')}
-          className="inline-flex items-center space-x-4 px-6 py-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-        >
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">
-              {user?.fullName?.split(' ').map(n => n[0]).join('') || 'S'}
-            </span>
+        {/* Quick Start Section - EdrawAI Style */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-white mb-6">Quick Start</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <motion.a
+                  key={item.id}
+                  href={item.href}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  className={`relative group block p-6 bg-gray-800 border border-gray-700 rounded-xl transition-all duration-300 hover:border-gray-600 hover:${item.glowColor} hover:shadow-xl`}
+                >
+                  {item.isNew && (
+                    <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                      New
+                    </div>
+                  )}
+                  
+                  <div className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComponent className="w-6 h-6 text-white" />
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors">
+                    {item.title}
+                  </h3>
+                  
+                  <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors">
+                    {item.description}
+                  </p>
+                  
+                  <div className="flex items-center text-blue-400 group-hover:text-blue-300 transition-colors">
+                    <span className="text-sm font-medium mr-2">Get started</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </motion.a>
+              );
+            })}
           </div>
-          <div className="text-left">
-            <h3 className="text-xl font-bold text-gray-900">{user?.fullName || 'Student'}</h3>
-            <div className="flex items-center space-x-2">
-              <p className="text-gray-600">Computer Science Student</p>
-              <div className="flex items-center space-x-1">
-                <span className="text-gray-600">•</span>
-                <span className="text-gray-600 text-sm">Stanford University</span>
+        </div>
+
+        {/* Additional Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-blue-500/50 transition-all duration-300"
+          >
+            <div className="flex items-center mb-4">
+              <Plus className="w-5 h-5 text-blue-400 mr-2" />
+              <span className="text-white font-medium">Create New</span>
+            </div>
+            <div className="space-y-2">
+              <a href="/academic-writing" className="block text-sm text-gray-400 hover:text-blue-400 transition-colors">+ New Research Paper</a>
+              <a href="/study-planner" className="block text-sm text-gray-400 hover:text-blue-400 transition-colors">+ Study Schedule</a>
+              <a href="/career-center" className="block text-sm text-gray-400 hover:text-blue-400 transition-colors">+ CV Project</a>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-purple-500/50 transition-all duration-300"
+          >
+            <div className="flex items-center mb-4">
+              <Trophy className="w-5 h-5 text-purple-400 mr-2" />
+              <span className="text-white font-medium">Your Progress</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">GPA</span>
+                <span className="text-white">3.8</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Credits</span>
+                <span className="text-white">{user?.credits || 145}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Projects</span>
+                <span className="text-white">8 completed</span>
               </div>
             </div>
-          </div>
-        </motion.div>
-      </motion.div>
+          </motion.div>
 
-      {/* Stats Grid - All Clickable */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="dashboard-stats">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          onClick={() => handleStatClick('scholarships')}
-          className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-purple-100 rounded-xl group-hover:bg-purple-200 transition-colors">
-              <Award className="w-6 h-6 text-purple-600" />
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-green-500/50 transition-all duration-300"
+          >
+            <div className="flex items-center mb-4">
+              <Calendar className="w-5 h-5 text-green-400 mr-2" />
+              <span className="text-white font-medium">Upcoming</span>
             </div>
-            <div className="flex items-center space-x-1 text-green-600 text-sm">
-              <ArrowUp className="w-4 h-4" />
-              <span>+{stats.scholarshipsGrowth}</span>
+            <div className="space-y-2">
+              <div className="text-sm text-gray-400">Research Proposal Due</div>
+              <div className="text-xs text-green-400">Feb 15, 2025</div>
+              <div className="text-sm text-gray-400">Scholarship Application</div>
+              <div className="text-xs text-green-400">Mar 1, 2025</div>
             </div>
-          </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.totalScholarships}</h3>
-          <p className="text-gray-600">Scholarship Matches</p>
-        </motion.div>
+          </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          onClick={() => handleStatClick('courses')}
-          className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:border-green-300 hover:shadow-md transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-green-100 rounded-xl group-hover:bg-green-200 transition-colors">
-              <BookOpen className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="flex items-center space-x-1 text-green-600 text-sm">
-              <ArrowUp className="w-4 h-4" />
-              <span>+{stats.coursesGrowth}</span>
-            </div>
-          </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.activeCourses}</h3>
-          <p className="text-gray-600">Active Courses</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          onClick={() => handleStatClick('research')}
-          className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
-              <Search className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="flex items-center space-x-1 text-green-600 text-sm">
-              <ArrowUp className="w-4 h-4" />
-              <span>+{stats.researchGrowth}</span>
-            </div>
-          </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.researchOpportunities}</h3>
-          <p className="text-gray-600">Research Opportunities</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          onClick={() => handleStatClick('analytics')}
-          className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-orange-100 rounded-xl group-hover:bg-orange-200 transition-colors">
-              <Target className="w-6 h-6 text-orange-600" />
-            </div>
-            <span className="text-orange-600 text-sm font-medium">{stats.completionRate}%</span>
-          </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.completionRate}%</h3>
-          <p className="text-gray-600">Completion Rate</p>
-        </motion.div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Academic Progress Chart - Clickable */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          whileHover={{ scale: 1.02 }}
-          onClick={() => navigate('/courses')}
-          className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-        >
+        {/* Recent Documents Section */}
+        <div>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-900">Academic Progress</h3>
-            <div className="flex items-center space-x-3">
-              <select className="bg-gray-100 text-gray-700 rounded-lg px-3 py-2 border border-gray-200">
-                <option>Current Semester</option>
-                <option>Last Semester</option>
-                <option>All Time</option>
-              </select>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </motion.button>
-            </div>
+            <h2 className="text-xl font-semibold text-white">Recent Documents</h2>
+            <button className="text-blue-400 hover:text-blue-300 transition-colors text-sm">
+              View all
+            </button>
           </div>
           
-          {/* Interactive Chart */}
-          <div className="h-64 relative">
-            <svg className="w-full h-full" viewBox="0 0 400 200">
-              {/* Grid lines */}
-              {[0, 1, 2, 3, 4, 5].map(i => (
-                <line
-                  key={i}
-                  x1="0"
-                  y1={i * 40}
-                  x2="400"
-                  y2={i * 40}
-                  stroke="rgb(229 231 235)"
-                  strokeWidth="1"
-                />
-              ))}
-              
-              {/* Course Completion Line */}
-              <motion.path
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 2, delay: 0.5 }}
-                d="M 0 160 Q 100 140 200 100 T 400 80"
-                fill="none"
-                stroke="rgb(59 130 246)"
-                strokeWidth="3"
-                className="hover:stroke-blue-400 cursor-pointer"
-              />
-              
-              {/* Grade Average Line */}
-              <motion.path
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 2, delay: 0.7 }}
-                d="M 0 180 Q 100 160 200 120 T 400 100"
-                fill="none"
-                stroke="rgb(147 51 234)"
-                strokeWidth="3"
-                className="hover:stroke-purple-400 cursor-pointer"
-              />
-
-              {/* Interactive Data Points */}
-              {[80, 140, 200, 260, 320, 380].map((x, index) => (
-                <motion.circle
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { name: 'Research Proposal Draft', type: 'Document', modified: '2 hours ago', icon: PenTool },
+              { name: 'Literature Review', type: 'Paper', modified: '1 day ago', icon: BookOpen },
+              { name: 'CV Template', type: 'CV', modified: '3 days ago', icon: Target }
+            ].map((doc, index) => {
+              const IconComponent = doc.icon;
+              return (
+                <motion.div
                   key={index}
-                  cx={x}
-                  cy={120 - index * 8}
-                  r="4"
-                  fill="rgb(59 130 246)"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 1 + index * 0.1 }}
-                  whileHover={{ scale: 1.5 }}
-                  className="cursor-pointer"
-                />
-              ))}
-            </svg>
-            
-            {/* Legend */}
-            <div className="absolute bottom-4 left-4 flex space-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-700 text-sm">Course Completion</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                <span className="text-gray-700 text-sm">Grade Average</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Recent Activity - All Items Clickable */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-900">Recent Activity</h3>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <Bell className="w-4 h-4" />
-            </motion.button>
-          </div>
-          
-          <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + index * 0.1 }}
-                whileHover={{ scale: 1.02, x: 5 }}
-                onClick={() => handleActivityClick(activity)}
-                className="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all cursor-pointer group"
-              >
-                <div className="p-2 bg-gray-200 rounded-lg group-hover:bg-gray-300 transition-colors">
-                  {getActivityIcon(activity.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-gray-900 font-medium group-hover:text-blue-600 transition-colors">{activity.title}</h4>
-                  <p className="text-gray-600 text-sm">{activity.description}</p>
-                  <p className="text-gray-500 text-xs mt-1">{formatTimeAgo(activity.timestamp)}</p>
-                </div>
-                <ArrowUp className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transform rotate-45 transition-all" />
-              </motion.div>
-            ))}
-          </div>
-          
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/notifications')}
-            className="w-full mt-4 py-2 text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors"
-          >
-            View All Activity →
-          </motion.button>
-        </motion.div>
-      </div>
-
-      {/* Quick Actions & Bookmarked Scholarships */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions - All Clickable */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
-          id="quick-actions"
-        >
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleQuickAction('find-scholarships')}
-              className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl text-left group hover:shadow-md transition-all"
-            >
-              <div className="p-3 bg-purple-100 rounded-xl w-fit mb-4 group-hover:bg-purple-200 transition-colors">
-                <Award className="w-6 h-6 text-purple-600" />
-              </div>
-              <h4 className="text-gray-900 font-semibold mb-2">Find Scholarships</h4>
-              <p className="text-gray-600 text-sm">Discover opportunities</p>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleQuickAction('manage-courses')}
-              className="p-6 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl text-left group hover:shadow-md transition-all"
-            >
-              <div className="p-3 bg-green-100 rounded-xl w-fit mb-4 group-hover:bg-green-200 transition-colors">
-                <BookOpen className="w-6 h-6 text-green-600" />
-              </div>
-              <h4 className="text-gray-900 font-semibold mb-2">Manage Courses</h4>
-              <p className="text-gray-600 text-sm">Track your progress</p>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleQuickAction('research-opportunities')}
-              className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl text-left group hover:shadow-md transition-all"
-            >
-              <div className="p-3 bg-blue-100 rounded-xl w-fit mb-4 group-hover:bg-blue-200 transition-colors">
-                <Search className="w-6 h-6 text-blue-600" />
-              </div>
-              <h4 className="text-gray-900 font-semibold mb-2">Research</h4>
-              <p className="text-gray-600 text-sm">Find opportunities</p>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleQuickAction('get-help')}
-              className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl text-left group hover:shadow-md transition-all"
-            >
-              <div className="p-3 bg-orange-100 rounded-xl w-fit mb-4 group-hover:bg-orange-200 transition-colors">
-                <Users className="w-6 h-6 text-orange-600" />
-              </div>
-              <h4 className="text-gray-900 font-semibold mb-2">Get Help</h4>
-              <p className="text-gray-600 text-sm">Expert assistance</p>
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* Bookmarked Scholarships */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-900">Bookmarked Scholarships</h3>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              onClick={() => navigate('/scholarships')}
-              className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-            </motion.button>
-          </div>
-          
-          <div className="space-y-4">
-            {bookmarkedScholarships.map((scholarship, index) => (
-              <motion.div
-                key={scholarship.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 + index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                onClick={() => navigate('/scholarships')}
-                className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all cursor-pointer group"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <h4 className="text-gray-900 font-medium group-hover:text-blue-600 transition-colors">{scholarship.title}</h4>
+                  whileHover={{ scale: 1.02 }}
+                  className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
+                      <IconComponent className="w-5 h-5 text-gray-400" />
                     </div>
-                    <p className="text-gray-600 text-sm mb-2">{scholarship.provider}</p>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500">
-                      <span>Amount: {scholarship.amount}</span>
-                      <span>Deadline: {scholarship.deadline}</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-medium truncate">{doc.name}</h3>
+                      <p className="text-gray-400 text-sm">{doc.type}</p>
+                      <p className="text-gray-500 text-xs">{doc.modified}</p>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate('/scholarships');
-                      }}
-                      className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate('/scholarships');
-                      }}
-                      className="p-1 text-gray-400 hover:text-green-600 transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/scholarships')}
-            className="w-full mt-4 py-2 text-purple-600 hover:text-purple-500 text-sm font-medium transition-colors"
-          >
-            View All Scholarships →
-          </motion.button>
-        </motion.div>
+        </div>
       </div>
-
-      {/* Upcoming Deadlines - Clickable */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
-        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">Upcoming Deadlines</h3>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            onClick={() => navigate('/scholarships')}
-            className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <Calendar className="w-4 h-4" />
-          </motion.button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/scholarships')}
-            className="p-4 bg-red-50 border border-red-100 rounded-xl hover:border-red-200 hover:shadow-sm transition-all cursor-pointer group"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-gray-900 font-medium group-hover:text-red-600 transition-colors">STEM Excellence Scholarship</h4>
-                <p className="text-gray-600 text-sm">Application deadline</p>
-              </div>
-              <div className="text-right">
-                <p className="text-red-600 font-bold">3 days</p>
-                <p className="text-gray-500 text-xs">remaining</p>
-              </div>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/courses')}
-            className="p-4 bg-yellow-50 border border-yellow-100 rounded-xl hover:border-yellow-200 hover:shadow-sm transition-all cursor-pointer group"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-gray-900 font-medium group-hover:text-yellow-600 transition-colors">Data Science Final Project</h4>
-                <p className="text-gray-600 text-sm">Assignment due</p>
-              </div>
-              <div className="text-right">
-                <p className="text-yellow-600 font-bold">5 days</p>
-                <p className="text-gray-500 text-xs">remaining</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {/* Professional Help Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.0 }}
-        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">Professional Help</h3>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            onClick={() => navigate('/human-help')}
-            className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <Users className="w-4 h-4" />
-          </motion.button>
-        </div>
-        
-        <div className="flex flex-col md:flex-row gap-4">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/human-help')}
-            className="flex-1 p-4 bg-green-50 border border-green-100 rounded-xl hover:border-green-200 hover:shadow-sm transition-all cursor-pointer"
-          >
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Users className="w-5 h-5 text-green-600" />
-              </div>
-              <h4 className="text-gray-900 font-medium">Academic Advising</h4>
-            </div>
-            <p className="text-gray-600 text-sm mb-3">Get personalized guidance from academic experts</p>
-            <div className="flex items-center text-green-600 text-sm font-medium">
-              <span>Connect with an advisor</span>
-              <ArrowUp className="w-4 h-4 ml-1 transform rotate-45" />
-            </div>
-          </motion.div>
-          
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/human-help')}
-            className="flex-1 p-4 bg-blue-50 border border-blue-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer"
-          >
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FileText className="w-5 h-5 text-blue-600" />
-              </div>
-              <h4 className="text-gray-900 font-medium">Application Review</h4>
-            </div>
-            <p className="text-gray-600 text-sm mb-3">Get professional feedback on your applications</p>
-            <div className="flex items-center text-blue-600 text-sm font-medium">
-              <span>Submit for review</span>
-              <ArrowUp className="w-4 h-4 ml-1 transform rotate-45" />
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
+      
+      {/* Student Navigation */}
+      <StudentNavigation />
     </div>
   );
-};
-
-export default StudentDashboard;
+}

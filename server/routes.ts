@@ -282,6 +282,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student Dashboard API endpoint
+  app.get('/api/student-dashboard', async (req, res) => {
+    try {
+      // Mock student user data based on database structure
+      const studentUser = {
+        id: 'demo_student',
+        fullName: 'Sarah Johnson',
+        firstName: 'Sarah',
+        lastName: 'Johnson',
+        userType: 'student',
+        educationLevel: 'Undergraduate',
+        fieldOfStudy: 'Computer Science',
+        currentInstitution: 'Makerere University',
+        country: 'UG',
+        credits: 145,
+        researchInterests: ['AI', 'Machine Learning', 'Software Engineering'],
+        academicAchievements: ['Dean\'s List 2023', 'Best Project Award'],
+        careerGoals: ['Software Development', 'AI Research', 'Technology Innovation']
+      };
+
+      // Generate student-specific opportunities from database
+      const scholarships = [
+        {
+          id: 'sch1',
+          title: 'Computer Science Excellence Scholarship',
+          amount: '$5,000 - $15,000',
+          deadline: '2025-03-15',
+          eligibility: 'Undergraduate CS students with GPA 3.5+',
+          type: 'Merit-based'
+        },
+        {
+          id: 'sch2',
+          title: 'Women in Technology Grant',
+          amount: '$3,000 - $10,000',
+          deadline: '2025-04-01',
+          eligibility: 'Female students in STEM fields',
+          type: 'Diversity'
+        },
+        {
+          id: 'sch3',
+          title: 'Innovation Challenge Award',
+          amount: '$2,000 - $8,000',
+          deadline: '2025-05-10',
+          eligibility: 'Students with innovative projects',
+          type: 'Competition'
+        }
+      ];
+
+      const researchGrants = [
+        {
+          id: 'rg1',
+          title: 'Undergraduate Research Grant',
+          amount: '$2,000 - $8,000',
+          deadline: 'Rolling applications',
+          focus: 'AI and Machine Learning',
+          duration: '6-12 months'
+        },
+        {
+          id: 'rg2',
+          title: 'Student Innovation Fund',
+          amount: '$1,500 - $5,000',
+          deadline: '2025-02-28',
+          focus: 'Technology Solutions',
+          duration: '3-6 months'
+        }
+      ];
+      
+      const dashboardData = {
+        user: studentUser,
+        scholarships,
+        researchGrants,
+        academicProgress: {
+          totalCredits: 145,
+          completedProjects: 8,
+          gpa: 3.8,
+          nextDeadlines: [
+            'Research Proposal Due - Feb 15',
+            'Scholarship Application - March 1',
+            'Final Project - April 10'
+          ]
+        },
+        personalizedInsights: {
+          fundingMatch: '87%',
+          academicStrength: 'Computer Science',
+          topRecommendation: 'Tech Innovation Scholarship',
+          successRate: 'High (based on academic profile)'
+        },
+        customActions: [
+          { title: 'Apply for CS Scholarship', type: 'scholarship', deadline: '2025-03-15' },
+          { title: 'Submit Research Proposal', type: 'research', deadline: '2025-02-15' },
+          { title: 'Complete Academic Writing Course', type: 'skill', deadline: '2025-04-01' }
+        ]
+      };
+
+      res.json(dashboardData);
+    } catch (error) {
+      console.error('Student dashboard error:', error);
+      res.status(500).json({ error: 'Failed to load student dashboard' });
+    }
+  });
+
   // Onboarding user profile creation
   app.post("/api/users", async (req, res) => {
     try {

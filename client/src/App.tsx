@@ -21,6 +21,7 @@ import CreditsPurchase from './CreditsPurchase';
 import NGOPipeline from './NGOPipeline';
 
 import MobileNavigation from './shared/MobileNavigation';
+import StudentNavigation from './StudentNavigation';
 
 
 import LandingPage from './LandingPage';
@@ -71,14 +72,15 @@ function App() {
   
   // For development, bypass auth and provide default user
   const mockUser = { 
-    id: 'demo_user',
-    userType: 'ngo', 
-    email: 'demo@example.com',
-    firstName: 'Demo',
-    lastName: 'User',
+    id: 'demo_student',
+    userType: 'student', 
+    email: 'student@example.com',
+    firstName: 'Sarah',
+    lastName: 'Johnson',
     country: 'UG',
-    sector: 'Health',
-    organizationType: 'NGO'
+    educationLevel: 'Undergraduate',
+    fieldOfStudy: 'Computer Science',
+    currentInstitution: 'Makerere University'
   };
   const isAuthenticated = true;
 
@@ -91,16 +93,20 @@ function App() {
         <MoodThemeProvider>
           <AddictionProvider>
             <div className="min-h-screen safari-fix" style={{ background: 'var(--theme-background)' }}>
-              <Header />
+              {/* Only show header for NGO users, not students */}
+              {!isStudent && <Header />}
               
               <div className="flex">
-                <Sidebar 
-                  collapsed={sidebarCollapsed} 
-                  onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-                />
+                {/* Only show sidebar for NGO users, not students */}
+                {!isStudent && (
+                  <Sidebar 
+                    collapsed={sidebarCollapsed} 
+                    onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                  />
+                )}
                 
-                <main className={`flex-1 transition-all duration-300 pt-16 pb-16 md:pb-0 ${
-                  sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-72'
+                <main className={`flex-1 transition-all duration-300 ${
+                  isStudent ? 'pt-0 pb-16 ml-0' : 'pt-16 pb-16 md:pb-0 ' + (sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-72')
                 }`}>
                   <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
                     <Routes>
@@ -148,8 +154,8 @@ function App() {
                 </main>
               </div>
               
-              {/* Mobile Navigation */}
-              <MobileNavigation />
+              {/* Mobile Navigation - Conditional based on user type */}
+              {isStudent ? <StudentNavigation /> : <MobileNavigation />}
               
               {/* Human Help Button */}
               <HumanHelpButton />
