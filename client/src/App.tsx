@@ -45,6 +45,7 @@ import MatchingPage from './MatchingPage';
 import AcademicWritingPage from './pages/AcademicWritingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import TestPage from './pages/TestPage';
 
 import AddictionProvider from './contexts/AddictionContext';
 
@@ -173,6 +174,7 @@ function Router() {
                     {/* Auth pages for preview */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/test" element={<TestPage />} />
                     
                     {/* New Dynamic Pages */}
                     <Route path="/opportunities" element={<OpportunitiesPage />} />
