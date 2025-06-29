@@ -46,8 +46,10 @@ import AcademicWritingPage from './pages/AcademicWritingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import TestPage from './pages/TestPage';
+import HelpDemoPage from './pages/HelpDemoPage';
 
 import AddictionProvider from './contexts/AddictionContext';
+import { HelpProvider } from './contexts/HelpContext';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MoodThemeProvider } from './components/MoodThemeProvider';
@@ -79,7 +81,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <MoodThemeProvider>
         <AddictionProvider>
-          <Router />
+          <HelpProvider>
+            <Router />
+          </HelpProvider>
         </AddictionProvider>
       </MoodThemeProvider>
     </QueryClientProvider>
@@ -175,6 +179,7 @@ function Router() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/test" element={<TestPage />} />
+                    <Route path="/help-demo" element={<HelpDemoPage />} />
                     
                     {/* New Dynamic Pages */}
                     <Route path="/opportunities" element={<OpportunitiesPage />} />
