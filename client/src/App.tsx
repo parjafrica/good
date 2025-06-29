@@ -37,6 +37,9 @@ import GenesisEngine from './GenesisEngine';
 import CareerSuite from './CareerSuite';
 import AcademicSuite from './AcademicSuite';
 import HumanHelpButton from './shared/HumanHelpButton';
+import OpportunitiesPage from './OpportunitiesPage';
+import AnalyticsPage from './AnalyticsPage';
+import MatchingPage from './MatchingPage';
 
 import AddictionProvider from './contexts/AddictionContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -124,6 +127,12 @@ function App() {
                     <Route path="/genesis" element={<GenesisEngine />} />
                     <Route path="/career" element={<CareerSuite />} />
                     <Route path="/academic" element={<AcademicSuite />} />
+                    
+                    {/* New Dynamic Pages */}
+                    <Route path="/opportunities" element={<OpportunitiesPage />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
+                    <Route path="/matching" element={<MatchingPage />} />
+                    <Route path="/opportunity/:id" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold">Opportunity Details</h1><p>Individual opportunity view coming soon...</p></div>} />
                     
                     {/* FastAPI Engine Routes */}
                     <Route path="/orchestrator" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold mb-4">Master Orchestrator</h1><p>Central AI coordination service coming soon...</p><a href="http://localhost:8000/docs" className="text-blue-600 hover:underline" target="_blank">View API Documentation</a></div>} />
