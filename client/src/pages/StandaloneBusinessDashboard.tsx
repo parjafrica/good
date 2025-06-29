@@ -926,7 +926,7 @@ const StandaloneBusinessDashboard: React.FC = () => {
               className="text-4xl md:text-6xl font-bold mb-6"
             >
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                Hey, What do you want to do today?
+                Ready to Grow Your Business?
               </span>
             </motion.h1>
             <motion.p
@@ -935,7 +935,7 @@ const StandaloneBusinessDashboard: React.FC = () => {
               transition={{ delay: 0.4 }}
               className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto"
             >
-              Manage your business operations, track performance, and drive growth with our comprehensive suite
+              Discover funding opportunities, create winning business plans, and connect with investors to scale your business
             </motion.p>
           </div>
 
@@ -947,11 +947,11 @@ const StandaloneBusinessDashboard: React.FC = () => {
             className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12"
           >
             {[
-              { icon: BarChart3, label: 'Analytics', color: 'from-purple-500 to-purple-600', section: 'analytics' },
-              { icon: Briefcase, label: 'Projects', color: 'from-blue-500 to-blue-600', section: 'projects' },
-              { icon: Users, label: 'Team', color: 'from-green-500 to-green-600', section: 'hr' },
-              { icon: DollarSign, label: 'Finance', color: 'from-yellow-500 to-yellow-600', section: 'finance' },
-              { icon: FileText, label: 'Reports', color: 'from-pink-500 to-pink-600', section: 'documents' },
+              { icon: DollarSign, label: 'Find Funding', color: 'from-purple-500 to-purple-600', section: 'funding' },
+              { icon: FileText, label: 'Business Plan', color: 'from-blue-500 to-blue-600', section: 'business-plan' },
+              { icon: Users, label: 'Network', color: 'from-green-500 to-green-600', section: 'network' },
+              { icon: BarChart3, label: 'Growth Tools', color: 'from-yellow-500 to-yellow-600', section: 'growth' },
+              { icon: Briefcase, label: 'Portfolio', color: 'from-pink-500 to-pink-600', section: 'portfolio' },
             ].map((item, index) => (
               <motion.div
                 key={item.label}
@@ -1198,19 +1198,29 @@ const StandaloneBusinessDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* HR Management Section */}
-        {activeTab === 'hr' && metrics && employees && (
-          <HRManagement employees={employees} />
+        {/* Business Funding Section */}
+        {activeTab === 'funding' && (
+          <BusinessFundingSection />
         )}
 
-        {/* Finance Management Section */}
-        {activeTab === 'finance' && metrics && (
-          <FinanceManagement metrics={metrics} />
+        {/* Business Plan Section */}
+        {activeTab === 'business-plan' && (
+          <BusinessPlanSection />
         )}
 
-        {/* Analytics Section */}
-        {activeTab === 'analytics' && metrics && projects && (
-          <AnalyticsSection metrics={metrics} projects={projects} />
+        {/* Network Section */}
+        {activeTab === 'network' && (
+          <BusinessNetworkSection />
+        )}
+
+        {/* Growth Tools Section */}
+        {activeTab === 'growth' && metrics && projects && (
+          <BusinessGrowthSection metrics={metrics} projects={projects} />
+        )}
+
+        {/* Portfolio Section */}
+        {activeTab === 'portfolio' && (
+          <BusinessPortfolioSection />
         )}
 
         {/* Settings Section */}
@@ -1224,7 +1234,7 @@ const StandaloneBusinessDashboard: React.FC = () => {
         )}
 
         {/* Default to overview if no matching tab */}
-        {!['overview', 'hr', 'finance', 'analytics', 'settings', 'menu'].includes(activeTab) && (
+        {!['overview', 'funding', 'business-plan', 'network', 'growth', 'portfolio', 'settings', 'menu'].includes(activeTab) && (
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-white mb-4">Section Not Found</h2>
             <p className="text-slate-400 mb-6">The requested section is not available.</p>
@@ -1243,6 +1253,401 @@ const StandaloneBusinessDashboard: React.FC = () => {
       {/* Business Footer Navigation */}
       <BusinessFooter onNavigate={handleNavigation} activeTab={activeTab} />
     </div>
+  );
+};
+
+// Business Section Components
+const BusinessFundingSection = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-white mb-4">Find Business Funding</h2>
+        <p className="text-slate-300 max-w-2xl mx-auto">
+          Discover funding opportunities specifically tailored for businesses - from startup capital to growth investments
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          {
+            title: "Startup Funding",
+            amount: "$10K - $500K",
+            description: "Seed funding and early-stage investments for new businesses",
+            color: "from-purple-500 to-purple-600",
+            deadline: "Rolling basis"
+          },
+          {
+            title: "Growth Capital",
+            amount: "$100K - $2M",
+            description: "Expansion funding for established businesses looking to scale",
+            color: "from-blue-500 to-blue-600", 
+            deadline: "Quarterly"
+          },
+          {
+            title: "Export Development",
+            amount: "$25K - $750K",
+            description: "Support for businesses entering international markets",
+            color: "from-green-500 to-green-600",
+            deadline: "Feb 2025"
+          },
+          {
+            title: "Tech Innovation",
+            amount: "$50K - $1M",
+            description: "Funding for technology-driven business solutions",
+            color: "from-yellow-500 to-yellow-600",
+            deadline: "Mar 2025"
+          },
+          {
+            title: "Women-Led Business",
+            amount: "$5K - $250K", 
+            description: "Dedicated funding for women entrepreneurs",
+            color: "from-pink-500 to-pink-600",
+            deadline: "Apr 2025"
+          },
+          {
+            title: "Green Business",
+            amount: "$20K - $500K",
+            description: "Environmental and sustainability-focused businesses",
+            color: "from-emerald-500 to-emerald-600",
+            deadline: "May 2025"
+          }
+        ].map((opportunity, index) => (
+          <motion.div
+            key={opportunity.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-gradient-to-br ${opportunity.color} rounded-2xl p-6 border border-white/10`}
+          >
+            <h3 className="text-white font-bold text-lg mb-2">{opportunity.title}</h3>
+            <p className="text-white/90 text-2xl font-bold mb-3">{opportunity.amount}</p>
+            <p className="text-white/80 text-sm mb-4">{opportunity.description}</p>
+            <div className="flex justify-between items-center">
+              <span className="text-white/70 text-xs">Deadline: {opportunity.deadline}</span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Apply Now
+              </motion.button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+const BusinessPlanSection = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-white mb-4">Create Your Business Plan</h2>
+        <p className="text-slate-300 max-w-2xl mx-auto">
+          Build a comprehensive business plan that attracts investors and guides your growth
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          {[
+            { title: "Executive Summary", progress: 85, color: "purple" },
+            { title: "Market Analysis", progress: 70, color: "blue" },
+            { title: "Financial Projections", progress: 60, color: "green" },
+            { title: "Marketing Strategy", progress: 45, color: "yellow" },
+            { title: "Operations Plan", progress: 30, color: "pink" }
+          ].map((section, index) => (
+            <motion.div
+              key={section.title}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-6"
+            >
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-white font-semibold">{section.title}</h3>
+                <span className="text-slate-400 text-sm">{section.progress}%</span>
+              </div>
+              <div className="w-full bg-slate-700 rounded-full h-2">
+                <div 
+                  className={`bg-gradient-to-r from-${section.color}-500 to-${section.color}-600 h-2 rounded-full transition-all`}
+                  style={{ width: `${section.progress}%` }}
+                />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-xl mb-6">AI Business Plan Assistant</h3>
+          <div className="space-y-4">
+            <div className="bg-slate-700/50 rounded-lg p-4">
+              <p className="text-slate-300 text-sm mb-2">Next Steps Recommended:</p>
+              <ul className="text-white text-sm space-y-1">
+                <li>• Complete market size analysis</li>
+                <li>• Define pricing strategy</li>
+                <li>• Identify key partnerships</li>
+              </ul>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium"
+            >
+              Continue Writing Plan
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const BusinessNetworkSection = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-white mb-4">Business Network</h2>
+        <p className="text-slate-300 max-w-2xl mx-auto">
+          Connect with investors, mentors, and other businesses to accelerate your growth
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          {
+            title: "Angel Investors",
+            count: "24 Active",
+            description: "Individual investors looking for promising startups",
+            icon: "👨‍💼",
+            color: "from-purple-500 to-purple-600"
+          },
+          {
+            title: "Venture Capital",
+            count: "12 Firms", 
+            description: "VC firms focused on growth-stage businesses",
+            icon: "🏢",
+            color: "from-blue-500 to-blue-600"
+          },
+          {
+            title: "Business Mentors",
+            count: "38 Experts",
+            description: "Experienced entrepreneurs offering guidance",
+            icon: "🎯",
+            color: "from-green-500 to-green-600"
+          }
+        ].map((network, index) => (
+          <motion.div
+            key={network.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-gradient-to-br ${network.color} rounded-2xl p-6 border border-white/10`}
+          >
+            <div className="text-center">
+              <div className="text-4xl mb-4">{network.icon}</div>
+              <h3 className="text-white font-bold text-lg mb-2">{network.title}</h3>
+              <p className="text-white/90 text-xl font-semibold mb-3">{network.count}</p>
+              <p className="text-white/80 text-sm mb-6">{network.description}</p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-white/20 text-white px-6 py-2 rounded-lg font-medium"
+              >
+                Connect Now
+              </motion.button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+const BusinessGrowthSection = ({ metrics, projects }: { metrics: any, projects: any }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-white mb-4">Growth Tools & Analytics</h2>
+        <p className="text-slate-300 max-w-2xl mx-auto">
+          Track your business performance and access tools to accelerate growth
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+          <h3 className="text-white font-semibold mb-2">Revenue Growth</h3>
+          <p className="text-2xl font-bold text-green-400 mb-1">+{metrics.revenue.growth}%</p>
+          <p className="text-slate-400 text-sm">vs last quarter</p>
+        </div>
+        
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+          <h3 className="text-white font-semibold mb-2">Active Projects</h3>
+          <p className="text-2xl font-bold text-blue-400 mb-1">{metrics.projects.active}</p>
+          <p className="text-slate-400 text-sm">in progress</p>
+        </div>
+
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+          <h3 className="text-white font-semibold mb-2">Team Size</h3>
+          <p className="text-2xl font-bold text-purple-400 mb-1">{metrics.employees.total}</p>
+          <p className="text-slate-400 text-sm">team members</p>
+        </div>
+
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+          <h3 className="text-white font-semibold mb-2">Net Profit</h3>
+          <p className="text-2xl font-bold text-yellow-400 mb-1">${metrics.finances.profit.toLocaleString()}</p>
+          <p className="text-slate-400 text-sm">this month</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-lg mb-6">Growth Recommendations</h3>
+          <div className="space-y-4">
+            {[
+              "Expand marketing in Uganda and Kenya markets",
+              "Consider hiring 2 additional developers", 
+              "Launch mobile app version Q2 2025",
+              "Partner with local business associations"
+            ].map((rec, index) => (
+              <div key={index} className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-green-400 rounded-full" />
+                <span className="text-slate-300 text-sm">{rec}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-lg mb-6">Quick Actions</h3>
+          <div className="space-y-3">
+            {[
+              { title: "Apply for Growth Loan", color: "purple" },
+              { title: "Schedule Investor Meeting", color: "blue" },
+              { title: "Export Market Analysis", color: "green" },
+              { title: "Tax Optimization Review", color: "yellow" }
+            ].map((action, index) => (
+              <motion.button
+                key={action.title}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`w-full bg-gradient-to-r from-${action.color}-600 to-${action.color}-700 text-white py-3 rounded-lg text-sm font-medium`}
+              >
+                {action.title}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const BusinessPortfolioSection = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-white mb-4">Business Portfolio</h2>
+        <p className="text-slate-300 max-w-2xl mx-auto">
+          Showcase your business achievements and create investor-ready presentations
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+            <h3 className="text-white font-bold text-lg mb-4">Success Metrics</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Revenue Generated", value: "$2.8M", color: "green" },
+                { label: "Customers Served", value: "15,400", color: "blue" },
+                { label: "Market Share", value: "12%", color: "purple" },
+                { label: "Team Growth", value: "300%", color: "yellow" }
+              ].map((metric, index) => (
+                <div key={metric.label} className="text-center">
+                  <p className={`text-2xl font-bold text-${metric.color}-400 mb-1`}>{metric.value}</p>
+                  <p className="text-slate-400 text-sm">{metric.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+            <h3 className="text-white font-bold text-lg mb-4">Key Achievements</h3>
+            <div className="space-y-3">
+              {[
+                "Secured $500K Series A funding",
+                "Expanded to 3 African markets", 
+                "Won 'Best Tech Startup' award 2024",
+                "Reached break-even within 18 months",
+                "Built team of 25 professionals"
+              ].map((achievement, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-gold-400 rounded-full" />
+                  <span className="text-slate-300 text-sm">{achievement}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+            <h3 className="text-white font-bold text-lg mb-4">Pitch Deck</h3>
+            <div className="bg-slate-700/50 rounded-lg p-4 mb-4">
+              <div className="w-full h-32 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">Business Presentation</span>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium"
+            >
+              Edit Pitch Deck
+            </motion.button>
+          </div>
+
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6">
+            <h3 className="text-white font-bold text-lg mb-4">Documents</h3>
+            <div className="space-y-2">
+              {[
+                "Business Plan 2025.pdf",
+                "Financial Projections.xlsx", 
+                "Market Research.pdf",
+                "Legal Documents.zip"
+              ].map((doc, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-300 text-sm">{doc}</span>
+                  <FileText className="h-4 w-4 text-slate-400" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
