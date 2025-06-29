@@ -2,28 +2,58 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { registerPaymentRoutes } from "./paymentRoutes";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, requireAuth } from "./auth";
+import session from "express-session";
 
 import { proposals, donorOpportunities } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
-  await setupAuth(app);
+  // Setup session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
+  // Setup social authentication
+  setupAuth(app);
   
   // Register payment processing routes
   registerPaymentRoutes(app);
-  
-  // Replit Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+
+  // Authentication endpoints
+  app.get('/api/auth/user', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      if (req.session?.user) {
+        // Return user from session
+        const user = await storage.getUser(req.session.user.id);
+        if (user) {
+          res.json(user);
+        } else {
+          res.status(401).json({ message: "User not found" });
+        }
+      } else {
+        res.status(401).json({ message: "Not authenticated" });
+      }
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.session?.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Logged out successfully" });
+    });
   });
 
   // Comprehensive user registration with all profile fields

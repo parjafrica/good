@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   // Additional profile fields from original schema
   fullName: text("full_name"),
   userType: text("user_type").notNull().default("user"),
+  hashedPassword: text("hashed_password"), // For email/password authentication
 
   // Contact Information - Comprehensive Collection
   primaryPhoneNumber: text("primary_phone_number"),

@@ -16,6 +16,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
+  // Additional auth methods for social login
+  getUserByEmail(email: string): Promise<User | undefined>;
+  
   // Admin functions
   getAllUsers(): Promise<User[]>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;

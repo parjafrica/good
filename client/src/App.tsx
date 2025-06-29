@@ -43,9 +43,11 @@ import OpportunitiesPage from './OpportunitiesPage';
 import AnalyticsPage from './AnalyticsPage';
 import MatchingPage from './MatchingPage';
 import AcademicWritingPage from './pages/AcademicWritingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 import AddictionProvider from './contexts/AddictionContext';
-import { AuthProvider } from './contexts/AuthContext';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MoodThemeProvider } from './components/MoodThemeProvider';
 import { useAuth } from './hooks/useAuth';
@@ -74,13 +76,11 @@ function App() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <MoodThemeProvider>
-          <AddictionProvider>
-            <Router />
-          </AddictionProvider>
-        </MoodThemeProvider>
-      </AuthProvider>
+      <MoodThemeProvider>
+        <AddictionProvider>
+          <Router />
+        </AddictionProvider>
+      </MoodThemeProvider>
     </QueryClientProvider>
   );
 }
@@ -97,7 +97,7 @@ function Router() {
     };
   }, []);
 
-  // Check if user is a student
+  // Check if user is a student - properly typed with User interface
   const isStudent = user?.userType === 'student';
 
   // Show loading while authentication state is being determined
@@ -112,9 +112,16 @@ function Router() {
     );
   }
 
-  // Show landing page for unauthenticated users
+  // Show authentication pages for unauthenticated users
   if (!isAuthenticated) {
-    return <LandingPage />;
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
   }
 
   return (
