@@ -1195,10 +1195,8 @@ const StandaloneBusinessDashboard: React.FC = () => {
             </table>
           </div>
         </motion.div>
-        </div>
-      </div>
-    </div>
-  )}
+          </div>
+        )}
 
         {/* HR Management Section */}
         {activeTab === 'hr' && metrics && employees && (
