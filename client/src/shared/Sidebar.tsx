@@ -147,6 +147,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         label: 'Funding',
         icon: DollarSign,
         path: '/funding'
+      },
+      {
+        id: 'business',
+        label: 'Business Dashboard',
+        icon: Building,
+        path: '/business'
       }
     ]
   };

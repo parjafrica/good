@@ -950,6 +950,273 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Business Dashboard API endpoints
+  app.get('/api/business/metrics', async (req, res) => {
+    try {
+      const { period = 'month' } = req.query;
+      
+      // Generate realistic business metrics based on period
+      const metrics = {
+        revenue: {
+          total: 2847320,
+          growth: 15.2,
+          monthly: [750000, 820000, 865000, 920000, 1050000, 1180000, 1320000, 1450000, 1680000, 1920000, 2150000, 2847320]
+        },
+        employees: {
+          total: 142,
+          active: 138,
+          departments: [
+            { name: 'Engineering', count: 45 },
+            { name: 'Sales', count: 32 },
+            { name: 'Marketing', count: 28 },
+            { name: 'HR', count: 15 },
+            { name: 'Finance', count: 12 },
+            { name: 'Operations', count: 10 }
+          ]
+        },
+        projects: {
+          active: 28,
+          completed: 156,
+          pending: 12
+        },
+        finances: {
+          profit: 1193040,
+          expenses: 1654280,
+          cashFlow: 847320
+        }
+      };
+      
+      res.json(metrics);
+    } catch (error) {
+      console.error('Business metrics API error:', error);
+      res.status(500).json({ error: 'Failed to fetch business metrics' });
+    }
+  });
+
+  app.get('/api/business/projects', async (req, res) => {
+    try {
+      const projects = [
+        {
+          id: '1',
+          name: 'E-commerce Platform Redesign',
+          status: 'active',
+          progress: 75,
+          budget: 150000,
+          spent: 112500,
+          deadline: '2024-02-15',
+          team: ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Wilson'],
+          priority: 'high',
+          description: 'Complete overhaul of the e-commerce platform with modern UI/UX'
+        },
+        {
+          id: '2',
+          name: 'Mobile App Development',
+          status: 'active',
+          progress: 45,
+          budget: 120000,
+          spent: 54000,
+          deadline: '2024-03-20',
+          team: ['Sarah Wilson', 'Tom Brown', 'Alex Chen'],
+          priority: 'medium',
+          description: 'Native mobile application for iOS and Android'
+        },
+        {
+          id: '3',
+          name: 'Database Migration',
+          status: 'pending',
+          progress: 0,
+          budget: 80000,
+          spent: 0,
+          deadline: '2024-04-10',
+          team: ['Alex Chen', 'David Kim'],
+          priority: 'low',
+          description: 'Migration from legacy database to modern cloud solution'
+        },
+        {
+          id: '4',
+          name: 'Marketing Campaign Q1',
+          status: 'completed',
+          progress: 100,
+          budget: 75000,
+          spent: 72000,
+          deadline: '2024-01-31',
+          team: ['Lisa Park', 'James Wilson', 'Maria Garcia'],
+          priority: 'high',
+          description: 'Comprehensive marketing campaign for Q1 product launch'
+        },
+        {
+          id: '5',
+          name: 'Security Audit',
+          status: 'active',
+          progress: 60,
+          budget: 95000,
+          spent: 57000,
+          deadline: '2024-02-28',
+          team: ['Robert Lee', 'Jennifer Chang'],
+          priority: 'high',
+          description: 'Complete security assessment and implementation of fixes'
+        }
+      ];
+      
+      res.json(projects);
+    } catch (error) {
+      console.error('Business projects API error:', error);
+      res.status(500).json({ error: 'Failed to fetch business projects' });
+    }
+  });
+
+  app.get('/api/business/employees', async (req, res) => {
+    try {
+      const employees = [
+        {
+          id: '1',
+          name: 'John Doe',
+          position: 'Senior Software Engineer',
+          department: 'Engineering',
+          salary: 95000,
+          startDate: '2022-01-15',
+          status: 'active',
+          performance: 92,
+          email: 'john.doe@company.com',
+          phone: '+1 (555) 123-4567'
+        },
+        {
+          id: '2',
+          name: 'Jane Smith',
+          position: 'Marketing Manager',
+          department: 'Marketing',
+          salary: 78000,
+          startDate: '2021-06-10',
+          status: 'active',
+          performance: 88,
+          email: 'jane.smith@company.com',
+          phone: '+1 (555) 234-5678'
+        },
+        {
+          id: '3',
+          name: 'Mike Johnson',
+          position: 'Sales Representative',
+          department: 'Sales',
+          salary: 65000,
+          startDate: '2023-03-20',
+          status: 'active',
+          performance: 85,
+          email: 'mike.johnson@company.com',
+          phone: '+1 (555) 345-6789'
+        },
+        {
+          id: '4',
+          name: 'Sarah Wilson',
+          position: 'UX Designer',
+          department: 'Engineering',
+          salary: 72000,
+          startDate: '2022-08-12',
+          status: 'active',
+          performance: 90,
+          email: 'sarah.wilson@company.com',
+          phone: '+1 (555) 456-7890'
+        },
+        {
+          id: '5',
+          name: 'Tom Brown',
+          position: 'DevOps Engineer',
+          department: 'Engineering',
+          salary: 88000,
+          startDate: '2021-11-03',
+          status: 'active',
+          performance: 89,
+          email: 'tom.brown@company.com',
+          phone: '+1 (555) 567-8901'
+        },
+        {
+          id: '6',
+          name: 'Lisa Park',
+          position: 'Content Marketing Specialist',
+          department: 'Marketing',
+          salary: 58000,
+          startDate: '2023-01-08',
+          status: 'active',
+          performance: 86,
+          email: 'lisa.park@company.com',
+          phone: '+1 (555) 678-9012'
+        }
+      ];
+      
+      res.json(employees);
+    } catch (error) {
+      console.error('Business employees API error:', error);
+      res.status(500).json({ error: 'Failed to fetch business employees' });
+    }
+  });
+
+  app.get('/api/business/finances', async (req, res) => {
+    try {
+      const finances = {
+        summary: {
+          totalRevenue: 2847320,
+          totalExpenses: 1654280,
+          netProfit: 1193040,
+          cashFlow: 847320
+        },
+        transactions: [
+          {
+            id: '1',
+            type: 'income',
+            description: 'Client Payment - Enterprise Project',
+            amount: 45000,
+            date: '2024-01-15',
+            category: 'Project Revenue'
+          },
+          {
+            id: '2',
+            type: 'expense',
+            description: 'Office Rent - January',
+            amount: -12000,
+            date: '2024-01-14',
+            category: 'Operational'
+          },
+          {
+            id: '3',
+            type: 'income',
+            description: 'Consulting Services',
+            amount: 8500,
+            date: '2024-01-13',
+            category: 'Consulting'
+          },
+          {
+            id: '4',
+            type: 'expense',
+            description: 'Software Licenses',
+            amount: -3200,
+            date: '2024-01-12',
+            category: 'Technology'
+          },
+          {
+            id: '5',
+            type: 'income',
+            description: 'Product Sales Q4',
+            amount: 125000,
+            date: '2024-01-10',
+            category: 'Product Revenue'
+          }
+        ],
+        monthlyData: [
+          { month: 'Jan', revenue: 185000, expenses: 142000, profit: 43000 },
+          { month: 'Feb', revenue: 220000, expenses: 158000, profit: 62000 },
+          { month: 'Mar', revenue: 195000, expenses: 145000, profit: 50000 },
+          { month: 'Apr', revenue: 240000, expenses: 165000, profit: 75000 },
+          { month: 'May', revenue: 280000, expenses: 175000, profit: 105000 },
+          { month: 'Jun', revenue: 310000, expenses: 185000, profit: 125000 }
+        ]
+      };
+      
+      res.json(finances);
+    } catch (error) {
+      console.error('Business finances API error:', error);
+      res.status(500).json({ error: 'Failed to fetch business finances' });
+    }
+  });
+
   // AI-powered personalized opportunities for each user
   app.get('/api/personalized-opportunities/:userId', async (req, res) => {
     try {
