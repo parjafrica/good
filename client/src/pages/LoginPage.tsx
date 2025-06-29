@@ -176,30 +176,33 @@ export default function LoginPage() {
                 </div>
 
                 {/* Social Login */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-3">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleSocialLogin('google')}
-                    className="h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl"
+                    className="w-full h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl flex items-center justify-center space-x-3"
                   >
                     <FaGoogle className="text-red-500" size={20} />
+                    <span className="font-medium text-gray-700">Google</span>
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleSocialLogin('microsoft')}
-                    className="h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl"
+                    className="w-full h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl flex items-center justify-center space-x-3"
                   >
                     <FaMicrosoft className="text-blue-500" size={20} />
+                    <span className="font-medium text-gray-700">Microsoft</span>
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleSocialLogin('apple')}
-                    className="h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl"
+                    className="w-full h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl flex items-center justify-center space-x-3"
                   >
                     <FaApple className="text-gray-800" size={20} />
+                    <span className="font-medium text-gray-700">Apple</span>
                   </Button>
                 </div>
 

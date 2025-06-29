@@ -274,6 +274,44 @@ export default function RegisterPage() {
                     </Button>
                   </form>
 
+                  {/* Divider */}
+                  <div className="my-6 flex items-center">
+                    <div className="flex-1 border-t border-gray-200"></div>
+                    <span className="px-4 text-sm text-gray-500">Or register with</span>
+                    <div className="flex-1 border-t border-gray-200"></div>
+                  </div>
+
+                  {/* Social Registration */}
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleSocialRegister('google')}
+                      className="w-full h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl flex items-center justify-center space-x-3"
+                    >
+                      <FaGoogle className="text-red-500" size={20} />
+                      <span className="font-medium text-gray-700">Google</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleSocialRegister('microsoft')}
+                      className="w-full h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl flex items-center justify-center space-x-3"
+                    >
+                      <FaMicrosoft className="text-blue-500" size={20} />
+                      <span className="font-medium text-gray-700">Microsoft</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleSocialRegister('apple')}
+                      className="w-full h-12 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl flex items-center justify-center space-x-3"
+                    >
+                      <FaApple className="text-gray-800" size={20} />
+                      <span className="font-medium text-gray-700">Apple</span>
+                    </Button>
+                  </div>
+
                   {/* Back to Login */}
                   <div className="mt-6 text-center">
                     <p className="text-gray-600">
