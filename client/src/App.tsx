@@ -72,15 +72,15 @@ function App() {
   
   // For development, bypass auth and provide default user
   const mockUser = { 
-    id: 'demo_student',
-    userType: 'student', 
-    email: 'student@example.com',
-    firstName: 'Sarah',
-    lastName: 'Johnson',
+    id: 'demo_user',
+    userType: 'organization', 
+    email: 'user@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
     country: 'UG',
-    educationLevel: 'Undergraduate',
-    fieldOfStudy: 'Computer Science',
-    currentInstitution: 'Makerere University'
+    organizationType: 'NGO',
+    organizationName: 'Granada Foundation',
+    sector: 'Education'
   };
   const isAuthenticated = true;
 
