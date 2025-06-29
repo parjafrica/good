@@ -61,57 +61,105 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [creditHistory, setCreditHistory] = useState<CreditTransaction[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  // Initialize isAuthenticated based on whether a user is loaded from localStorage
+  // or if a demo user is set. This will be updated by checkAuthState.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!user && user.id !== 'demo_user');
 
-  // Save user to localStorage whenever it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('granada_user', JSON.stringify(user));
-      setIsAuthenticated(true);
-    } else {
-      localStorage.removeItem('granada_user');
-      setIsAuthenticated(false);
+  const checkAuthState = async () => {
+    try {
+      const response = await fetch('/api/auth/user');
+      if (response.ok) {
+        const userData = await response.json();
+        if (userData && userData.id) { // Check if userData is not null and has an id
+          setUser(userData);
+          setIsAuthenticated(true);
+        } else {
+          // If /api/auth/user returns no user but localStorage has one (e.g. demo user), clear it.
+          // Or if the user was previously logged in but session expired.
+          const storedUser = localStorage.getItem('granada_user');
+          if (storedUser) {
+            localStorage.removeItem('granada_user');
+          }
+          // Only set to null if not already the demo user or null
+          if (user && user.id !== 'demo_user') setUser(null);
+          setIsAuthenticated(false);
+        }
+      } else {
+         // If response is not ok (e.g. 401), ensure user is logged out client-side
+        const storedUser = localStorage.getItem('granada_user');
+        if (storedUser) {
+          localStorage.removeItem('granada_user');
+        }
+        if (user && user.id !== 'demo_user') setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Error checking auth state:', error);
+      // In case of network error, etc., keep current local state but mark as not authenticated
+      // unless it's the demo user which is always "authenticated" client-side initially.
+      if (!user || user.id !== 'demo_user') {
+        setIsAuthenticated(false);
+      }
     }
+  };
+
+  useEffect(() => {
+    // Check auth state when the component mounts,
+    // unless it's the demo user which doesn't need server validation initially.
+    if (!user || user.id !== 'demo_user') {
+      checkAuthState();
+    }
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Save user to localStorage whenever it changes, unless it's the demo user being cleared.
+  useEffect(() => {
+    if (user && user.id !== 'demo_user') { // Don't persist demo user if it was default
+      localStorage.setItem('granada_user', JSON.stringify(user));
+    } else if (!user) { // If user becomes null (logout)
+      localStorage.removeItem('granada_user');
+    }
+    // Update isAuthenticated based on user state, crucial after checkAuthState or login/logout
+    // The demo user is considered authenticated for client-side purposes.
+    setIsAuthenticated(!!user);
   }, [user]);
 
   const login = async (email: string, password: string) => {
-    // Mock login - in production this would call your API
-    console.log('Login attempt:', email);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Determine user type based on email
-    const userType = email.includes('student') ? 'student' : 
-                     email.includes('ngo') ? 'ngo' : 
-                     email.includes('business') ? 'business' : 'general';
-    
-    // Mock successful login
-    const mockUser: User = {
-      id: '1',
-      email,
-      fullName: email.includes('admin') ? 'Admin User' : 'John Doe',
-      credits: 1247,
-      isTrialUser: true,
-      trialDaysRemaining: 14,
-      is_superuser: email.includes('admin'), // Admin if email contains 'admin'
-      userType: userType, // Add user type
-      organization: {
-        id: '1',
-        name: 'Impact First Foundation',
-        sector: 'Education',
-        country: 'Global'
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
       }
-    };
-    
-    setUser(mockUser);
-    setIsAuthenticated(true);
+
+      const data = await response.json();
+      setUser(data.user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Login error in AuthContext:', error);
+      setIsAuthenticated(false); // Ensure isAuthenticated is false on error
+      throw error; // Re-throw to be caught by UI
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setCreditHistory([]);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still proceed with client-side logout
+    } finally {
+      setUser(null);
+      setCreditHistory([]);
+      setIsAuthenticated(false);
+      localStorage.removeItem('granada_user'); // Clear user from localStorage on logout
+    }
   };
 
   const updateCredits = (amount: number) => {

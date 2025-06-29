@@ -127,6 +127,7 @@ const LoginPage: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                onClick={() => window.location.href = '/api/auth/google'}
               >
                 Google
               </motion.button>
