@@ -170,6 +170,10 @@ function Router() {
                     <Route path="/academic-writing" element={<AcademicWritingPage />} />
                     <Route path="/business" element={<StandaloneBusinessDashboard />} />
                     
+                    {/* Auth pages for preview */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    
                     {/* New Dynamic Pages */}
                     <Route path="/opportunities" element={<OpportunitiesPage />} />
                     <Route path="/analytics" element={<AnalyticsPage />} />
