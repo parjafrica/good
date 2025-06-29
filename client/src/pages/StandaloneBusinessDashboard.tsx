@@ -1263,35 +1263,18 @@ const BusinessFundingSection = () => {
   const handleNavigation = (path: string) => {
     window.location.href = path;
   };
-  
-  // Fetch actual funding opportunities from database
-  const { data: opportunities, isLoading } = useQuery({
-    queryKey: ['/api/opportunities'],
-    queryFn: async () => {
-      const response = await fetch('/api/opportunities?sector=business&limit=10');
-      return response.json();
-    }
-  });
 
-  const handleFindMoreFunding = () => {
+  const handleFindFunding = () => {
     handleNavigation('/donor-discovery');
   };
 
-  const handleApplyToOpportunity = (opportunityId: string) => {
-    handleNavigation(`/opportunities/${opportunityId}`);
+  const handleFindMoreFunding = () => {
+    handleNavigation('/donor-discovery?focus=business');
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"
-        />
-      </div>
-    );
-  }
+  const handleViewOpportunities = () => {
+    handleNavigation('/opportunities');
+  };
 
   return (
     <motion.div
@@ -1302,66 +1285,69 @@ const BusinessFundingSection = () => {
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold text-white mb-4">Find Business Funding</h2>
         <p className="text-slate-300 max-w-2xl mx-auto">
-          Discover real funding opportunities specifically tailored for businesses - from startup capital to growth investments
+          Access our comprehensive funding discovery system with thousands of verified opportunities
         </p>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleFindMoreFunding}
-          className="mt-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
-        >
-          <Target className="h-4 w-4" />
-          <span>Explore All Opportunities</span>
-        </motion.button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {(opportunities?.slice(0, 6) || []).map((opportunity: any, index: number) => (
-          <motion.div
-            key={opportunity.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6 hover:border-purple-500/30 transition-all"
-          >
-            <h3 className="text-white font-bold text-lg mb-2">{opportunity.title}</h3>
-            <p className="text-purple-400 text-xl font-bold mb-3">{opportunity.fundingAmount || 'Contact for details'}</p>
-            <p className="text-slate-300 text-sm mb-4 line-clamp-3">{opportunity.description}</p>
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-slate-400 text-xs">
-                {opportunity.deadline ? `Deadline: ${new Date(opportunity.deadline).toLocaleDateString()}` : 'Rolling basis'}
-              </span>
-              <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded text-xs">
-                {opportunity.sector}
-              </span>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleApplyToOpportunity(opportunity.id)}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg text-sm font-medium"
-            >
-              View Details
-            </motion.button>
-          </motion.div>
-        ))}
+        {/* Quick Access Cards */}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-2xl p-8 cursor-pointer"
+          onClick={handleFindFunding}
+        >
+          <Search className="h-12 w-12 text-purple-400 mb-4" />
+          <h3 className="text-white font-bold text-xl mb-3">Explore All Funding</h3>
+          <p className="text-slate-300 mb-6">
+            Access the complete funding discovery system with advanced search and filtering
+          </p>
+          <div className="bg-purple-500/20 text-purple-400 px-4 py-2 rounded-lg text-sm font-medium">
+            Launch Discovery Tool
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-2xl p-8 cursor-pointer"
+          onClick={handleViewOpportunities}
+        >
+          <Target className="h-12 w-12 text-blue-400 mb-4" />
+          <h3 className="text-white font-bold text-xl mb-3">Browse Opportunities</h3>
+          <p className="text-slate-300 mb-6">
+            View categorized funding opportunities with detailed application information
+          </p>
+          <div className="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-lg text-sm font-medium">
+            View Opportunities
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-green-600/20 to-teal-600/20 border border-green-500/30 rounded-2xl p-8 cursor-pointer"
+          onClick={handleFindMoreFunding}
+        >
+          <DollarSign className="h-12 w-12 text-green-400 mb-4" />
+          <h3 className="text-white font-bold text-xl mb-3">Business Focus</h3>
+          <p className="text-slate-300 mb-6">
+            Find funding specifically filtered for business and startup opportunities
+          </p>
+          <div className="bg-green-500/20 text-green-400 px-4 py-2 rounded-lg text-sm font-medium">
+            Business Funding
+          </div>
+        </motion.div>
       </div>
 
-      {opportunities?.length === 0 && (
-        <div className="text-center py-12">
-          <Target className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No opportunities found</h3>
-          <p className="text-slate-400 mb-6">Try exploring our full database of funding opportunities</p>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleFindMoreFunding}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium"
-          >
-            Browse All Opportunities
-          </motion.button>
-        </div>
-      )}
+      <div className="text-center">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleFindFunding}
+          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-12 py-4 rounded-lg font-bold text-lg inline-flex items-center space-x-3"
+        >
+          <Search className="h-5 w-5" />
+          <span>Launch Funding Discovery System</span>
+        </motion.button>
+      </div>
     </motion.div>
   );
 };
