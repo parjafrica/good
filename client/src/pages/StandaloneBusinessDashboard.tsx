@@ -615,9 +615,15 @@ const BusinessFooter: React.FC<{
                   y: -5,
                   transition: { type: "spring", stiffness: 300, damping: 20 }
                 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => onNavigate(item.section)}
-                className="relative flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 group"
+                whileTap={{ 
+                  scale: 0.85,
+                  transition: { duration: 0.1 }
+                }}
+                onClick={() => {
+                  console.log(`Navigating to: ${item.section}`);
+                  onNavigate(item.section);
+                }}
+                className="relative flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 group overflow-hidden"
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: index * 0.1 }}
@@ -634,6 +640,66 @@ const BusinessFooter: React.FC<{
                 {/* Glowing background on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${item.color} rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300 shadow-lg`} />
                 
+                {/* Wave Folding Effect - Multiple Ripples */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none"
+                  whileTap={{
+                    background: [
+                      "radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.6) 0%, transparent 0%)",
+                      "radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.4) 20%, transparent 40%)",
+                      "radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.2) 50%, transparent 70%)",
+                      "radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.1) 80%, transparent 100%)"
+                    ],
+                    transition: { 
+                      duration: 0.6,
+                      ease: "easeOut"
+                    }
+                  }}
+                />
+                
+                {/* Secondary Wave Effect */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none"
+                  whileTap={{
+                    scale: [1, 1.5, 2],
+                    opacity: [0, 0.3, 0],
+                    background: `radial-gradient(circle, ${item.color.includes('blue') ? 'rgba(59, 130, 246, 0.4)' : 
+                      item.color.includes('purple') ? 'rgba(147, 51, 234, 0.4)' :
+                      item.color.includes('orange') ? 'rgba(249, 115, 22, 0.4)' :
+                      item.color.includes('green') ? 'rgba(34, 197, 94, 0.4)' :
+                      'rgba(107, 114, 128, 0.4)'} 0%, transparent 70%)`,
+                    transition: { 
+                      duration: 0.8,
+                      ease: "easeOut",
+                      delay: 0.1
+                    }
+                  }}
+                />
+                
+                {/* Tertiary Fold Effect */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none"
+                  whileTap={{
+                    scale: [1, 2, 3],
+                    opacity: [0, 0.2, 0],
+                    rotate: [0, 180, 360],
+                    background: `conic-gradient(from 0deg, ${item.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' : 
+                      item.color.includes('purple') ? 'rgba(147, 51, 234, 0.2)' :
+                      item.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
+                      item.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                      'rgba(107, 114, 128, 0.2)'} 0%, transparent 50%, ${item.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' : 
+                      item.color.includes('purple') ? 'rgba(147, 51, 234, 0.2)' :
+                      item.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
+                      item.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                      'rgba(107, 114, 128, 0.2)'} 100%)`,
+                    transition: { 
+                      duration: 1.2,
+                      ease: "easeInOut",
+                      delay: 0.2
+                    }
+                  }}
+                />
+                
                 {/* Icon with enhanced styling */}
                 <motion.div
                   className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
@@ -642,6 +708,11 @@ const BusinessFooter: React.FC<{
                       : 'bg-slate-700/50 group-hover:bg-slate-600/70'
                   }`}
                   whileHover={{ rotate: [0, -10, 10, 0] }}
+                  whileTap={{ 
+                    scale: [1, 0.8, 1.1, 1],
+                    rotate: [0, -5, 5, 0],
+                    transition: { duration: 0.4 }
+                  }}
                   transition={{ duration: 0.5 }}
                 >
                   <item.icon className={`h-5 w-5 transition-all duration-300 ${
@@ -653,12 +724,16 @@ const BusinessFooter: React.FC<{
                 
                 {/* Label with enhanced typography */}
                 <motion.span 
-                  className={`text-xs font-semibold mt-1 transition-all duration-300 ${
+                  className={`text-xs font-semibold mt-1 transition-all duration-300 relative z-10 ${
                     isActive 
                       ? 'text-white drop-shadow-lg' 
                       : 'text-slate-400 group-hover:text-white'
                   }`}
                   whileHover={{ scale: 1.05 }}
+                  whileTap={{ 
+                    scale: [1, 0.9, 1.05, 1],
+                    transition: { duration: 0.3 }
+                  }}
                 >
                   {item.label}
                 </motion.span>
@@ -666,21 +741,12 @@ const BusinessFooter: React.FC<{
                 {/* Active indicator dot */}
                 {isActive && (
                   <motion.div
-                    className={`absolute -top-1 w-2 h-2 bg-gradient-to-r ${item.color} rounded-full shadow-lg`}
+                    className={`absolute -top-1 w-2 h-2 bg-gradient-to-r ${item.color} rounded-full shadow-lg z-20`}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   />
                 )}
-                
-                {/* Ripple effect on tap */}
-                <motion.div
-                  className="absolute inset-0 rounded-2xl"
-                  whileTap={{ 
-                    background: "radial-gradient(circle, rgba(147, 51, 234, 0.3) 0%, transparent 70%)",
-                    transition: { duration: 0.3 }
-                  }}
-                />
               </motion.button>
             );
           })}
