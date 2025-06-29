@@ -586,40 +586,112 @@ const BusinessFooter: React.FC<{
   activeTab: string;
 }> = ({ onNavigate, activeTab }) => {
   const footerItems = [
-    { icon: Home, label: 'Home', section: 'dashboard' },
-    { icon: Users, label: 'Donors', section: 'donors' },
-    { icon: Zap, label: 'Genesis', section: 'genesis' },
-    { icon: FileText, label: 'Proposals', section: 'proposals' },
-    { icon: Menu, label: 'Menu', section: 'menu' },
+    { icon: Home, label: 'Home', section: 'overview', color: 'from-blue-500 to-cyan-500' },
+    { icon: Users, label: 'Donors', section: 'funding', color: 'from-purple-500 to-pink-500' },
+    { icon: Zap, label: 'Genesis', section: 'genesis', color: 'from-orange-500 to-red-500' },
+    { icon: FileText, label: 'Proposals', section: 'business-plan', color: 'from-green-500 to-teal-500' },
+    { icon: Menu, label: 'Menu', section: 'menu', color: 'from-slate-500 to-gray-500' },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-50">
-      <div className="flex justify-around items-center py-2 px-4">
-        {footerItems.map((item) => (
-          <motion.button
-            key={item.section}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onNavigate(item.section)}
-            className={`flex flex-col items-center justify-center p-3 rounded-lg transition-colors ${
-              activeTab === item.section
-                ? 'text-purple-600'
-                : 'text-slate-600 hover:text-purple-600'
-            }`}
-          >
-            <item.icon className={`h-6 w-6 mb-1 ${
-              activeTab === item.section ? 'text-purple-600' : 'text-slate-600'
-            }`} />
-            <span className={`text-xs font-medium ${
-              activeTab === item.section ? 'text-purple-600' : 'text-slate-600'
-            }`}>
-              {item.label}
-            </span>
-          </motion.button>
-        ))}
+    <motion.div 
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="fixed bottom-0 left-0 right-0 z-50"
+    >
+      {/* Backdrop with enhanced styling */}
+      <div className="bg-gradient-to-t from-slate-900/95 via-slate-800/90 to-transparent backdrop-blur-xl border-t border-purple-500/20 shadow-2xl">
+        {/* Glowing top border */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-60" />
+        
+        <div className="flex justify-around items-center py-3 px-4 relative">
+          {footerItems.map((item, index) => {
+            const isActive = activeTab === item.section;
+            return (
+              <motion.button
+                key={item.section}
+                whileHover={{ 
+                  scale: 1.15,
+                  y: -5,
+                  transition: { type: "spring", stiffness: 300, damping: 20 }
+                }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onNavigate(item.section)}
+                className="relative flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 group"
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                {/* Active indicator background */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className={`absolute inset-0 bg-gradient-to-br ${item.color} rounded-2xl opacity-20 shadow-lg`}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+                
+                {/* Glowing background on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300 shadow-lg`} />
+                
+                {/* Icon with enhanced styling */}
+                <motion.div
+                  className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+                    isActive 
+                      ? `bg-gradient-to-br ${item.color} shadow-lg` 
+                      : 'bg-slate-700/50 group-hover:bg-slate-600/70'
+                  }`}
+                  whileHover={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <item.icon className={`h-5 w-5 transition-all duration-300 ${
+                    isActive 
+                      ? 'text-white drop-shadow-lg' 
+                      : 'text-slate-300 group-hover:text-white'
+                  }`} />
+                </motion.div>
+                
+                {/* Label with enhanced typography */}
+                <motion.span 
+                  className={`text-xs font-semibold mt-1 transition-all duration-300 ${
+                    isActive 
+                      ? 'text-white drop-shadow-lg' 
+                      : 'text-slate-400 group-hover:text-white'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {item.label}
+                </motion.span>
+                
+                {/* Active indicator dot */}
+                {isActive && (
+                  <motion.div
+                    className={`absolute -top-1 w-2 h-2 bg-gradient-to-r ${item.color} rounded-full shadow-lg`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  />
+                )}
+                
+                {/* Ripple effect on tap */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl"
+                  whileTap={{ 
+                    background: "radial-gradient(circle, rgba(147, 51, 234, 0.3) 0%, transparent 70%)",
+                    transition: { duration: 0.3 }
+                  }}
+                />
+              </motion.button>
+            );
+          })}
+        </div>
+        
+        {/* iPhone-style home indicator */}
+        <div className="flex justify-center pb-2">
+          <div className="w-32 h-1 bg-slate-600 rounded-full opacity-40" />
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
