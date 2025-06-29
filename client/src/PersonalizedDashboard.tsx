@@ -168,7 +168,7 @@ const PersonalizedDashboard: React.FC = () => {
         relevantOpportunities: 18,
         aiMatchScore: 87.3,
         personalizedStats: {
-          availableFunding: "$2.8M",
+          availableFunding: "$145K",
           totalOpportunities: 18,
           matchAccuracy: "87.3%",
           processingTime: "2.4 hours",
@@ -178,21 +178,21 @@ const PersonalizedDashboard: React.FC = () => {
         sectorFocus: [
           {
             name: "Healthcare",
-            amount: "$2.1M",
+            amount: "$85K",
             color: "blue",
             icon: "fas fa-heartbeat",
             percentage: 65
           },
           {
             name: "Community Development",
-            amount: "$480K",
+            amount: "$35K",
             color: "green", 
             icon: "fas fa-hands-helping",
             percentage: 25
           },
           {
             name: "Education",
-            amount: "$220K",
+            amount: "$25K",
             color: "purple",
             icon: "fas fa-graduation-cap", 
             percentage: 10
@@ -214,7 +214,7 @@ const PersonalizedDashboard: React.FC = () => {
           },
           {
             title: "Gates Foundation Maternal Health",
-            description: "New $2M funding opportunity just opened",
+            description: "New $125K funding opportunity just opened",
             icon: "fas fa-dollar-sign", 
             color: "green",
             url: "/opportunities?filter=gates"

@@ -911,7 +911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI-powered dashboard content for each user
+  // AI-powered dashboard content for each user with realistic funding amounts
   app.get('/api/personalized-dashboard/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
@@ -924,7 +924,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const opportunities = await storage.getDonorOpportunities({});
       const userInteractions = await storage.getUserInteractions(userId);
       
-      // AI-generated personalized content
+      // Calculate realistic funding amounts based on user profile
+      const realisticFunding = calculateRealisticFunding(user, opportunities);
+      
+      // AI-generated personalized content with realistic data
       const dashboardContent = {
         welcomeMessage: `Welcome back, ${user.firstName || 'User'}!`,
         priorityOpportunities: opportunities
@@ -936,19 +939,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Review pending applications'
         ],
         personalizedStats: {
-          totalRelevantOpportunities: opportunities.filter(opp => 
-            opp.country === user.country || opp.sector === user.sector
-          ).length,
-          avgFundingAmount: opportunities
-            .filter(opp => opp.country === user.country)
-            .reduce((sum, opp) => sum + (opp.amountMax || 0), 0) / 
-            opportunities.filter(opp => opp.country === user.country).length || 0,
+          availableFunding: realisticFunding.totalAvailable,
+          totalRelevantOpportunities: realisticFunding.relevantCount,
+          avgFundingAmount: realisticFunding.averageAmount,
+          suitableFunding: realisticFunding.suitableRange,
+          organizationFit: realisticFunding.organizationScore,
           lastActivity: userInteractions[0]?.createdAt || user.createdAt
         },
+        sectorBreakdown: realisticFunding.sectorBreakdown,
         aiInsights: [
-          `Based on your profile, you have high potential for ${user.sector || 'development'} funding`,
-          `Organizations in ${user.country || 'your region'} typically secure $${Math.floor(Math.random() * 500000 + 50000)} in funding`,
-          'Your application success rate could improve by 25% with profile completion'
+          `Based on your ${user.organizationType || 'organization'} profile, you're eligible for ${realisticFunding.eligibilityTier} funding`,
+          `Organizations like yours in ${user.country || 'your region'} typically secure ${realisticFunding.typicalRange}`,
+          `Your best opportunities are in the ${realisticFunding.bestSector} sector with ${realisticFunding.successProbability}% success rate`
         ]
       };
 
@@ -958,6 +960,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to get personalized dashboard' });
     }
   });
+
+  // Calculate realistic funding amounts based on user profile
+  function calculateRealisticFunding(user: any, opportunities: any[]) {
+    // Determine organization size and capacity
+    const orgType = user.organizationType || 'small_ngo';
+    const country = user.country || 'Uganda';
+    const sector = user.sector || 'Health';
+    
+    // Realistic funding ranges based on organization type and location
+    const fundingRanges = {
+      'startup_individual': { min: 1000, max: 25000, typical: '1K-25K' },
+      'small_ngo': { min: 5000, max: 150000, typical: '5K-150K' },
+      'medium_ngo': { min: 25000, max: 500000, typical: '25K-500K' },
+      'large_ngo': { min: 100000, max: 2000000, typical: '100K-2M' },
+      'university': { min: 50000, max: 1000000, typical: '50K-1M' },
+      'government': { min: 500000, max: 10000000, typical: '500K-10M' }
+    };
+    
+    const range = fundingRanges[orgType] || fundingRanges['small_ngo'];
+    
+    // Filter opportunities that match user's capacity
+    const suitableOpportunities = opportunities.filter(opp => {
+      const oppMin = opp.amountMin || 0;
+      const oppMax = opp.amountMax || 1000000;
+      
+      // Check if opportunity fits organization capacity
+      return oppMax >= range.min && oppMin <= range.max;
+    });
+    
+    // Calculate total available funding (realistic amount)
+    const totalAvailable = suitableOpportunities
+      .reduce((sum, opp) => sum + Math.min(opp.amountMax || range.max, range.max), 0);
+    
+    // Format total available funding realistically
+    const formattedTotal = totalAvailable > 1000000 
+      ? `$${(totalAvailable / 1000000).toFixed(1)}M`
+      : `$${(totalAvailable / 1000).toFixed(0)}K`;
+    
+    // Calculate sector breakdown
+    const sectorCounts = suitableOpportunities.reduce((acc, opp) => {
+      const oppSector = opp.sector || 'Other';
+      acc[oppSector] = (acc[oppSector] || 0) + 1;
+      return acc;
+    }, {});
+    
+    const topSector = Object.entries(sectorCounts)
+      .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || sector;
+    
+    // Determine success probability based on profile completeness and match
+    const profileCompleteness = calculateProfileCompleteness(user);
+    const baseSuccessRate = profileCompleteness * 0.6 + 30; // 30-90% range
+    
+    return {
+      totalAvailable: formattedTotal,
+      relevantCount: suitableOpportunities.length,
+      averageAmount: range.typical,
+      suitableRange: `$${(range.min / 1000).toFixed(0)}K - $${(range.max / 1000000).toFixed(1)}M`,
+      organizationScore: `${Math.round(profileCompleteness)}%`,
+      eligibilityTier: getEligibilityTier(orgType),
+      typicalRange: range.typical,
+      bestSector: topSector,
+      successProbability: Math.round(baseSuccessRate),
+      sectorBreakdown: Object.entries(sectorCounts).map(([name, count]) => ({
+        name,
+        count,
+        amount: `$${((count as number) * (range.max / 1000000) / 4).toFixed(1)}M`
+      }))
+    };
+  }
+  
+  function calculateProfileCompleteness(user: any): number {
+    let score = 0;
+    const fields = [
+      'firstName', 'lastName', 'email', 'country', 'sector', 
+      'organizationType', 'organization', 'interests'
+    ];
+    
+    fields.forEach(field => {
+      if (user[field] && user[field] !== '') score += 12.5;
+    });
+    
+    return Math.min(100, score);
+  }
+  
+  function getEligibilityTier(orgType: string): string {
+    const tiers = {
+      'startup_individual': 'small grants and seed funding',
+      'small_ngo': 'small to medium grants',
+      'medium_ngo': 'medium to large grants',
+      'large_ngo': 'large institutional funding',
+      'university': 'research and academic grants',
+      'government': 'major institutional funding'
+    };
+    
+    return tiers[orgType] || 'small to medium grants';
+  }
 
   // User creation endpoint for chat-based onboarding
   app.post('/api/users', async (req, res) => {
