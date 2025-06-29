@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { 
   TrendingUp, 
   Users, 
@@ -1256,8 +1258,41 @@ const StandaloneBusinessDashboard: React.FC = () => {
   );
 };
 
-// Business Section Components
+// Business Section Components  
 const BusinessFundingSection = () => {
+  const handleNavigation = (path: string) => {
+    window.location.href = path;
+  };
+  
+  // Fetch actual funding opportunities from database
+  const { data: opportunities, isLoading } = useQuery({
+    queryKey: ['/api/opportunities'],
+    queryFn: async () => {
+      const response = await fetch('/api/opportunities?sector=business&limit=10');
+      return response.json();
+    }
+  });
+
+  const handleFindMoreFunding = () => {
+    handleNavigation('/donor-discovery');
+  };
+
+  const handleApplyToOpportunity = (opportunityId: string) => {
+    handleNavigation(`/opportunities/${opportunityId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1267,78 +1302,66 @@ const BusinessFundingSection = () => {
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold text-white mb-4">Find Business Funding</h2>
         <p className="text-slate-300 max-w-2xl mx-auto">
-          Discover funding opportunities specifically tailored for businesses - from startup capital to growth investments
+          Discover real funding opportunities specifically tailored for businesses - from startup capital to growth investments
         </p>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleFindMoreFunding}
+          className="mt-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
+        >
+          <Target className="h-4 w-4" />
+          <span>Explore All Opportunities</span>
+        </motion.button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[
-          {
-            title: "Startup Funding",
-            amount: "$10K - $500K",
-            description: "Seed funding and early-stage investments for new businesses",
-            color: "from-purple-500 to-purple-600",
-            deadline: "Rolling basis"
-          },
-          {
-            title: "Growth Capital",
-            amount: "$100K - $2M",
-            description: "Expansion funding for established businesses looking to scale",
-            color: "from-blue-500 to-blue-600", 
-            deadline: "Quarterly"
-          },
-          {
-            title: "Export Development",
-            amount: "$25K - $750K",
-            description: "Support for businesses entering international markets",
-            color: "from-green-500 to-green-600",
-            deadline: "Feb 2025"
-          },
-          {
-            title: "Tech Innovation",
-            amount: "$50K - $1M",
-            description: "Funding for technology-driven business solutions",
-            color: "from-yellow-500 to-yellow-600",
-            deadline: "Mar 2025"
-          },
-          {
-            title: "Women-Led Business",
-            amount: "$5K - $250K", 
-            description: "Dedicated funding for women entrepreneurs",
-            color: "from-pink-500 to-pink-600",
-            deadline: "Apr 2025"
-          },
-          {
-            title: "Green Business",
-            amount: "$20K - $500K",
-            description: "Environmental and sustainability-focused businesses",
-            color: "from-emerald-500 to-emerald-600",
-            deadline: "May 2025"
-          }
-        ].map((opportunity, index) => (
+        {(opportunities?.slice(0, 6) || []).map((opportunity: any, index: number) => (
           <motion.div
-            key={opportunity.title}
+            key={opportunity.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className={`bg-gradient-to-br ${opportunity.color} rounded-2xl p-6 border border-white/10`}
+            className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6 hover:border-purple-500/30 transition-all"
           >
             <h3 className="text-white font-bold text-lg mb-2">{opportunity.title}</h3>
-            <p className="text-white/90 text-2xl font-bold mb-3">{opportunity.amount}</p>
-            <p className="text-white/80 text-sm mb-4">{opportunity.description}</p>
-            <div className="flex justify-between items-center">
-              <span className="text-white/70 text-xs">Deadline: {opportunity.deadline}</span>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium"
-              >
-                Apply Now
-              </motion.button>
+            <p className="text-purple-400 text-xl font-bold mb-3">{opportunity.fundingAmount || 'Contact for details'}</p>
+            <p className="text-slate-300 text-sm mb-4 line-clamp-3">{opportunity.description}</p>
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-slate-400 text-xs">
+                {opportunity.deadline ? `Deadline: ${new Date(opportunity.deadline).toLocaleDateString()}` : 'Rolling basis'}
+              </span>
+              <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded text-xs">
+                {opportunity.sector}
+              </span>
             </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleApplyToOpportunity(opportunity.id)}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg text-sm font-medium"
+            >
+              View Details
+            </motion.button>
           </motion.div>
         ))}
       </div>
+
+      {opportunities?.length === 0 && (
+        <div className="text-center py-12">
+          <Target className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-white mb-2">No opportunities found</h3>
+          <p className="text-slate-400 mb-6">Try exploring our full database of funding opportunities</p>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleFindMoreFunding}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium"
+          >
+            Browse All Opportunities
+          </motion.button>
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -1401,9 +1424,18 @@ const BusinessPlanSection = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => window.location.href = '/proposals'}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium"
             >
               Continue Writing Plan
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.location.href = '/proposals/new'}
+              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 rounded-lg font-medium mt-2"
+            >
+              Create New Business Plan
             </motion.button>
           </div>
         </div>
@@ -1413,6 +1445,35 @@ const BusinessPlanSection = () => {
 };
 
 const BusinessNetworkSection = () => {
+  // Fetch network connections from database
+  const { data: networkData, isLoading } = useQuery({
+    queryKey: ['/api/network'],
+    queryFn: async () => {
+      const response = await fetch('/api/network');
+      return response.json();
+    }
+  });
+
+  const handleConnectToNetwork = () => {
+    window.location.href = '/donor-discovery?tab=network';
+  };
+
+  const handleViewProfile = (profileId: string) => {
+    window.location.href = `/profile/${profileId}`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1424,6 +1485,15 @@ const BusinessNetworkSection = () => {
         <p className="text-slate-300 max-w-2xl mx-auto">
           Connect with investors, mentors, and other businesses to accelerate your growth
         </p>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleConnectToNetwork}
+          className="mt-6 bg-gradient-to-r from-green-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
+        >
+          <Users className="h-4 w-4" />
+          <span>Expand Your Network</span>
+        </motion.button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
