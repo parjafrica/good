@@ -338,7 +338,7 @@ const DonorDashboard: React.FC = () => {
           <form onSubmit={handleSearch}>
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300" />
-              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl border border-white/20">
+              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl border border-white/20 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
                 <input
                   type="text"
                   placeholder="Search for funding opportunities, donors, or sectors..."
@@ -351,7 +351,7 @@ const DonorDashboard: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center gap-2"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-gray-800"
                 >
                   <span>Find</span>
                   <ArrowRight className="w-4 h-4" />
@@ -386,7 +386,7 @@ const DonorDashboard: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={() => navigate('/donor-discovery')}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-gray-800"
             >
               View All
               <ChevronRight className="w-4 h-4" />
@@ -394,36 +394,19 @@ const DonorDashboard: React.FC = () => {
           </motion.div>
 
           <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              >
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 border border-white/20">
-                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-3"></div>
-                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mb-4"></div>
-                      <div className="flex gap-2 mb-4">
-                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
-                        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
-                      </div>
-                      <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            ) : (
+            {/* The main isLoading check at the top of the component handles the loading state
+                before any of this section is rendered. So, if we reach here, isLoading is false.
+                We only need to handle the case where opportunities array is empty.
+            */}
+            {(Array.isArray(opportunities) && opportunities.length > 0) ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               >
-                {(Array.isArray(opportunities) ? opportunities : []).slice(0, 6).map((opportunity: any, index: number) => (
+                {opportunities.slice(0, 6).map((opportunity: any, index: number) => (
                   <motion.div
-                    key={opportunity.id}
+                    key={opportunity.id || index} // Added index as fallback key
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.9 + index * 0.1 }}
@@ -496,6 +479,41 @@ const DonorDashboard: React.FC = () => {
                     </div>
                   </motion.div>
                 ))}
+              </motion.div>
+            ) : (
+              // This block executes if isLoading is false AND opportunities array is empty
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 }}
+                className="text-center py-10 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg"
+              >
+                <Gift size={56} className="mx-auto text-gray-400 dark:text-gray-500 mb-6" strokeWidth={1.5} />
+                <h4 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">
+                  No Matched Opportunities Yet
+                </h4>
+                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
+                  We couldn't find any specific opportunities matching your current profile right now.
+                  Try broadening your search criteria, or ensure your profile details (like sector and country) are up-to-date for the best recommendations.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/profile-settings')} // Assuming a route to profile settings
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center gap-2"
+                  >
+                    Update Profile
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/donor-discovery')}
+                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl hover:shadow-lg transition-all font-medium"
+                  >
+                    Explore All Opportunities
+                  </motion.button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
